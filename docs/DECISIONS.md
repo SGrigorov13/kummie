@@ -4,6 +4,7 @@ Newest first. Status: **Decided**, **Proposed** (needs owner confirmation), **Op
 
 | # | Date | Decision | Status |
 |---|---|---|---|
+| D-013 | 2026-11-16 | Mini-game **KUMMIE Pixel Run** goes into the mobile app only as an **original-IP version**: engine kept, BLACKPINK/BTS songs, lyrics, members, quotes and autographs replaced with original KUMMIE crews, characters and chiptune tracks; brand re-skin; cards earned only by play, stored server-side separately from the shop collection. Spec: `docs/specs/G1-pixel-run.md`. | Proposed |
 | D-012 | 2026-11-16 | Artists and merch taxonomy are based on `docs/research/kpop-research.md`: 99 groups (gen 1–5) seeded in `data/seed/groups.json`, merch categories in `data/seed/merch-taxonomy.json`. Group entries need an editorial check before going live. | Decided |
 | D-011 | 2026-11-16 | Production hosting: **Bulinfo cPanel shared hosting**. Node apps via cPanel, PostgreSQL, cron for background work, builds in GitHub Actions, upgrade path to VPS. Plan size and technical details to confirm with Bulinfo (see `docs/hosting/bulinfo-checklist.md`). | Decided |
 | D-010 | 2026-11-16 | **Fully own backend**: no hosted commerce platform (Shopify) and no commerce framework (Medusa). Node.js + Fastify + PostgreSQL (Drizzle) in this repo. | Decided |
