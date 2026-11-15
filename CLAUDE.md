@@ -38,7 +38,8 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
-docker compose up -d   # local PostgreSQL + Mailpit
+# Local database: PostgreSQL installed natively (Windows), DATABASE_URL in apps/api/.env
+# docker compose up -d  # optional alternative if Docker Desktop is installed
 ```
 
 A task is not done until `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass.

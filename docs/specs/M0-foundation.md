@@ -28,7 +28,11 @@ Read first: `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/bran
 - `.nvmrc` with the current Node.js LTS; `engines` field in root `package.json`.
 - `.gitignore` (node_modules, build outputs, `.env*` except `.env.example`, Expo/Next caches).
 - `.editorconfig`; keep `oxlint` as linter for all TS packages.
-- `docker-compose.yml` for local dev only: PostgreSQL + Mailpit. `.env.example` for each app.
+- Local database: the owner runs **PostgreSQL natively on Windows** (no Docker installed). Read the
+  connection from `DATABASE_URL` in `apps/api/.env`; document the setup in `docs/dev-setup.md`.
+  Also add an optional `docker-compose.yml` (PostgreSQL + Mailpit) for machines with Docker, but
+  nothing may require Docker. `.env.example` for each app.
+- All scripts must work in Windows PowerShell (use cross-platform tooling, no bash-only scripts).
 
 ### 2. `packages/core` (from `packages/catalog`)
 
@@ -114,7 +118,7 @@ Read first: `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/bran
 ## Definition of done
 
 - `pnpm install && pnpm lint && pnpm typecheck && pnpm test && pnpm build` pass from a clean clone.
-- `pnpm dev` starts web (Next.js), admin and api; `GET /health` returns OK with Docker PostgreSQL up.
+- `pnpm dev` starts web (Next.js), admin and api; `GET /health` returns OK against the local PostgreSQL.
 - Web shows the branded storefront in BG and EN; promo bar absent on Teen pages; `/dev/typography`
   exists.
 - Mobile app starts in Expo with the five branded tabs.

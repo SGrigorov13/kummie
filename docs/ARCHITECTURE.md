@@ -186,8 +186,8 @@ marketing cap.
 
 ## 10. Infrastructure
 
-- **Local development:** Docker Compose with PostgreSQL and Mailpit (catches emails). Docker is a
-  developer tool only; production does not use it.
+- **Local development:** PostgreSQL installed natively (the owner's machine is Windows without
+  Docker); Docker Compose with PostgreSQL + Mailpit is an optional alternative. Nothing requires Docker.
 - **Production: Bulinfo cPanel shared hosting** (decided 2026-11-16). Bulinfo lists Node.js
   support, PostgreSQL, SSH and 1–2 GB RAM depending on plan; Node versions, cron and Passenger
   details must be confirmed with Bulinfo support before M1 (see `docs/hosting/bulinfo-checklist.md`).
