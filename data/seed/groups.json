@@ -1,0 +1,601 @@
+{
+  "_note": "Seed from docs/research/kpop-research.md (Oct 2026). Metadata only: no logos, photos or official artwork. editorialCheck=true until an editor confirms the group is active and the name/spelling is correct.",
+  "groups": [
+    {
+      "id": "illit",
+      "name": "ILLIT",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "riize",
+      "name": "RIIZE",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "babymonster",
+      "name": "BABYMONSTER",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "zerobaseone",
+      "name": "ZEROBASEONE",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "tws",
+      "name": "TWS",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "boynextdoor",
+      "name": "BOYNEXTDOOR",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "kiss-of-life",
+      "name": "KISS OF LIFE",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "meovv",
+      "name": "MEOVV",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "izna",
+      "name": "izna",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "nct-wish",
+      "name": "NCT WISH",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "triples",
+      "name": "tripleS",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "hearts2hearts",
+      "name": "Hearts2Hearts",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "cortis",
+      "name": "CORTIS",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "xikers",
+      "name": "xikers",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "unis",
+      "name": "UNIS",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "evnne",
+      "name": "EVNNE",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "katseye",
+      "name": "KATSEYE",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "ampersandone",
+      "name": "AMPERS&ONE",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "fantasy-boys",
+      "name": "FANTASY BOYS",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "pow",
+      "name": "POW",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "whib",
+      "name": "WHIB",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "dxmon",
+      "name": "DXMON",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "allhours",
+      "name": "ALL(H)OURS",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "badvillain",
+      "name": "BADVILLAIN",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "young-posse",
+      "name": "YOUNG POSSE",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "rescene",
+      "name": "RESCENE",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "madein",
+      "name": "MADEIN",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "vvup",
+      "name": "VVUP",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "say-my-name",
+      "name": "SAY MY NAME",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "dear-alice",
+      "name": "Dear Alice",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "1verse",
+      "name": "1VERSE",
+      "generation": 5,
+      "editorialCheck": true
+    },
+    {
+      "id": "stray-kids",
+      "name": "Stray Kids",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "newjeans",
+      "name": "NewJeans",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "aespa",
+      "name": "aespa",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "le-sserafim",
+      "name": "LE SSERAFIM",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "ive",
+      "name": "IVE",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "enhypen",
+      "name": "ENHYPEN",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "gi-dle",
+      "name": "(G)I-DLE",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "itzy",
+      "name": "ITZY",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "tomorrow-x-together",
+      "name": "TOMORROW X TOGETHER",
+      "generation": 4,
+      "aka": "TXT",
+      "editorialCheck": true
+    },
+    {
+      "id": "ateez",
+      "name": "ATEEZ",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "nmixx",
+      "name": "NMIXX",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "p1harmony",
+      "name": "P1Harmony",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "treasure",
+      "name": "TREASURE",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "stayc",
+      "name": "STAYC",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "the-boyz",
+      "name": "The Boyz",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "viviz",
+      "name": "VIVIZ",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "kep1er",
+      "name": "Kep1er",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "oneus",
+      "name": "ONEUS",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "cravity",
+      "name": "CRAVITY",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "fifty-fifty",
+      "name": "Fifty Fifty",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "tempest",
+      "name": "Tempest",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "xdinary-heroes",
+      "name": "Xdinary Heroes",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "wei",
+      "name": "WEi",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "epex",
+      "name": "EPEX",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "h1-key",
+      "name": "H1-KEY",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "kingdom",
+      "name": "KINGDOM",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "blitzers",
+      "name": "BLITZERS",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "trendz",
+      "name": "TRENDZ",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "blackswan",
+      "name": "Blackswan",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "8turn",
+      "name": "8TURN",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "younite",
+      "name": "YOUNITE",
+      "generation": 4,
+      "editorialCheck": true
+    },
+    {
+      "id": "bts",
+      "name": "BTS",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "blackpink",
+      "name": "BLACKPINK",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "twice",
+      "name": "TWICE",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "seventeen",
+      "name": "SEVENTEEN",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "exo",
+      "name": "EXO",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "red-velvet",
+      "name": "Red Velvet",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "nct",
+      "name": "NCT",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "nct-127",
+      "name": "NCT 127",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "nct-dream",
+      "name": "NCT DREAM",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "wayv",
+      "name": "WayV",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "mamamoo",
+      "name": "MAMAMOO",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "monsta-x",
+      "name": "MONSTA X",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "btob",
+      "name": "BTOB",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "oh-my-girl",
+      "name": "OH MY GIRL",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "wjsn",
+      "name": "WJSN",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "day6",
+      "name": "DAY6",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "akmu",
+      "name": "AKMU",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "kard",
+      "name": "KARD",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "dreamcatcher",
+      "name": "Dreamcatcher",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "k-tigers-zero",
+      "name": "K-TIGERS ZERO",
+      "generation": 3,
+      "editorialCheck": true
+    },
+    {
+      "id": "girls-generation",
+      "name": "Girls' Generation",
+      "generation": 2,
+      "aka": "SNSD",
+      "editorialCheck": true
+    },
+    {
+      "id": "bigbang",
+      "name": "BIGBANG",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "shinee",
+      "name": "SHINee",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "super-junior",
+      "name": "Super Junior",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "2ne1",
+      "name": "2NE1",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "kara",
+      "name": "KARA",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "tvxq",
+      "name": "TVXQ!",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "infinite",
+      "name": "INFINITE",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "highlight",
+      "name": "Highlight",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "apink",
+      "name": "Apink",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "cnblue",
+      "name": "CNBLUE",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "ftisland",
+      "name": "FTISLAND",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "brown-eyed-girls",
+      "name": "Brown Eyed Girls",
+      "generation": 2,
+      "editorialCheck": true
+    },
+    {
+      "id": "shinhwa",
+      "name": "Shinhwa",
+      "generation": 1,
+      "editorialCheck": true
+    },
+    {
+      "id": "g-o-d",
+      "name": "g.o.d",
+      "generation": 1,
+      "editorialCheck": true
+    },
+    {
+      "id": "sechs-kies",
+      "name": "Sechs Kies",
+      "generation": 1,
+      "editorialCheck": true
+    },
+    {
+      "id": "v-o-s",
+      "name": "V.O.S.",
+      "generation": 1,
+      "editorialCheck": true
+    }
+  ]
+}

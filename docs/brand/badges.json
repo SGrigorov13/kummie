@@ -1,0 +1,22 @@
+{
+  "$comment": "KUMMIE badge enum. Closed set — no free-text badges. Every SKU carries exactly one 'sourcing' badge and at most one 'state' badge.",
+  "sourcing": [
+    { "id": "OFFICIAL",        "en": "OFFICIAL",         "bg": "ОФИЦИАЛЕН",         "fill": "#FFE44D", "text": "#2D0075", "meaning": "Licensed/authentic product from a documented source" },
+    { "id": "KUMMIE_ORIGINAL", "en": "KUMMIE ORIGINAL",  "bg": "KUMMIE ORIGINAL",   "fill": "#5B14E5", "text": "#FFFFFF", "meaning": "Own-brand product, original design, no third-party IP" },
+    { "id": "LICENSED",        "en": "LICENSED",         "bg": "ЛИЦЕНЗИРАН",        "fill": "#2D0075", "text": "#FFFFFF", "meaning": "Third-party IP used under a documented licence" },
+    { "id": "SUPPLIER_DIRECT", "en": "SUPPLIER DIRECT",  "bg": "ДИРЕКТНА ДОСТАВКА", "fill": "#FFFFFF", "text": "#2D0075", "border": "2px solid #2D0075", "meaning": "Ships from the supplier, not from EU stock" }
+  ],
+  "state": [
+    { "id": "LIMITED",     "en": "LIMITED",       "bg": "ЛИМИТИРАН",    "fill": "#FF2E9A", "text": "#2D0075", "meaning": "Scarcity only. Bound to product.isLimited. Hot Pink appears nowhere else." },
+    { "id": "NEW_DROP",    "en": "NEW DROP",      "bg": "НОВО",         "fill": "#B4FF3A", "text": "#2D0075", "meaning": "Released within the last 14 days" },
+    { "id": "IN_STOCK_EU", "en": "IN STOCK — EU", "bg": "НАЛИЧЕН В ЕС", "fill": "#B4FF3A", "text": "#2D0075", "meaning": "Held in EU fulfilment, no customs exposure" },
+    { "id": "PRE_ORDER",   "en": "PRE-ORDER",     "bg": "ПРЕДЗАКАЗ",    "fill": "#FFFFFF", "text": "#5B14E5", "border": "2px solid #5B14E5", "meaning": "Not yet released; dispatch estimate required on the page" }
+  ],
+  "typography": { "font": "Space Mono", "weight": 700, "size": "12px", "case": "upper", "tracking": "0.12em", "radius": "6px", "padding": "7px 12px" },
+  "rules": [
+    "Never invent a badge outside this enum.",
+    "Never use white text on Glow, Spotlight or Hot Pink at badge size.",
+    "Hot Pink is wired to exactly one boolean: product.isLimited.",
+    "Badges are translated; the enum id is never shown to users."
+  ]
+}
