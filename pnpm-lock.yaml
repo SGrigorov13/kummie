@@ -298,6 +298,24 @@ importers:
         specifier: ^8.3.6
         version: 8.3.8(@types/node@24.19.2)(terser@5.51.2)
 
+  packages/brand:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.12.0
+        version: 24.19.2
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.1.0
+        version: 5.1.0(@types/node@24.19.2)(vite@8.3.8(@types/node@24.19.2)(terser@5.51.2))
+
   packages/core:
     devDependencies:
       '@types/node':

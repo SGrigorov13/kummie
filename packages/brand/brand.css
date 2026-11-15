@@ -1,0 +1,113 @@
+/* KUMMIE brand primitives: star, equaliser, horizontal logo lockup.
+ * Requires tokens.css (and fonts.css for the wordmark). No colours outside tokens.css. */
+
+/* ---- Star ---- */
+.kum-star {
+  display: inline-block;
+  flex: none;
+}
+
+/* ---- Equaliser: paused by default, animates on hover/active or [data-animate] ---- */
+.kum-eq {
+  --kum-eq-h: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--kum-eq-h) / 14.4);
+  height: var(--kum-eq-h);
+  flex: none;
+}
+.kum-eq > i {
+  display: block;
+  width: calc(var(--kum-eq-h) / 10.3);
+  border-radius: calc(var(--kum-eq-h) / 10.3 / 1.6);
+  background: var(--kum-pink);
+  transform-origin: center;
+  animation: kum-eq-bounce 720ms var(--kum-ease) infinite alternate;
+  animation-play-state: paused;
+}
+.kum-eq > i.kum-eq__glow {
+  background: var(--kum-glow);
+}
+/* Icon-size equaliser: four bars, one colour. */
+.kum-eq--compact > i,
+.kum-eq--compact > i.kum-eq__glow {
+  background: currentColor;
+}
+.kum-eq[data-animate="true"] > i,
+.kum-eq:hover > i,
+a:hover .kum-eq > i,
+a:active .kum-eq > i,
+button:hover .kum-eq > i,
+button:active .kum-eq > i {
+  animation-play-state: running;
+}
+@keyframes kum-eq-bounce {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0.45);
+  }
+}
+
+/* ---- Horizontal lockup (logo-geometry.md). Everything scales from --kum-logo-size. ---- */
+.kum-logo {
+  --kum-logo-size: 28px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--kum-white);
+  text-decoration: none;
+  line-height: 1;
+}
+.kum-logo > .kum-eq {
+  --kum-eq-h: calc(var(--kum-logo-size) * 0.9);
+}
+.kum-logo__col {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  /* 48px for a 52px wordmark: keeps the star's left point clear of the last bar. */
+  margin-left: calc(var(--kum-logo-size) * 48 / 52);
+}
+.kum-logo__star {
+  position: absolute;
+  z-index: 0;
+  /* 115px star at left −39px for a 52px wordmark, centred on the K. */
+  width: calc(var(--kum-logo-size) * 115 / 52);
+  height: calc(var(--kum-logo-size) * 115 / 52);
+  left: calc(var(--kum-logo-size) * -39 / 52);
+  top: calc(var(--kum-logo-size) * (0.5 - 115 / 104));
+  color: var(--kum-pink);
+  pointer-events: none;
+}
+.kum-logo__word {
+  position: relative;
+  z-index: 1;
+  font-family: var(--kum-font-display);
+  font-size: var(--kum-logo-size);
+  line-height: 1;
+  letter-spacing: var(--kum-track-display);
+}
+.kum-logo__tag {
+  position: relative;
+  z-index: 2;
+  margin-top: calc(var(--kum-logo-size) * 0.18);
+  font-family: var(--kum-font-text);
+  font-weight: 500;
+  font-size: max(9px, calc(var(--kum-logo-size) * 0.27));
+  letter-spacing: var(--kum-track-tagline);
+  text-transform: uppercase;
+  color: var(--kum-glow);
+  white-space: nowrap;
+}
+
+/* Reduced motion: equaliser and star animations stop entirely. */
+@media (prefers-reduced-motion: reduce) {
+  .kum-eq > i {
+    animation: none !important;
+  }
+  .kum-star {
+    transition: none !important;
+    animation: none !important;
+  }
+}
