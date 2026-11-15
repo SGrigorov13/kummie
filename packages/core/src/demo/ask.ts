@@ -1,9 +1,11 @@
-import { groupById } from "./content.ts";
-import { calendar } from "./content.ts";
-import { formatMoney } from "./money.ts";
-import { products } from "./products.ts";
-import type { Locale, Localized, Product } from "./types.ts";
+import { groupById } from "../groups";
+import { formatMoney, parseEuroToCents } from "../money";
+import type { Localized } from "../types";
+import { unitGrossCents } from "../vat";
+import { calendar } from "./content";
+import { products } from "./products";
 
+/** @demo Rule-based Ask KUMMIE reply. Always labelled as a recommendation. */
 export type AssistantReply = {
   answer: Localized;
   productIds: string[];
@@ -24,32 +26,43 @@ function withDisclaimer(body: Localized, productIds: string[]): AssistantReply {
   };
 }
 
-function grossBg(product: Product): number {
-  return Math.round(product.priceExVat * 1.2 * 100) / 100;
+function budgetCents(q: string): number | undefined {
+  const match = q.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur|euro|евро)/i) ?? q.match(/(?:€)\s*(\d+(?:[.,]\d{1,2})?)/);
+  if (match?.[1]) return parseEuroToCents(match[1]);
+  return q.includes("40") ? 4000 : undefined;
 }
 
-export function askKummie(query: string): AssistantReply {
+/** @demo Answers a few question types from the demo catalogue. Never invents stock or dates. */
+export function askKummie(query: string, date: Date = new Date()): AssistantReply {
   const q = query.toLowerCase();
-  const budgetMatch = q.match(/(\d+(?:[.,]\d+)?)\s*(?:€|eur|euro|евро)/i);
-  const budget = budgetMatch ? Number(budgetMatch[1].replace(",", ".")) : q.includes("40") ? 40 : undefined;
+  const budget = budgetCents(q);
+  const talksMoney =
+    q.includes("куп") || q.includes("buy") || q.includes("взе") || q.includes("бюджет") || q.includes("имам");
 
-  if (budget !== undefined && (q.includes("куп") || q.includes("buy") || q.includes("взе") || q.includes("бюджет") || q.includes("имам") || budgetMatch)) {
-    const picks = products.filter((product) => grossBg(product) <= budget).slice(0, 3);
+  if (budget !== undefined && (talksMoney || /€|eur|евро/.test(q))) {
+    const picks = products.filter((product) => unitGrossCents(product.priceExVatCents, "BG", date) <= budget).slice(0, 3);
     const names = picks.map((product) => product.title).join(", ");
     return withDisclaimer(
       {
         bg: names
-          ? `Под ${formatMoney(budget, "EUR", "bg")} с ДДС за България в демо каталога влизат: ${names}.`
-          : `Под ${formatMoney(budget, "EUR", "bg")} с ДДС за България няма артикул в демо каталога.`,
+          ? `Под ${formatMoney(budget, "bg")} с ДДС за България в демо каталога влизат: ${names}.`
+          : `Под ${formatMoney(budget, "bg")} с ДДС за България няма артикул в демо каталога.`,
         en: names
-          ? `Under ${formatMoney(budget, "EUR", "en")} including Bulgarian VAT, the demo catalogue includes: ${names}.`
-          : `Nothing in the demo catalogue sits under ${formatMoney(budget, "EUR", "en")} including Bulgarian VAT.`,
+          ? `Under ${formatMoney(budget, "en")} including Bulgarian VAT, the demo catalogue includes: ${names}.`
+          : `Nothing in the demo catalogue sits under ${formatMoney(budget, "en")} including Bulgarian VAT.`,
       },
       picks.map((product) => product.id),
     );
   }
 
-  if (q.includes("фотокарт") || q.includes("photocard") || q.includes("photo card") || q.includes("класьор") || q.includes("binder") || q.includes("sleeve")) {
+  if (
+    q.includes("фотокарт") ||
+    q.includes("photocard") ||
+    q.includes("photo card") ||
+    q.includes("класьор") ||
+    q.includes("binder") ||
+    q.includes("sleeve")
+  ) {
     return withDisclaimer(
       {
         bg: "За карти ти трябват джоб и, ако вече са много, класьор. Твърдият протектор е само за тези, които вадиш често.",
@@ -59,13 +72,14 @@ export function askKummie(query: string): AssistantReply {
     );
   }
 
-  if (q.includes("камбек") || q.includes("comeback") || q.includes("календар") || q.includes("calendar") || q.includes("release")) {
-    const lines = calendar
-      .map((entry) => {
-        const group = groupById(entry.groupId);
-        return `${entry.when}: ${group?.name ?? ""}`;
-      })
-      .join("; ");
+  if (
+    q.includes("камбек") ||
+    q.includes("comeback") ||
+    q.includes("календар") ||
+    q.includes("calendar") ||
+    q.includes("release")
+  ) {
+    const lines = calendar.map((entry) => `${entry.when}: ${groupById(entry.groupId)?.name ?? ""}`).join("; ");
     return withDisclaimer(
       {
         bg: `Примерният календар, не официален график: ${lines}.`,

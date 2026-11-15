@@ -1,4 +1,4 @@
-import type { Product } from "./types.ts";
+import type { Product } from "../types";
 
 const regions = ["BG", "RO", "GR"] as const;
 
@@ -12,16 +12,17 @@ const sampleWarning = {
   en: "Sample item for a local test. No real stock, shipment, or authorisation.",
 };
 
-export const products: Product[] = [
+/** @demo Sample catalogue for the prototype storefront. Not real stock or authorisation. */
+export const products: readonly Product[] = [
   {
     id: "kum-binder",
     title: "KUMMIE Collector Binder",
-    category: "original",
+    subcategory: "binders",
     sourcing: "KUMMIE_ORIGINAL",
     state: "IN_STOCK_EU",
     isLimited: false,
     version: "A5 · 20 sheets",
-    priceExVat: 18.33,
+    priceExVatCents: 1833,
     currency: "EUR",
     summary: {
       bg: "Класьор за фотокарти с оригинален дизайн на KUMMIE. Без имена, лога или снимки на артисти.",
@@ -45,12 +46,12 @@ export const products: Product[] = [
   {
     id: "kum-sleeves",
     title: "KUMMIE Sleeve Pack",
-    category: "collect",
+    subcategory: "sleeves",
     sourcing: "KUMMIE_ORIGINAL",
     state: "IN_STOCK_EU",
     isLimited: false,
     version: "50 sleeves",
-    priceExVat: 6.25,
+    priceExVatCents: 625,
     currency: "EUR",
     summary: {
       bg: "Прозрачни джобове за стандартна фотокарта. Оригинален аксесоар, не официален мърч на група.",
@@ -76,12 +77,11 @@ export const products: Product[] = [
   {
     id: "kum-toploader",
     title: "KUMMIE Toploader Set",
-    category: "collect",
+    subcategory: "toploaders",
     sourcing: "KUMMIE_ORIGINAL",
-    state: "LIMITED",
     isLimited: true,
     version: "10 pieces",
-    priceExVat: 9.17,
+    priceExVatCents: 917,
     currency: "EUR",
     summary: {
       bg: "Твърди протектори за карти, които искаш да показваш. Лимитираната визия е само на опаковката на KUMMIE.",
@@ -105,12 +105,12 @@ export const products: Product[] = [
   {
     id: "kum-box",
     title: "KUMMIE Storage Box",
-    category: "collect",
+    subcategory: "storage",
     sourcing: "KUMMIE_ORIGINAL",
     state: "NEW_DROP",
     isLimited: false,
     version: "Holds 4 binders",
-    priceExVat: 15.83,
+    priceExVatCents: 1583,
     currency: "EUR",
     summary: {
       bg: "Кутия за класьори и джобове. Нова в демо каталога от последните 14 дни.",
@@ -130,11 +130,11 @@ export const products: Product[] = [
   {
     id: "kum-tote",
     title: "KUMMIE Tote",
-    category: "original",
+    subcategory: "bags",
     sourcing: "KUMMIE_ORIGINAL",
     isLimited: false,
     version: "Cotton · one size",
-    priceExVat: 13.33,
+    priceExVatCents: 1333,
     currency: "EUR",
     summary: {
       bg: "Памучна чанта със звездата на KUMMIE. Без артисти и без албумни визии.",
@@ -158,12 +158,12 @@ export const products: Product[] = [
   {
     id: "kum-stickers",
     title: "KUMMIE Sticker Sheet",
-    category: "original",
+    subcategory: "stickers",
     sourcing: "KUMMIE_ORIGINAL",
     state: "IN_STOCK_EU",
     isLimited: false,
     version: "6 stickers",
-    priceExVat: 4.17,
+    priceExVatCents: 417,
     currency: "EUR",
     summary: {
       bg: "Стикери със звездата и еквалайзера. Поръчка само с този артикул е под прага за Kummies.",
@@ -183,13 +183,13 @@ export const products: Product[] = [
   {
     id: "demo-album-skz",
     title: "Sample album — Stray Kids",
-    category: "album",
+    subcategory: "album",
     groupId: "stray-kids",
     sourcing: "OFFICIAL",
     state: "PRE_ORDER",
     isLimited: false,
     version: "Demo version A",
-    priceExVat: 15,
+    priceExVatCents: 1500,
     currency: "EUR",
     summary: {
       bg: "Примерен официален албум в каталога, за да се види баджът и предзаказната страница. Не се продава и не е истински предзаказ.",
@@ -213,13 +213,13 @@ export const products: Product[] = [
   {
     id: "demo-album-ive",
     title: "Sample album — IVE",
-    category: "album",
+    subcategory: "album",
     groupId: "ive",
     sourcing: "OFFICIAL",
     state: "NEW_DROP",
     isLimited: false,
     version: "Demo version B",
-    priceExVat: 14.17,
+    priceExVatCents: 1417,
     currency: "EUR",
     summary: {
       bg: "Втори примерен албум за филтъра по група. Няма снимка на обложката нарочно.",
@@ -237,12 +237,12 @@ export const products: Product[] = [
   {
     id: "demo-album-enhypen",
     title: "Sample album — ENHYPEN",
-    category: "album",
+    subcategory: "album",
     groupId: "enhypen",
     sourcing: "OFFICIAL",
     isLimited: false,
     version: "Demo version C",
-    priceExVat: 14.17,
+    priceExVatCents: 1417,
     currency: "EUR",
     summary: {
       bg: "Примерен албум без бадж за състояние, за да се тества карта само с един sourcing бадж.",
@@ -260,13 +260,13 @@ export const products: Product[] = [
   {
     id: "demo-lightstick",
     title: "Sample lightstick case",
-    category: "merch",
+    subcategory: "concert-merch",
     groupId: "stray-kids",
     sourcing: "SUPPLIER_DIRECT",
     state: "PRE_ORDER",
     isLimited: false,
     version: "Generic hard case",
-    priceExVat: 11.67,
+    priceExVatCents: 1167,
     currency: "EUR",
     summary: {
       bg: "Кутия за лайтстик без лого на група. Баджът показва директна доставка от доставчик в демо модела.",
@@ -287,6 +287,7 @@ export const products: Product[] = [
   },
 ];
 
+/** @demo */
 export function productById(id: string): Product | undefined {
   return products.find((product) => product.id === id);
 }

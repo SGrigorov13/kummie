@@ -1,41 +1,7 @@
-import type { Article, CalendarEntry, Group, Localized } from "./types.ts";
+import type { Article, CalendarEntry } from "../types";
 
-export const groups: Group[] = [
-  { id: "illit", name: "ILLIT", generation: 5 },
-  { id: "riize", name: "RIIZE", generation: 5 },
-  { id: "babymonster", name: "BABYMONSTER", generation: 5 },
-  { id: "zb1", name: "ZEROBASEONE", generation: 5 },
-  { id: "tws", name: "TWS", generation: 5 },
-  { id: "bnd", name: "BOYNEXTDOOR", generation: 5 },
-  { id: "kol", name: "KISS OF LIFE", generation: 5 },
-  { id: "katseye", name: "KATSEYE", generation: 5 },
-  { id: "stray-kids", name: "Stray Kids", generation: 4 },
-  { id: "newjeans", name: "NewJeans", generation: 4 },
-  { id: "aespa", name: "aespa", generation: 4 },
-  { id: "le-sserafim", name: "LE SSERAFIM", generation: 4 },
-  { id: "ive", name: "IVE", generation: 4 },
-  { id: "enhypen", name: "ENHYPEN", generation: 4 },
-  { id: "txt", name: "TOMORROW X TOGETHER", generation: 4 },
-  { id: "ateez", name: "ATEEZ", generation: 4 },
-  { id: "bts", name: "BTS", generation: 3 },
-  { id: "blackpink", name: "BLACKPINK", generation: 3 },
-  { id: "twice", name: "TWICE", generation: 3 },
-  { id: "seventeen", name: "SEVENTEEN", generation: 3 },
-  { id: "exo", name: "EXO", generation: 3 },
-  { id: "red-velvet", name: "Red Velvet", generation: 3 },
-  { id: "nct", name: "NCT", generation: 3 },
-  { id: "snsd", name: "Girls' Generation", generation: 2 },
-  { id: "bigbang", name: "BIGBANG", generation: 2 },
-  { id: "shinee", name: "SHINee", generation: 2 },
-  { id: "tvxq", name: "TVXQ!", generation: 2 },
-  { id: "shinhwa", name: "Shinhwa", generation: 1 },
-];
-
-export function groupById(id: string | undefined): Group | undefined {
-  return groups.find((group) => group.id === id);
-}
-
-export const articles: Article[] = [
+/** @demo Sample articles until Magazine/Teen move to MDX (M4). */
+export const articles: readonly Article[] = [
   {
     slug: "what-is-a-photocard",
     section: "magazine",
@@ -160,11 +126,13 @@ export const articles: Article[] = [
   },
 ];
 
+/** @demo */
 export function articleBySlug(slug: string): Article | undefined {
   return articles.find((article) => article.slug === slug);
 }
 
-export const calendar: CalendarEntry[] = [
+/** @demo Sample comeback calendar. Dates are not an official schedule. */
+export const calendar: readonly CalendarEntry[] = [
   {
     id: "cal-1",
     groupId: "stray-kids",
@@ -186,14 +154,4 @@ export const calendar: CalendarEntry[] = [
     title: { bg: "Примерен клип", en: "Sample video" },
     kind: { bg: "Демо дата, не е официален график", en: "Demo date, not an official schedule" },
   },
-];
-
-export const orderSteps: Localized[] = [
-  { bg: "Поръчката е потвърдена", en: "Order confirmed" },
-  { bg: "В сборната поръчка към доставчика", en: "Included in the batch order" },
-  { bg: "Сборната пратка е изпратена", en: "Grouped shipment dispatched" },
-  { bg: "Пристигна в пункта в България", en: "Arrived at the Bulgaria hub" },
-  { bg: "Предадена на куриера", en: "Handed to the carrier" },
-  { bg: "На път към теб", en: "Out for delivery" },
-  { bg: "Доставена", en: "Delivered" },
 ];
