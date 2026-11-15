@@ -63,7 +63,7 @@ Read first: `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/bran
 - Move the copy from `apps/web/src/i18n.ts`; typed keys; `bg` default, `en` second.
 - Add the promo bar copy (D-007) in both languages.
 
-### 5. `apps/web` → Next.js (D-005, proposed — confirm with owner before starting this task)
+### 5. `apps/web` → Next.js (D-005, decided)
 
 - Next.js App Router, TypeScript, locale prefixes `/bg/...` and `/en/...`, `/` redirects to `/bg`.
 - Port all 16 routes from the prototype with the same behaviour. Keep the local demo state
