@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Space+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #F4F2EF; }
+  a { color: #5B14E5; text-decoration: none; }
+  a:hover { color: #2D0075; text-decoration: underline; }
+</style>
+</helmet>
+
+<div style="font-family: 'Space Grotesk', system-ui, sans-serif; color: #2D0075; background: #F4F2EF;">
+
+  <!-- ======================= COVER ======================= -->
+  <div style="background: #5B14E5; padding: 72px 48px 64px;">
+    <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #B4FF3A;">Brand concept · v1.0 · Direction 3B “Star &amp; Sound”</div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #ffffff;">October 2026 launch</div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 22px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 6px; height: 96px;">
+          <div style="width: 9px; height: 32px; border-radius: 5px; background: #FF2E9A;"></div>
+          <div style="width: 9px; height: 64px; border-radius: 5px; background: #FF2E9A;"></div>
+          <div style="width: 9px; height: 92px; border-radius: 5px; background: #B4FF3A;"></div>
+          <div style="width: 9px; height: 50px; border-radius: 5px; background: #FF2E9A;"></div>
+          <div style="width: 9px; height: 76px; border-radius: 5px; background: #B4FF3A;"></div>
+          <div style="width: 9px; height: 28px; border-radius: 5px; background: #FF2E9A;"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-left: 70px;">
+          <div style="position: relative; display: flex; align-items: center;">
+            <div style="position: absolute; left: -48px; top: 50%; width: 140px; height: 140px; margin-top: -70px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+            <div style="position: relative; font-family: 'Archivo Black', sans-serif; font-size: 76px; line-height: .9; letter-spacing: -.02em; color: #ffffff;">KUMMIE</div>
+          </div>
+          <div style="position: relative; z-index: 2; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 18px; letter-spacing: .28em; text-transform: uppercase; color: #B4FF3A;">your k-pop chingu</div>
+        </div>
+      </div>
+
+      <div style="max-width: 720px; font-size: 18px; line-height: 1.6; color: #ffffff; text-wrap: pretty;">The identity is one idea: a star that makes sound. The star is the fandom, the equaliser is the music, and the wordmark sits in front of both. Everything in this document is built from that lockup, five colours and two typefaces.</div>
+
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;">
+        <a href="#logo" style="padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); color: #ffffff;">Logo</a>
+        <a href="#colour" style="padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); color: #ffffff;">Colour</a>
+        <a href="#type" style="padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); color: #ffffff;">Type</a>
+        <a href="#icons" style="padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); color: #ffffff;">Icons &amp; badges</a>
+        <a href="#voice" style="padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); color: #ffffff;">Slogans</a>
+        <a href="#banners" style="padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); color: #ffffff;">Banners</a>
+        <a href="#social" style="padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); color: #ffffff;">Social</a>
+        <a href="#web" style="padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); color: #ffffff;">Web spec</a>
+        <a href="#app" style="padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); color: #ffffff;">App spec</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= LOGO ======================= -->
+  <div id="logo" style="max-width: 1120px; margin: 0 auto; padding: 72px 48px 0;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">01 · Logo system</div>
+    <h2 style="margin: 0 0 12px; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; letter-spacing: -.02em;">Four lockups, one mark</h2>
+    <p style="margin: 0 0 36px; max-width: 700px; font-size: 17px; line-height: 1.6; color: #55507a; text-wrap: pretty;">The horizontal lockup is the default. The stacked lockup is for narrow placements. The star monogram is the app icon, avatar and favicon. The equaliser alone is the loading, playing and “new drop” signal.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+      <div style="grid-column: 1 / -1; background: #ffffff; border-radius: 22px; padding: 44px; display: flex; flex-direction: column; gap: 18px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Primary horizontal lockup</div>
+        <div style="background: #5B14E5; border-radius: 16px; padding: 40px 36px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px; height: 72px;">
+            <div style="width: 7px; height: 24px; border-radius: 4px; background: #FF2E9A;"></div>
+            <div style="width: 7px; height: 48px; border-radius: 4px; background: #FF2E9A;"></div>
+            <div style="width: 7px; height: 68px; border-radius: 4px; background: #B4FF3A;"></div>
+            <div style="width: 7px; height: 38px; border-radius: 4px; background: #FF2E9A;"></div>
+            <div style="width: 7px; height: 58px; border-radius: 4px; background: #B4FF3A;"></div>
+            <div style="width: 7px; height: 20px; border-radius: 4px; background: #FF2E9A;"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-left: 48px;">
+            <div style="position: relative; display: flex; align-items: center;">
+              <div style="position: absolute; left: -39px; top: 50%; width: 115px; height: 115px; margin-top: -58px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+              <div style="position: relative; font-family: 'Archivo Black', sans-serif; font-size: 52px; line-height: .92; letter-spacing: -.02em; color: #ffffff;">KUMMIE</div>
+            </div>
+            <div style="position: relative; z-index: 2; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 14px; letter-spacing: .26em; text-transform: uppercase; color: #B4FF3A;">your k-pop chingu</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Stacked lockup</div>
+        <div style="background: #2D0075; border-radius: 16px; padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+          <div style="display: flex; align-items: flex-end; gap: 4px; height: 34px;">
+            <div style="width: 6px; height: 14px; border-radius: 3px; background: #FF2E9A;"></div>
+            <div style="width: 6px; height: 28px; border-radius: 3px; background: #B4FF3A;"></div>
+            <div style="width: 6px; height: 34px; border-radius: 3px; background: #FF2E9A;"></div>
+            <div style="width: 6px; height: 22px; border-radius: 3px; background: #B4FF3A;"></div>
+          </div>
+          <div style="position: relative; display: flex; align-items: center;">
+            <div style="position: absolute; left: -26px; top: 50%; width: 76px; height: 76px; margin-top: -38px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+            <div style="position: relative; font-family: 'Archivo Black', sans-serif; font-size: 34px; letter-spacing: -.02em; color: #ffffff;">KUMMIE</div>
+          </div>
+          <div style="position: relative; z-index: 2; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: #B4FF3A;">your k-pop chingu</div>
+        </div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Star monogram · icon</div>
+        <div style="background: #F4F2EF; border-radius: 16px; padding: 24px; display: flex; align-items: center; justify-content: center; gap: 18px;">
+          <div style="width: 96px; height: 96px; border-radius: 22px; background: #5B14E5; display: flex; align-items: center; justify-content: center;">
+            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+              <div style="position: absolute; width: 74px; height: 74px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+              <span style="position: relative; font-family: 'Archivo Black', sans-serif; font-size: 34px; color: #ffffff;">K</span>
+            </div>
+          </div>
+          <div style="width: 56px; height: 56px; border-radius: 13px; background: #5B14E5; display: flex; align-items: center; justify-content: center;">
+            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+              <div style="position: absolute; width: 44px; height: 44px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+              <span style="position: relative; font-family: 'Archivo Black', sans-serif; font-size: 20px; color: #ffffff;">K</span>
+            </div>
+          </div>
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #5B14E5; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 24px; height: 24px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+          </div>
+        </div>
+        <div style="font-size: 14px; line-height: 1.55; color: #55507a;">Below 32 px the K is dropped — the rotated star alone carries the brand.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">One-colour versions</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="background: #F4F2EF; border-radius: 14px; min-height: 96px; padding: 22px; display: flex; align-items: center; justify-content: center;"><span style="font-family: 'Archivo Black', sans-serif; font-size: 34px; letter-spacing: -.02em; color: #2D0075;">KUMMIE</span></div>
+          <div style="background: #2D0075; border-radius: 14px; min-height: 96px; padding: 22px; display: flex; align-items: center; justify-content: center;"><span style="font-family: 'Archivo Black', sans-serif; font-size: 34px; letter-spacing: -.02em; color: #ffffff;">KUMMIE</span></div>
+        </div>
+        <div style="font-size: 14px; line-height: 1.55; color: #55507a;">Invoices, legal pages, embroidery, engraving and single-colour print use the wordmark only, in Ink or white.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Clear space &amp; minimum size</div>
+        <div style="background: #F4F2EF; border-radius: 14px; padding: 20px; display: flex; align-items: center; justify-content: center;">
+          <div style="border: 2px dashed #b7a9e0; border-radius: 10px; padding: 26px;">
+            <span style="font-family: 'Archivo Black', sans-serif; font-size: 28px; color: #2D0075;">KUMMIE</span>
+          </div>
+        </div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.7; color: #55507a;">
+          <li>Clear space on all sides = the height of the K.</li>
+          <li>Minimum digital width for the horizontal lockup: 140 px.</li>
+          <li>Minimum print width: 30 mm.</li>
+        </ul>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Do not</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.75; color: #55507a;">
+          <li>Re-colour the star outside Hot Pink, Glow or white.</li>
+          <li>Rotate the wordmark, or change the star's −20° angle.</li>
+          <li>Add outlines, gradients, bevels or drop shadows.</li>
+          <li>Place the lockup on a photo without a solid violet or Ink panel behind it.</li>
+          <li>Combine the mark with any artist name, group logo, album art or photograph.</li>
+          <li>Stretch, condense or re-space the letters.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= COLOUR ======================= -->
+  <div id="colour" style="max-width: 1120px; margin: 0 auto; padding: 72px 48px 0;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">02 · Colour</div>
+    <h2 style="margin: 0 0 12px; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; letter-spacing: -.02em;">Five colours, fixed jobs</h2>
+    <p style="margin: 0 0 36px; max-width: 700px; font-size: 17px; line-height: 1.6; color: #55507a; text-wrap: pretty;">Electric Violet is the brand ground. Glow is the single call-to-action colour. Hot Pink is reserved for LIMITED — scarcity only, never decoration. Spotlight is for editorial and OFFICIAL. Ink replaces black everywhere.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px;">
+      <div style="border-radius: 20px; overflow: hidden; background: #ffffff;">
+        <div style="background: #5B14E5; height: 132px;"></div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-weight: 700; font-size: 16px;">Electric Violet</div>
+          <div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #55507a;">#5B14E5 · rgb(91,20,229)</div>
+          <div style="font-size: 13px; line-height: 1.5; color: #55507a;">Primary ground, header, app chrome, packaging. White or Glow text only.</div>
+        </div>
+      </div>
+      <div style="border-radius: 20px; overflow: hidden; background: #ffffff;">
+        <div style="background: #B4FF3A; height: 132px;"></div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-weight: 700; font-size: 16px;">Glow</div>
+          <div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #55507a;">#B4FF3A · rgb(180,255,58)</div>
+          <div style="font-size: 13px; line-height: 1.5; color: #55507a;">Buttons, links on violet, equaliser peak, NEW DROP. Always with Ink text.</div>
+        </div>
+      </div>
+      <div style="border-radius: 20px; overflow: hidden; background: #ffffff;">
+        <div style="background: #FF2E9A; height: 132px;"></div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-weight: 700; font-size: 16px;">Hot Pink — LIMITED</div>
+          <div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #55507a;">#FF2E9A · rgb(255,46,154)</div>
+          <div style="font-size: 13px; line-height: 1.5; color: #55507a;">The star, and LIMITED / last-units states. Ink text at small sizes, white only above 24 px.</div>
+        </div>
+      </div>
+      <div style="border-radius: 20px; overflow: hidden; background: #ffffff;">
+        <div style="background: #FFE44D; height: 132px;"></div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-weight: 700; font-size: 16px;">Spotlight</div>
+          <div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #55507a;">#FFE44D · rgb(255,228,77)</div>
+          <div style="font-size: 13px; line-height: 1.5; color: #55507a;">OFFICIAL badge, editorial highlights, Magazine accents. Ink text only.</div>
+        </div>
+      </div>
+      <div style="border-radius: 20px; overflow: hidden; background: #ffffff;">
+        <div style="background: #2D0075; height: 132px;"></div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-weight: 700; font-size: 16px;">Ink</div>
+          <div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #55507a;">#2D0075 · rgb(45,0,117)</div>
+          <div style="font-size: 13px; line-height: 1.5; color: #55507a;">All body text, icons and rules. The brand never uses pure black.</div>
+        </div>
+      </div>
+      <div style="border-radius: 20px; overflow: hidden; background: #ffffff; border: 1px solid #e6e2da;">
+        <div style="background: #F4F2EF; height: 132px;"></div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-weight: 700; font-size: 16px;">Paper</div>
+          <div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #55507a;">#F4F2EF · rgb(244,242,239)</div>
+          <div style="font-size: 13px; line-height: 1.5; color: #55507a;">Light-mode page background, product cards, long-form reading.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; background: #ffffff; border-radius: 20px; padding: 26px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px;">
+      <div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">Approved text pairs</div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="padding: 10px 14px; border-radius: 10px; background: #5B14E5; color: #ffffff; font-weight: 600; font-size: 14px;">White on Electric Violet</div>
+          <div style="padding: 10px 14px; border-radius: 10px; background: #B4FF3A; color: #2D0075; font-weight: 600; font-size: 14px;">Ink on Glow</div>
+          <div style="padding: 10px 14px; border-radius: 10px; background: #FFE44D; color: #2D0075; font-weight: 600; font-size: 14px;">Ink on Spotlight</div>
+          <div style="padding: 10px 14px; border-radius: 10px; background: #FF2E9A; color: #2D0075; font-weight: 600; font-size: 14px;">Ink on Hot Pink</div>
+          <div style="padding: 10px 14px; border-radius: 10px; background: #F4F2EF; color: #2D0075; font-weight: 600; font-size: 14px;">Ink on Paper</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">Never</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.75; color: #55507a;">
+          <li>White text on Glow, Spotlight or Hot Pink at UI sizes.</li>
+          <li>Glow on Hot Pink, or Hot Pink on Electric Violet, for text.</li>
+          <li>Hot Pink as a background for anything that is not scarcity.</li>
+          <li>More than two accents in one screen or one print surface.</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">Proportion</div>
+        <div style="display: flex; height: 44px; border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
+          <div style="flex: 6; background: #F4F2EF;"></div>
+          <div style="flex: 3; background: #5B14E5;"></div>
+          <div style="flex: .7; background: #B4FF3A;"></div>
+          <div style="flex: .3; background: #FF2E9A;"></div>
+        </div>
+        <div style="font-size: 14px; line-height: 1.55; color: #55507a;">Roughly 60% Paper, 30% Violet, 7% Glow, 3% Hot Pink. Pink should feel rare enough that teens recognise it as “almost gone”.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= TYPE ======================= -->
+  <div id="type" style="max-width: 1120px; margin: 0 auto; padding: 72px 48px 0;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">03 · Typography</div>
+    <h2 style="margin: 0 0 36px; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; letter-spacing: -.02em;">Two faces, one mono</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+      <div style="background: #ffffff; border-radius: 22px; padding: 30px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 14px;">Archivo Black · display</div>
+        <div style="font-family: 'Archivo Black', sans-serif; font-size: 52px; line-height: 1; letter-spacing: -.02em;">Aa Kk 01</div>
+        <div style="margin-top: 14px; font-size: 14px; line-height: 1.6; color: #55507a;">Headlines, hero statements, prices over €100, campaign posters. Tracking −2%. Never below 20 px, never in long paragraphs.</div>
+      </div>
+      <div style="background: #ffffff; border-radius: 22px; padding: 30px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 14px;">Space Grotesk · text &amp; UI</div>
+        <div style="font-size: 52px; line-height: 1; font-weight: 700;">Aa Kk 01</div>
+        <div style="margin-top: 14px; font-size: 14px; line-height: 1.6; color: #55507a;">Everything readable: product titles, body, buttons, forms, app UI. Weights 400 / 500 / 700 only.</div>
+      </div>
+      <div style="background: #ffffff; border-radius: 22px; padding: 30px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 14px;">Space Mono · labels</div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 46px; line-height: 1; font-weight: 700;">Aa Kk 01</div>
+        <div style="margin-top: 14px; font-size: 14px; line-height: 1.6; color: #55507a;">Badges, SKU codes, drop timers, tracking numbers, release dates. Uppercase, tracking +0.12em.</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; background: #ffffff; border-radius: 22px; padding: 30px; display: flex; flex-direction: column; gap: 18px;">
+      <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Scale (web / app)</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; font-size: 14px; color: #55507a;">
+        <div><div style="font-family: 'Archivo Black', sans-serif; font-size: 44px; color: #2D0075; line-height: 1.05;">Display 44/48</div>Hero, campaign</div>
+        <div><div style="font-family: 'Archivo Black', sans-serif; font-size: 30px; color: #2D0075; line-height: 1.1;">H2 30/36</div>Section headings</div>
+        <div><div style="font-weight: 700; font-size: 20px; color: #2D0075; line-height: 1.25;">H3 20/26</div>Card and product titles</div>
+        <div><div style="font-size: 16px; color: #2D0075; line-height: 1.6;">Body 16/26</div>Default reading size</div>
+        <div><div style="font-size: 14px; color: #2D0075; line-height: 1.5;">Small 14/20</div>Meta, help text</div>
+        <div><div style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 12px; letter-spacing: .12em; color: #2D0075;">LABEL 12</div>Badges, codes</div>
+      </div>
+      <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Minimum body size on any surface is 14 px / 12 pt. Teen-facing screens use 16 px body as the floor.</div>
+    </div>
+  </div>
+
+  <!-- ======================= ICONS & BADGES ======================= -->
+  <div id="icons" style="max-width: 1120px; margin: 0 auto; padding: 72px 48px 0;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">04 · Icons, badges, sub-brands</div>
+    <h2 style="margin: 0 0 12px; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; letter-spacing: -.02em;">The badge system does the explaining</h2>
+    <p style="margin: 0 0 36px; max-width: 700px; font-size: 17px; line-height: 1.6; color: #55507a; text-wrap: pretty;">Every product carries exactly one sourcing badge and at most one state badge. This is how a large catalogue stays understandable, and how “official”, “original” and “supplier direct” stay honest.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+      <div style="background: #ffffff; border-radius: 22px; padding: 30px; display: flex; flex-direction: column; gap: 18px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Sourcing badges — one per SKU</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 12px; letter-spacing: .12em;">
+          <span style="padding: 7px 12px; border-radius: 6px; background: #FFE44D; color: #2D0075;">OFFICIAL</span>
+          <span style="padding: 7px 12px; border-radius: 6px; background: #5B14E5; color: #ffffff;">KUMMIE ORIGINAL</span>
+          <span style="padding: 7px 12px; border-radius: 6px; background: #2D0075; color: #ffffff;">LICENSED</span>
+          <span style="padding: 7px 12px; border-radius: 6px; background: #ffffff; border: 2px solid #2D0075; color: #2D0075;">SUPPLIER DIRECT</span>
+        </div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">State badges</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 12px; letter-spacing: .12em;">
+          <span style="padding: 7px 12px; border-radius: 6px; background: #FF2E9A; color: #2D0075;">LIMITED</span>
+          <span style="padding: 7px 12px; border-radius: 6px; background: #B4FF3A; color: #2D0075;">NEW DROP</span>
+          <span style="padding: 7px 12px; border-radius: 6px; background: #B4FF3A; color: #2D0075;">IN STOCK — EU</span>
+          <span style="padding: 7px 12px; border-radius: 6px; background: #ffffff; border: 2px solid #5B14E5; color: #5B14E5;">PRE-ORDER</span>
+        </div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Hot Pink is locked to LIMITED. If a screen shows pink, something is running out.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 30px; display: flex; flex-direction: column; gap: 18px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Icon language</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">All UI icons are drawn on a 24 px grid, 2 px stroke, rounded caps and joins, Ink by default, Glow when active. Only three shapes appear as filled forms: the star, the equaliser bar and the dot.</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 14px;">
+          <div style="width: 60px; height: 60px; border-radius: 14px; background: #F4F2EF; display: flex; align-items: center; justify-content: center;"><div style="width: 26px; height: 26px; background: #2D0075; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div style="width: 60px; height: 60px; border-radius: 14px; background: #F4F2EF; display: flex; align-items: flex-end; justify-content: center; gap: 3px; padding-bottom: 18px;"><div style="width: 5px; height: 10px; border-radius: 3px; background: #2D0075;"></div><div style="width: 5px; height: 22px; border-radius: 3px; background: #2D0075;"></div><div style="width: 5px; height: 15px; border-radius: 3px; background: #2D0075;"></div></div>
+          <div style="width: 60px; height: 60px; border-radius: 14px; background: #F4F2EF; display: flex; align-items: center; justify-content: center;"><div style="width: 26px; height: 26px; border-radius: 50%; border: 3px solid #2D0075;"></div></div>
+          <div style="width: 60px; height: 60px; border-radius: 14px; background: #F4F2EF; display: flex; align-items: center; justify-content: center;"><div style="width: 22px; height: 30px; border: 3px solid #2D0075; border-radius: 4px;"></div></div>
+          <div style="width: 60px; height: 60px; border-radius: 14px; background: #F4F2EF; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 24px; border: 3px solid #2D0075; border-radius: 10px 10px 10px 2px;"></div></div>
+        </div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; color: #6B5FA0;">star · equaliser · dot/alert · photocard · chingu bubble</div>
+      </div>
+
+      <div style="grid-column: 1 / -1; background: #ffffff; border-radius: 22px; padding: 30px; display: flex; flex-direction: column; gap: 18px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Sub-brand lockups</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px;">
+          <div style="border: 1px solid #e6e2da; border-radius: 14px; padding: 16px 18px;"><span style="font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #2D0075;">KUMMIE</span> <span style="font-weight: 500; font-size: 19px; color: #5B14E5;">Shop</span></div>
+          <div style="border: 1px solid #e6e2da; border-radius: 14px; padding: 16px 18px;"><span style="font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #2D0075;">KUMMIE</span> <span style="font-weight: 500; font-size: 19px; color: #5B14E5;">Magazine</span></div>
+          <div style="border: 1px solid #e6e2da; border-radius: 14px; padding: 16px 18px;"><span style="font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #2D0075;">KUMMIE</span> <span style="font-weight: 500; font-size: 19px; color: #5B14E5;">Teen</span></div>
+          <div style="border: 1px solid #e6e2da; border-radius: 14px; padding: 16px 18px;"><span style="font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #2D0075;">KUMMIE</span> <span style="font-weight: 500; font-size: 19px; color: #5B14E5;">Collect</span></div>
+          <div style="border: 1px solid #e6e2da; border-radius: 14px; padding: 16px 18px;"><span style="font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #2D0075;">KUMMIE</span> <span style="font-weight: 500; font-size: 19px; color: #5B14E5;">Club</span></div>
+          <div style="border: 1px solid #e6e2da; border-radius: 14px; padding: 16px 18px;"><span style="font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #2D0075;">KUMMIE</span> <span style="font-weight: 500; font-size: 19px; color: #5B14E5;">Picks</span></div>
+          <div style="border: 1px solid #e6e2da; border-radius: 14px; padding: 16px 18px;"><span style="font-weight: 500; font-size: 19px; color: #5B14E5;">Ask</span> <span style="font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #2D0075;">KUMMIE</span></div>
+          <div style="border: 1px solid #e6e2da; border-radius: 14px; padding: 16px 18px;"><span style="font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #2D0075;">KUMMIE</span> <span style="font-weight: 500; font-size: 19px; color: #5B14E5;">Originals</span></div>
+        </div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Sub-brand names are set in Space Grotesk Medium at the same optical size as the wordmark, always in Electric Violet, always after KUMMIE — except Ask KUMMIE.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= SLOGANS ======================= -->
+  <div id="voice" style="max-width: 1120px; margin: 0 auto; padding: 72px 48px 0;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">05 · Slogans &amp; voice</div>
+    <h2 style="margin: 0 0 36px; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; letter-spacing: -.02em;">One tagline, one rhythm</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+      <div style="grid-column: 1 / -1; background: #5B14E5; border-radius: 22px; padding: 44px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #B4FF3A;">Primary</div>
+        <div style="font-family: 'Archivo Black', sans-serif; font-size: 46px; line-height: 1.05; color: #ffffff;">Your K-pop Chingu</div>
+        <div style="font-size: 20px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: #B4FF3A;">Discover. Collect. Connect.</div>
+        <div style="max-width: 640px; font-size: 16px; line-height: 1.6; color: #ffffff;">A friendly European place to discover, collect and enjoy K-pop. Chingu (친구) is the Korean word for friend — the tagline carries the Korean connection, the name does not claim it.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Section slogans</div>
+        <div style="display: flex; flex-direction: column; gap: 14px; font-size: 15px; line-height: 1.5;">
+          <div><strong>KUMMIE Magazine</strong><br><span style="color: #55507a;">Your guide to K-pop, collecting and fan life.</span></div>
+          <div><strong>KUMMIE Teen</strong><br><span style="color: #55507a;">K-pop from a young fan's perspective.</span></div>
+          <div><strong>Ask KUMMIE</strong><br><span style="color: #55507a;">Your personal K-pop chingu.</span></div>
+          <div><strong>KUMMIE Collect</strong><br><span style="color: #55507a;">Build your collection. Find what you're missing.</span></div>
+          <div><strong>KUMMIE Club</strong><br><span style="color: #55507a;">Points, early access, member drops.</span></div>
+          <div><strong>KUMMIE Originals</strong><br><span style="color: #55507a;">Designed by us, for collectors.</span></div>
+        </div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Campaign lines</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 15px; line-height: 1.85; color: #2D0075;">
+          <li>Comeback? We're already packing.</li>
+          <li>Every photocard deserves a home.</li>
+          <li>Ships from Europe. No surprise customs.</li>
+          <li>Start your collection with one album.</li>
+          <li>Limited means limited.</li>
+          <li>Ask us anything about K-pop. Really.</li>
+        </ul>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Voice rules</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>Talk like a friend who knows the catalogue, not like a brand.</li>
+          <li>Short sentences. No hype words we cannot prove.</li>
+          <li>Prices, shipping and stock are always stated plainly.</li>
+          <li>Korean terms are used, then explained once: chingu, comeback, photocard, lightstick.</li>
+          <li>Never imply an artist or label endorses KUMMIE.</li>
+          <li>In Teen, no pressure language: no “last chance”, no countdown anxiety.</li>
+          <li>Sponsored or affiliate content is labelled in plain words.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= BANNERS ======================= -->
+  <div id="banners" style="max-width: 1120px; margin: 0 auto; padding: 72px 48px 0;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">06 · Site banners</div>
+    <h2 style="margin: 0 0 12px; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; letter-spacing: -.02em;">Three banner formats</h2>
+    <p style="margin: 0 0 36px; max-width: 700px; font-size: 17px; line-height: 1.6; color: #55507a; text-wrap: pretty;">Hero, category strip and promo bar. Product photography always sits on a flat violet or Ink panel — never a gradient, never a collage of artist images.</p>
+
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <div style="background: #ffffff; border-radius: 22px; padding: 22px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 14px;">Hero banner · 16:5 desktop, 4:5 mobile crop</div>
+        <div style="background: #5B14E5; border-radius: 16px; padding: 40px; display: flex; align-items: center; justify-content: space-between; gap: 28px; flex-wrap: wrap;">
+          <div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: .14em; color: #B4FF3A;">NEW DROP · COMEBACK WEEK</div>
+            <div style="font-family: 'Archivo Black', sans-serif; font-size: 42px; line-height: 1.02; color: #ffffff;">Comeback?<br>We're already packing.</div>
+            <div style="font-size: 16px; line-height: 1.55; color: #ffffff; max-width: 420px;">Pre-order albums, official merch and everything you need to keep them safe.&nbsp;</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <span style="padding: 13px 22px; border-radius: 999px; background: #B4FF3A; color: #2D0075; font-weight: 700; font-size: 15px;">Shop pre-orders</span>
+              <span style="padding: 13px 22px; border-radius: 999px; border: 2px solid #ffffff; color: #ffffff; font-weight: 700; font-size: 15px;">Comeback radar</span>
+            </div>
+          </div>
+          <div style="flex: 0 1 300px; height: 210px; border-radius: 14px; background: repeating-linear-gradient(135deg, rgba(255,255,255,.14) 0 10px, rgba(255,255,255,.06) 10px 20px); display: flex; align-items: center; justify-content: center;">
+            <span style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .1em; color: #ffffff; text-align: center; padding: 0 16px;">product shot<br>(album + accessories)</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 22px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 14px;">Category strip · 3:2 tiles</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px;">
+          <div style="border-radius: 14px; background: #2D0075; padding: 22px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="width: 26px; height: 26px; background: #B4FF3A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+            <div style="font-family: 'Archivo Black', sans-serif; font-size: 20px; color: #ffffff;">Albums</div>
+          </div>
+          <div style="border-radius: 14px; background: #5B14E5; padding: 22px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; align-items: flex-end; gap: 3px; height: 26px;"><div style="width: 5px; height: 12px; border-radius: 3px; background: #B4FF3A;"></div><div style="width: 5px; height: 24px; border-radius: 3px; background: #B4FF3A;"></div><div style="width: 5px; height: 17px; border-radius: 3px; background: #B4FF3A;"></div></div>
+            <div style="font-family: 'Archivo Black', sans-serif; font-size: 20px; color: #ffffff;">Lightsticks</div>
+          </div>
+          <div style="border-radius: 14px; background: #FFE44D; padding: 22px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="width: 20px; height: 28px; border: 3px solid #2D0075; border-radius: 4px;"></div>
+            <div style="font-family: 'Archivo Black', sans-serif; font-size: 20px; color: #2D0075;">Photocards</div>
+          </div>
+          <div style="border-radius: 14px; background: #FF2E9A; padding: 22px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 11px; letter-spacing: .12em; color: #2D0075;">LIMITED</div>
+            <div style="font-family: 'Archivo Black', sans-serif; font-size: 20px; color: #2D0075;">Last units</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 22px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 14px;">Promo bar · 48 px, site-wide</div>
+        <div style="background: #B4FF3A; border-radius: 10px; padding: 14px 20px; display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;">
+          <div style="width: 16px; height: 16px; background: #2D0075; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+          <span style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #2D0075;">&nbsp;HURRY!!! ORDER IT NOW * COLLECT MORE KUMMIES AND WIN AWARD * FREE DELIVERY OVER 79.99 EUR</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= SOCIAL ======================= -->
+  <div id="social" style="max-width: 1120px; margin: 0 auto; padding: 72px 48px 0;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">07 · Social profiles</div>
+    <h2 style="margin: 0 0 12px; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; letter-spacing: -.02em;">Same avatar everywhere, different job per channel</h2>
+    <p style="margin: 0 0 24px; max-width: 760px; font-size: 17px; line-height: 1.6; color: #55507a; text-wrap: pretty;">Avatar is always the violet star monogram on a square, exported at 1000×1000 and above. Handle is <strong>@kummie</strong> where available, otherwise <strong>@kummie.eu</strong>. Every bio ends with the same link.</p>
+
+    <div style="background: #ffffff; border-radius: 22px; padding: 26px; margin-bottom: 20px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
+      <div style="width: 104px; height: 104px; border-radius: 26px; background: #5B14E5; display: flex; align-items: center; justify-content: center;">
+        <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; width: 80px; height: 80px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+          <span style="position: relative; font-family: 'Archivo Black', sans-serif; font-size: 36px; color: #ffffff;">K</span>
+        </div>
+      </div>
+      <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Universal profile kit</div>
+        <div style="font-size: 15px; line-height: 1.6; color: #55507a;">Square avatar (violet ground, pink star, white K) · 1:1, 4:5 and 9:16 export crops of every campaign · cover art = flat violet panel with the stacked lockup, safe margin 12% on all sides · display name “KUMMIE — Your K-pop Chingu”.</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px;">
+
+      <div style="background: #ffffff; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #5B14E5; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 30px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div><div style="font-weight: 700; font-size: 17px;">Instagram</div><div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #6B5FA0;">@kummie · shop window</div></div>
+        </div>
+        <div style="background: #F4F2EF; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.6; color: #2D0075;">Your K-pop Chingu 💜 Albums, merch &amp; collector supplies shipped from Europe.<br>Comeback radar in stories.<br>kummie.eu</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Grid: 4:5 product posts on violet, carousels for collecting guides, Reels for unboxings. Feed alternates violet, Paper, violet so the profile reads as a pattern.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #5B14E5; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 30px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div><div style="font-weight: 700; font-size: 17px;">TikTok</div><div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #6B5FA0;">@kummie · discovery engine</div></div>
+        </div>
+        <div style="background: #F4F2EF; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.6; color: #2D0075;">your k-pop chingu 🌟 unboxings, collecting hacks, comeback news. europe → your door. kummie.eu</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">9:16 only. Brand appears in the first 0.5 s as the star snapping in with the equaliser beat. Captions in Space Grotesk, never covering the bottom 20%. Music must be licensed for commercial use.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #5B14E5; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 30px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div><div style="font-weight: 700; font-size: 17px;">YouTube</div><div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #6B5FA0;">@kummie · long-form trust</div></div>
+        </div>
+        <div style="background: #F4F2EF; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.6; color: #2D0075;">KUMMIE — Your K-pop Chingu. Honest reviews, collecting guides and unboxings from a European K-pop shop. New video every week.</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Thumbnail rule: violet panel, one product, headline in Archivo Black max 4 words, star bottom-left. Shorts reuse the TikTok cut. Channel banner keeps the lockup inside the central safe area.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #5B14E5; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 30px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div><div style="font-weight: 700; font-size: 17px;">Facebook</div><div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #6B5FA0;">/kummie.eu · parents &amp; gifting</div></div>
+        </div>
+        <div style="background: #F4F2EF; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.6; color: #2D0075;">KUMMIE — Your K-pop Chingu. A European K-pop shop: official albums, merch and collector supplies. Clear prices, EU shipping, easy returns.</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Calmer tone, no slang. Gift guides, delivery and returns information, event announcements. This is the channel where the shop looks like a proper retailer.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #5B14E5; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 30px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div><div style="font-weight: 700; font-size: 17px;">Snapchat</div><div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #6B5FA0;">@kummie · teen native</div></div>
+        </div>
+        <div style="background: #F4F2EF; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.6; color: #2D0075;">your k-pop chingu ⭐ new drops, restocks &amp; behind-the-packing. swipe up for the shop.</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Vertical, fast, low production. Packing clips, restock alerts, sticker giveaways. A branded sticker pack (star, equaliser, “LIMITED”) is the cheapest reach we can buy. No commercial pressure language in teen-facing content.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #5B14E5; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 30px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div><div style="font-weight: 700; font-size: 17px;">Viber</div><div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #6B5FA0;">KUMMIE Community · Bulgaria first</div></div>
+        </div>
+        <div style="background: #F4F2EF; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.6; color: #2D0075;">KUMMIE — Your K-pop Chingu 🇧🇬 Order updates, restock alerts and community news. Български и English.</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Highest-value channel at launch because of Bulgarian reach: a public community for drops plus 1:1 customer service. Order notifications must be opt-in and separate from marketing.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #5B14E5; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 30px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div><div style="font-weight: 700; font-size: 17px;">WhatsApp</div><div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #6B5FA0;">Business · support &amp; tracking</div></div>
+        </div>
+        <div style="background: #F4F2EF; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.6; color: #2D0075;">KUMMIE Support. Questions about your order, delivery or returns? Write to us — we answer 10:00–18:00 EET.</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Service, not marketing: order status, pre-order updates, return instructions. Templates use the wordmark in text form, no images. Under-16 contacts are answered but never marketed to.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #5B14E5; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 30px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div><div style="font-weight: 700; font-size: 17px;">Signal</div><div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #6B5FA0;">Collector circle · invite only</div></div>
+        </div>
+        <div style="background: #F4F2EF; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.6; color: #2D0075;">KUMMIE Collectors. A small group for rare restocks, grails and swap talk. Invite from your Club account.</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Deliberately small and adult-only. Privacy-first channel for KUMMIE Club members. Text-only brand presence: group name plus the star as group photo.</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #5B14E5; display: flex; align-items: center; justify-content: center;"><div style="width: 30px; height: 30px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div></div>
+          <div><div style="font-weight: 700; font-size: 17px;">WeChat</div><div style="font-family: 'Space Mono', monospace; font-size: 12px; color: #6B5FA0;">Supplier &amp; OEM channel</div></div>
+        </div>
+        <div style="background: #F4F2EF; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.6; color: #2D0075;">KUMMIE · EU buyer. Original design accessories, collector supplies and packaging. Sampling and OEM enquiries welcome.</div>
+        <div style="font-size: 14px; line-height: 1.6; color: #55507a;">Not a consumer channel. Used for accessory and packaging sourcing, sampling and production follow-up. Every brief states: original KUMMIE design, no third-party IP.</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; background: #2D0075; border-radius: 20px; padding: 26px; color: #ffffff; font-size: 15px; line-height: 1.65;">
+      <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #B4FF3A; margin-bottom: 10px;">Rules that apply to all nine channels</div>
+      <ul style="margin: 0; padding-left: 18px;">
+        <li>No artist photos, album artwork, group logos or fan-cam footage without documented rights.</li>
+        <li>Paid or affiliate posts are labelled clearly, in the local language, before the fold.</li>
+        <li>Teen-facing content carries no scarcity pressure, no countdowns, no direct messaging with minors.</li>
+        <li>One person owns publishing; every account uses two-factor authentication.</li>
+        <li>Same three posts never go out identically on all channels — recut per format.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ======================= WEB SPEC ======================= -->
+  <div id="web" style="max-width: 1120px; margin: 0 auto; padding: 72px 48px 0;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">08 · Instructions for web developers</div>
+    <h2 style="margin: 0 0 36px; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; letter-spacing: -.02em;">Build spec — website</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+      <div style="grid-column: 1 / -1; background: #2D0075; border-radius: 22px; padding: 28px; overflow-x: auto;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #B4FF3A; margin-bottom: 14px;">Design tokens — ship these as CSS custom properties</div>
+        <div style="font-family: 'Space Mono', monospace; font-size: 13px; line-height: 1.85; color: #ffffff; white-space: pre;">--kum-violet:   #5B14E5;   /* brand ground        */
+--kum-ink:      #2D0075;   /* all text, no black  */
+--kum-glow:     #B4FF3A;   /* primary action      */
+--kum-pink:     #FF2E9A;   /* LIMITED only        */
+--kum-spotlight:#FFE44D;   /* OFFICIAL, editorial */
+--kum-paper:    #F4F2EF;   /* page background     */
+--kum-white:    #FFFFFF;
+
+--kum-font-display: "Archivo Black", system-ui, sans-serif;
+--kum-font-text:    "Space Grotesk", system-ui, sans-serif;
+--kum-font-mono:    "Space Mono", ui-monospace, monospace;
+
+--kum-radius-sm: 8px;   --kum-radius-md: 14px;
+--kum-radius-lg: 22px;  --kum-radius-pill: 999px;
+--kum-space: 4px;       /* all spacing = multiples of 4 */
+--kum-shadow: 0 18px 46px -24px rgba(45,0,117,.28);</div>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Structure</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>Responsive-first, PWA-capable. No native app in stage 1.</li>
+          <li>Top-level nav: Shop · Collect · Magazine · Teen · Club. Search is always visible.</li>
+          <li>Breakpoints 360 / 768 / 1024 / 1440. Content max-width 1120 px.</li>
+          <li>12-column grid desktop, 4-column mobile, 24 px gutters.</li>
+          <li>Promo bar is a dismissible region, not a fixed overlay.</li>
+          <li>Every product page renders: version, official/original classification, dispatch estimate, delivery region, manufacturer / responsible-person block, safety information, return exceptions.</li>
+        </ul>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Components</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>Buttons: pill, Glow with Ink text for primary; outlined Ink for secondary; never pink.</li>
+          <li>Badges are a single component with a fixed enum — no free-text badges.</li>
+          <li>Product card: 3:4 image, title 2 lines max, one sourcing badge, price, one state badge.</li>
+          <li>Star monogram is an inline SVG sprite, one file, currentColor-aware.</li>
+          <li>Equaliser is a CSS-animated component, paused by default, animating only on hover/active.</li>
+          <li>Forms: 44 px minimum touch height, labels above fields, errors in Ink with an icon, never colour alone.</li>
+        </ul>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Accessibility &amp; performance</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>WCAG 2.2 AA: 4.5:1 for text under 24 px. Use the approved pairs in section 02 only.</li>
+          <li>Visible focus ring: 3 px Glow on violet, 3 px Violet on Paper.</li>
+          <li>Respect prefers-reduced-motion — equaliser and star animations stop.</li>
+          <li>Self-host the three fonts, woff2, font-display: swap, subset Latin + Cyrillic.</li>
+          <li>Images: AVIF/WebP, lazy below the fold, explicit width and height.</li>
+          <li>Targets: LCP under 2.5 s on 4G, CLS under 0.1.</li>
+          <li>Full Bulgarian and English localisation from day one; EUR and BGN display.</li>
+        </ul>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Non-negotiable</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>Total price, shipping and delivery window visible before checkout — no surprise customs.</li>
+          <li>Cookie consent before any non-essential script; analytics loaded after consent.</li>
+          <li>Withdrawal, returns, guarantee and complaint pages linked from every footer.</li>
+          <li>Teen section has no comments, no DMs, no user profiles, no location data.</li>
+          <li>No artist imagery in templates or placeholders.</li>
+          <li>Hot Pink is wired to one boolean: product.isLimited.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= APP SPEC ======================= -->
+  <div id="app" style="max-width: 1120px; margin: 0 auto; padding: 72px 48px 96px;">
+    <div style="font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #6B5FA0; margin-bottom: 10px;">09 · Instructions for mobile app developers</div>
+    <h2 style="margin: 0 0 12px; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; letter-spacing: -.02em;">Build spec — app</h2>
+    <p style="margin: 0 0 36px; max-width: 700px; font-size: 17px; line-height: 1.6; color: #55507a; text-wrap: pretty;">The app is a retention tool, not a mobile copy of the shop. It ships only after the web business proves repeat purchase. Its job: comeback notifications, collection, wishlist, drops, Ask KUMMIE.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Icon &amp; launch</div>
+        <div style="display: flex; gap: 14px; align-items: flex-end;">
+          <div style="width: 84px; height: 84px; border-radius: 20px; background: #5B14E5; display: flex; align-items: center; justify-content: center;">
+            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+              <div style="position: absolute; width: 64px; height: 64px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+              <span style="position: relative; font-family: 'Archivo Black', sans-serif; font-size: 30px; color: #ffffff;">K</span>
+            </div>
+          </div>
+          <div style="width: 84px; height: 84px; border-radius: 42px; background: #5B14E5; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 52px; height: 52px; transform: rotate(-20deg); background: #FF2E9A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+          </div>
+        </div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>Icon: violet ground, pink star at −20°, white K. Adaptive icon keeps the star inside the 66% safe circle; the K is dropped on the round mask.</li>
+          <li>Splash: violet, stacked lockup centred, equaliser bars animate once (600 ms) then hand off.</li>
+          <li>App name on store: “KUMMIE — K-pop Shop &amp; Collect”. Subtitle: “Your K-pop Chingu”.</li>
+        </ul>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Navigation &amp; layout</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>Five tabs: Home · Shop · Collection · Drops · Chingu (Ask KUMMIE).</li>
+          <li>Tab bar: Paper in light mode, Ink in dark mode; active icon Violet on light, Glow on dark.</li>
+          <li>Minimum touch target 44×44 pt / 48×48 dp. Base spacing 4 pt.</li>
+          <li>Dark mode is first-class: Ink background, Paper text, Glow actions.</li>
+          <li>Type scale mirrors web and must honour OS dynamic type up to 200%.</li>
+          <li>Native components on each platform — no cross-platform imitation of the other OS.</li>
+        </ul>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Motion &amp; sound</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>One signature animation: the equaliser. Used for loading, live drops and Ask KUMMIE thinking.</li>
+          <li>Star rotates ±6° maximum on tap. It never spins.</li>
+          <li>Transitions 180–240 ms, ease-out. No bounce, no parallax.</li>
+          <li>No sound by default. Optional single tick on drop-countdown only.</li>
+          <li>Honour reduced-motion and reduced-transparency settings.</li>
+        </ul>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Notifications</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>Four opt-in categories, separately toggleable: comebacks, restocks, order status, Club drops.</li>
+          <li>Copy pattern: “⭐ Stray Kids comeback — pre-orders open 10:00.” Under 60 characters.</li>
+          <li>Order status is transactional and never bundled with marketing.</li>
+          <li>Quiet hours 22:00–08:00 local, no exceptions for drops.</li>
+          <li>Maximum two marketing pushes per week per user.</li>
+        </ul>
+      </div>
+
+      <div style="background: #ffffff; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6B5FA0;">Data, age &amp; compliance</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: #55507a;">
+          <li>Collection and wishlist data sync through the same API as web — one customer record.</li>
+          <li>Age gate at signup; minors get no personalised advertising and no public profile.</li>
+          <li>No third-party ad SDKs in v1. Analytics is consented, aggregated and documented.</li>
+          <li>Store listing declares data use truthfully; screenshots use original KUMMIE product photography only.</li>
+          <li>Ask KUMMIE answers are labelled as recommendations and must not invent stock or release dates.</li>
+        </ul>
+      </div>
+
+      <div style="background: #5B14E5; border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 12px; color: #ffffff;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #B4FF3A;">Handover checklist</div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8;">
+          <li>Logo package: SVG (horizontal, stacked, monogram, one-colour), PNG @1x/@2x/@3x, ICO favicon set.</li>
+          <li>Icon set: 24 px SVG sprite, Ink and white.</li>
+          <li>Token file: CSS custom properties, iOS colour set, Android colors.xml.</li>
+          <li>Font licences: self-hosted woff2 plus the original OFL files.</li>
+          <li>Badge enum with copy in English and Bulgarian.</li>
+          <li>Social export templates: 1:1, 4:5, 9:16.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top: 32px; font-size: 14px; line-height: 1.6; color: #6B5FA0; max-width: 760px; text-wrap: pretty;">Wordmark and lockups here use Archivo Black and Space Grotesk (SIL Open Font License) as production-ready stand-ins. Before trademark filing, the K and the wordmark should be redrawn as custom outlines so the mark is ownable. All shapes are original geometry with no third-party IP.</div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.next/
+.expo/
+.turbo/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# Local reference material that must not be committed (e.g. third-party game package)
+incoming/
