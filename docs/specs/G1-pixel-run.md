@@ -44,7 +44,7 @@ HTML5 Canvas + Web Audio game), `kummie-bridge.d.ts`, `CLAUDE_INTEGRATION_GUIDE.
 | MV stage themes | Original worlds (e.g. Sofia rooftop, neon arcade, collector's desk, concert hall, night train) |
 | Member quotes and autographs | Short original card texts in KUMMIE voice; no signatures |
 | "Official binder" | "KUMMIE Pixel Album" — clearly a game album, never "official" |
-| Upload-your-MP3 feature | Remove (it invites playing copyrighted audio in our app) |
+| Upload-your-MP3 feature (with re-processing of the audio) | Replace with the on-device **"Play your own music"** mode in section F: analysis only, audio played unaltered, nothing uploaded |
 | "Prepare ZIP for Claude" export | Remove (developer tool) |
 
 ## C. Brand re-skin (from `docs/brand/README.md`)
@@ -107,6 +107,35 @@ Rules:
 - No public leaderboards or profiles (minors). No Kummies or discounts for playing in this
   milestone — any reward link to commerce is a separate owner decision.
 - Account deletion removes game data.
+
+## F. "Play your own music" mode (D-014)
+
+Model: like Audiosurf / Beat Hazard — the player's own audio file is **analysed on the device to
+generate a level**; the audio itself is never modified, stored by us or shared.
+
+How it works
+- Inside the game HTML, a file input (`accept="audio/*"`) lets the player pick a file from the
+  phone. Android WebView file chooser must be enabled in the WebView config. The file never passes
+  through React Native or the network.
+- The game decodes it with Web Audio (`decodeAudioData`), runs the existing beat/energy analyser
+  and generates the platforms, gaps and obstacles from the beat map.
+- Playback is the **original audio, unaltered**: no chiptune conversion, no remix, no pitch or
+  tempo change, no filters. Difficulty comes from level density, not from changing the music.
+  Game sound effects may play on top.
+- Optional local cache of the generated beat map (numbers only, keyed by a file hash) so a replay
+  starts instantly. The audio is never cached or copied by the app.
+
+Hard rules
+- Nothing is uploaded: no audio, no file name, no ID3 tags (title, artist, album) leave the device.
+  The server only receives the stage result for a custom track as `stage_id = "custom"` plus rank
+  and times.
+- Rewards for custom tracks are cards of **our original characters**, never showing artist or song
+  names, even if the file's tags contain them.
+- No preset levels, lists, suggestions, lyrics or artwork for real songs anywhere in the app or
+  store listing. Copy says "your own audio files" and never hints where to download music.
+- No export, save-as, share or recording of gameplay with the audio.
+- Store listing and marketing describe the feature only as "play with your own music".
+- Before the Play Store release, a short review by an IP lawyer (tracked in M6).
 
 ## Definition of done
 
