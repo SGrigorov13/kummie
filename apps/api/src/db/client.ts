@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
+// pg is CommonJS: the default import is the reliable way to reach Pool from ESM.
 import pg from "pg";
 import * as schema from "./schema";
 
@@ -14,6 +15,7 @@ export type DatabaseHandle = {
 };
 
 export function createDatabase(url: string, poolMax: number): DatabaseHandle {
+  // oxlint-disable-next-line import/no-named-as-default-member
   const pool = new pg.Pool({
     connectionString: url,
     max: poolMax,

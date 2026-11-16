@@ -18,7 +18,8 @@
     "typescript/no-non-null-assertion": "warn",
     "import/no-cycle": "error",
     "import/no-unassigned-import": "off",
-    "unicorn/consistent-function-scoping": "off"
+    "unicorn/consistent-function-scoping": "off",
+    "react/style-prop-object": "off"
   },
   "ignorePatterns": [
     "**/node_modules/**",
