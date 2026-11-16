@@ -18,6 +18,12 @@ const EnvSchema = z.object({
   /** Shared hosting: keep the pool small (ARCHITECTURE §10, ≤ 10). */
   DB_POOL_MAX: z.coerce.number().int().min(1).max(10).default(5),
   LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
+  /** 32 random bytes, base64 — encrypts staff 2FA secrets. Without it the staff API is off. */
+  STAFF_SECRET_KEY: z.string().optional(),
+  /** Comma-separated origins of the admin app allowed to call the staff API with cookies. */
+  ADMIN_ORIGINS: z.string().default("http://localhost:5173,http://127.0.0.1:5173"),
+  /** Secure (HTTPS-only) cookies; defaults to on in production. */
+  COOKIE_SECURE: z.enum(["true", "false"]).optional(),
   /** Public base URL of uploaded media (product images). */
   MEDIA_BASE_URL: z.string().min(1).default("/media"),
   /** Folder with Drizzle SQL migrations, relative to the app root. */

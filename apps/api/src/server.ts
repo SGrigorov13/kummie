@@ -1,4 +1,5 @@
 import { buildApp } from "./app";
+import { createSecretBox } from "./auth/crypto";
 import { createPgCatalogueRepository } from "./catalogue/pg-repository";
 import { loadConfig } from "./config";
 import { createDatabase, type DatabaseHandle } from "./db/client";
@@ -32,7 +33,21 @@ async function main() {
   };
 
   const catalogue = database ? createPgCatalogueRepository(database.db, config.MEDIA_BASE_URL) : undefined;
-  const app = buildApp({ logger, checkDb, catalogue });
+  const admin =
+    database && config.STAFF_SECRET_KEY
+      ? {
+          db: database.db,
+          secretBox: createSecretBox(config.STAFF_SECRET_KEY),
+          allowedOrigins: config.ADMIN_ORIGINS.split(",")
+            .map((o) => o.trim())
+            .filter(Boolean),
+          cookieSecure: config.COOKIE_SECURE
+            ? config.COOKIE_SECURE === "true"
+            : config.NODE_ENV === "production",
+        }
+      : undefined;
+  const app = buildApp({ logger, checkDb, catalogue, admin });
+  if (database && !admin) app.log.warn("STAFF_SECRET_KEY is not set — the staff API (admin panel) is off");
   if (!database)
     app.log.warn(
       "DATABASE_URL is not set — /health will report db: not_configured (see apps/api/.env.example)",

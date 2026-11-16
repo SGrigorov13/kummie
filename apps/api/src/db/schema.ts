@@ -184,3 +184,67 @@ export const productKeywords = pgTable(
   },
   (t) => [primaryKey({ columns: [t.productId, t.keyword] })],
 );
+
+// ---------- Staff, sessions, audit and settings ----------
+
+export const staffRoleEnum = pgEnum("staff_role", ["admin", "hub", "content"]);
+
+/** Internal users of the admin panel. 2FA (TOTP) is mandatory (ARCHITECTURE §8). */
+export const staffUsers = pgTable(
+  "staff_users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull(),
+    name: text("name").notNull(),
+    role: staffRoleEnum("role").notNull(),
+    /** argon2id hash. */
+    passwordHash: text("password_hash").notNull(),
+    /** TOTP secret, encrypted with STAFF_SECRET_KEY (AES-256-GCM). Null until enrolled. */
+    totpSecretEnc: text("totp_secret_enc"),
+    totpEnabled: boolean("totp_enabled").notNull().default(false),
+    /** Last accepted TOTP time step, so a code can never be used twice. */
+    totpLastStep: integer("totp_last_step"),
+    active: boolean("active").notNull().default(true),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("staff_users_email_unique").on(sql`lower(${t.email})`)],
+);
+
+/** Server-side staff sessions; only the SHA-256 of the cookie token is stored. */
+export const staffSessions = pgTable(
+  "staff_sessions",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    staffId: uuid("staff_id")
+      .notNull()
+      .references(() => staffUsers.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    userAgent: text("user_agent"),
+  },
+  (t) => [index("staff_sessions_staff_idx").on(t.staffId)],
+);
+
+/** Append-only record of staff changes to products, orders, refunds, Kummies and settings. */
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    staffId: uuid("staff_id").references(() => staffUsers.id),
+    action: text("action").notNull(),
+    entity: text("entity").notNull(),
+    entityId: text("entity_id"),
+    data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("audit_log_entity_idx").on(t.entity, t.entityId), index("audit_log_at_idx").on(t.at)],
+);
+
+/** Key/value business settings edited in admin (company data, НАП numbers, OSS date, fees…). */
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").$type<unknown>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: uuid("updated_by").references(() => staffUsers.id),
+});

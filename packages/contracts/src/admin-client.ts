@@ -1,0 +1,79 @@
+import type { z } from "zod";
+import {
+  AdminProduct,
+  AdminProductList,
+  CompanySettings,
+  LoginResponse,
+  OkResponse,
+  Staff,
+  type ProductInput,
+} from "./admin";
+import { CategoryList, GroupList } from "./catalogue";
+import { ApiRequestError, type FetchLike } from "./client";
+
+/**
+ * Client for the staff API. Uses the HTTP-only session cookie (credentials: "include"); every
+ * request is JSON, which forces a CORS preflight and keeps form-based CSRF out.
+ */
+export function createAdminClient({
+  baseUrl,
+  fetch: fetchImpl = fetch,
+}: {
+  baseUrl: string;
+  fetch?: FetchLike;
+}) {
+  const base = baseUrl.replace(/\/$/, "");
+
+  async function call<T extends z.ZodType>(
+    method: "GET" | "POST" | "PUT",
+    path: string,
+    schema: T,
+    body?: unknown,
+  ): Promise<z.output<T>> {
+    const response = await fetchImpl(`${base}${path}`, {
+      method,
+      credentials: "include",
+      headers: {
+        accept: "application/json",
+        ...(body === undefined ? {} : { "content-type": "application/json" }),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const text = await response.text();
+    const json: unknown = text ? JSON.parse(text) : null;
+    if (!response.ok) {
+      const err = json as { error?: string; message?: string } | null;
+      throw new ApiRequestError(
+        response.status,
+        err?.error ? { error: err.error, message: err.message ?? err.error, ...(json as object) } : null,
+      );
+    }
+    return schema.parse(json);
+  }
+
+  return {
+    login: (email: string, password: string) =>
+      call("POST", "/admin-api/auth/login", LoginResponse, { email, password }),
+    verifyTotp: (challenge: string, code: string) =>
+      call("POST", "/admin-api/auth/totp", Staff, { challenge, code }),
+    enrollTotp: (challenge: string, code: string) =>
+      call("POST", "/admin-api/auth/enroll", Staff, { challenge, code }),
+    logout: () => call("POST", "/admin-api/auth/logout", OkResponse, {}),
+    me: () => call("GET", "/admin-api/me", Staff),
+    getCompany: () => call("GET", "/admin-api/settings/company", CompanySettings),
+    saveCompany: (settings: CompanySettings) =>
+      call("PUT", "/admin-api/settings/company", CompanySettings, settings),
+    listProducts: (q?: string) =>
+      call("GET", `/admin-api/products${q ? `?q=${encodeURIComponent(q)}` : ""}`, AdminProductList),
+    getProduct: (id: string) => call("GET", `/admin-api/products/${id}`, AdminProduct),
+    createProduct: (input: ProductInput) => call("POST", "/admin-api/products", AdminProduct, input),
+    updateProduct: (id: string, input: ProductInput) =>
+      call("PUT", `/admin-api/products/${id}`, AdminProduct, input),
+    publishProduct: (id: string) => call("POST", `/admin-api/products/${id}/publish`, AdminProduct, {}),
+    unpublishProduct: (id: string) => call("POST", `/admin-api/products/${id}/unpublish`, AdminProduct, {}),
+    categories: () => call("GET", "/catalogue/categories", CategoryList),
+    groups: () => call("GET", "/catalogue/groups", GroupList),
+  };
+}
+
+export type AdminClient = ReturnType<typeof createAdminClient>;
