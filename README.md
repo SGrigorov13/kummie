@@ -8,6 +8,7 @@ European K-pop commerce, media and collector platform, launching from Bulgaria.
 - Business concept (leading): [docs/concept/KUMMIE_Platform_Concept_v3.md](docs/concept/KUMMIE_Platform_Concept_v3.md)
 - Brand: [docs/brand/README.md](docs/brand/README.md)
 - Instructions for Claude Code: [CLAUDE.md](CLAUDE.md)
+- **Ръководство за собственика (BG):** [docs/owner-guide.md](docs/owner-guide.md)
 - Local setup (Windows, PowerShell): [docs/dev-setup.md](docs/dev-setup.md)
 
 ## Quick start
