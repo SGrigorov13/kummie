@@ -84,3 +84,41 @@ export function nextHappyStatus(status: OrderStatus): OrderStatus | null {
   if (index < 0 || index === HAPPY_PATH.length - 1) return null;
   return HAPPY_PATH[index + 1] ?? null;
 }
+
+/**
+ * The customer may cancel until the order joins a supplier batch (A10): before payment simply,
+ * after payment with a full refund and the order's Kummies revoked (D-032).
+ */
+export function customerCanCancel(status: OrderStatus): boolean {
+  return status === "pending_payment" || status === "paid";
+}
+
+/** Final states: nothing changes after them (partial refunds of delivered orders come in M2). */
+export const FINAL_STATUSES: readonly OrderStatus[] = [
+  "delivered",
+  "cancelled",
+  "refunded",
+  "partially_refunded",
+];
+
+/**
+ * Statuses staff may set by hand (testing and exceptions; every change is audited). Payment is
+ * never set by hand — `paid` comes only from the provider. Cancelling after the batch is closed
+ * is still possible for staff (e.g. the supplier cannot deliver) and refunds in full.
+ */
+export function staffNextStatuses(status: OrderStatus): OrderStatus[] {
+  if (FINAL_STATUSES.includes(status)) return [];
+  if (status === "pending_payment") return ["cancelled"];
+  const next: OrderStatus[] = [];
+  const happy = nextHappyStatus(status);
+  if (happy) next.push(happy);
+  if (["paid", "batched", "ordered_from_supplier", "exception"].includes(status)) next.push("cancelled");
+  if (status !== "exception") next.push("exception");
+  return next;
+}
+
+/** True when a change from `from` to `to` moves the customer to another step or off the track. */
+export function customerSeesChange(from: OrderStatus, to: OrderStatus): boolean {
+  if (isOffTrack(to)) return true;
+  return customerStep(from) !== customerStep(to);
+}
