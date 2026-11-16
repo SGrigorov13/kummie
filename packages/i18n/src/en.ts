@@ -367,6 +367,14 @@ export const en: Messages = {
   "admin.orderStatus.partially_refunded": "Partly refunded",
   "admin.orderStatus.exception": "Exception",
 
+  // ---- E-mail layout (M1 Task 8) ----
+  "email.serviceNote":
+    "This is a service e-mail about your KUMMIE account or order. It contains no advertising.",
+  "email.cta.verify": "Confirm e-mail",
+  "email.cta.reset": "Set a new password",
+  "email.cta.signin": "Sign in to KUMMIE",
+  "email.cta.order": "View your order",
+
   // ---- Groups and calendar ----
   follow: "Follow",
   following: "Following",
