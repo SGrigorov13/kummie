@@ -48,8 +48,11 @@ function arg(name: string): string | undefined {
 function askHidden(question: string): Promise<string> {
   return new Promise((resolve) => {
     const rl = createInterface({ input: stdin, output: stdout, terminal: true });
+    // readline has no public hook for hiding typed input; muting its private writer is the usual way.
+    // oxlint-disable-next-line no-underscore-dangle
     const writeOriginal = (rl as unknown as { _writeToOutput: (s: string) => void })._writeToOutput;
     let prompted = false;
+    // oxlint-disable-next-line no-underscore-dangle
     (rl as unknown as { _writeToOutput: (s: string) => void })._writeToOutput = (s: string) => {
       if (!prompted) {
         prompted = true;

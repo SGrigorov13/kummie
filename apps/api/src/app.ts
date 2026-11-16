@@ -1,3 +1,4 @@
+import cors from "@fastify/cors";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 import { adminPlugin } from "./admin/plugin";
@@ -20,6 +21,11 @@ export function buildApp({ logger, checkDb, catalogue, admin }: AppDeps) {
   const app = Fastify({ logger }).withTypeProvider<ZodTypeProvider>();
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
+  // Browsers may call the API with cookies only from the admin app's origins (public pages are
+  // rendered by the web server, which needs no CORS).
+  if (admin) {
+    app.register(cors, { origin: admin.allowedOrigins, credentials: true, methods: ["GET", "POST", "PUT"] });
+  }
   app.register(healthRoutes(checkDb));
   if (catalogue) app.register(catalogueRoutes(catalogue));
   if (admin) app.register(adminPlugin(admin));

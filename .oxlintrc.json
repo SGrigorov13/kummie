@@ -13,7 +13,8 @@
     "import/no-cycle": "error",
     "import/no-unassigned-import": "off",
     "unicorn/consistent-function-scoping": "off",
-    "react/style-prop-object": "off"
+    "react/style-prop-object": "off",
+    "oxc/no-async-endpoint-handlers": "off"
   },
   "ignorePatterns": [
     "**/node_modules/**",

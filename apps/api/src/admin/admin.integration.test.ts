@@ -54,8 +54,8 @@ describe.skipIf(!safe)("staff API on PostgreSQL", () => {
     await handle?.close();
   });
 
-  const post = (url: string, payload: unknown) =>
-    app.inject({ method: "POST", url, payload: payload as object, headers: cookie ? { cookie } : {} });
+  const post = (path: string, payload: unknown) =>
+    app.inject({ method: "POST", url: path, payload: payload as object, headers: cookie ? { cookie } : {} });
 
   it("refuses wrong passwords and weak new passwords", async () => {
     const wrong = await post("/admin-api/auth/login", { email: "editor@kummie.test", password: "nope" });
