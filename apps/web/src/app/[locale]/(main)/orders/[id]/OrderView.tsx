@@ -19,6 +19,8 @@ export function OrderView({ id }: { id: string }) {
   const [key, setKey] = useState<string | null>(null);
   const [notice, setNotice] = useState<"paid" | "cancelled" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   useEffect(() => {
     const k = fragmentValue("k");
@@ -61,6 +63,17 @@ export function OrderView({ id }: { id: string }) {
     return isOffTrack(status) ? t(`status.${status}`) : t("status.pending_payment");
   };
   const date = (iso: string) => new Date(iso).toLocaleDateString(locale === "bg" ? "bg-BG" : "en-GB");
+
+  async function cancelOrder() {
+    setCancelError(null);
+    try {
+      setOrder(await shopApi.cancelOrder(id, key));
+      setConfirming(false);
+      setNotice(null);
+    } catch {
+      setCancelError(t("order.cancelFailed"));
+    }
+  }
 
   async function payNow() {
     setError(null);
@@ -120,6 +133,36 @@ export function OrderView({ id }: { id: string }) {
           </ol>
         </>
       )}
+
+      {order.canCancel ? (
+        <div className="panel">
+          {confirming ? (
+            <>
+              <p>
+                {order.status === "pending_payment"
+                  ? t("order.cancelUnpaid")
+                  : t("order.cancelRefund", { amount: formatMoney(order.totalCents, locale) })}
+                {order.kummies > 0 ? ` ${t("order.cancelKummies", { kummies: order.kummies })}` : ""}
+              </p>
+              <div className="row">
+                <button type="button" className="btn btn--secondary" onClick={cancelOrder}>
+                  {t("order.cancelYes")}
+                </button>
+                <button type="button" className="btn btn--secondary" onClick={() => setConfirming(false)}>
+                  {t("order.cancelNo")}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button type="button" className="btn btn--secondary" onClick={() => setConfirming(true)}>
+              {t("order.cancel")}
+            </button>
+          )}
+          {cancelError ? <p role="alert">{cancelError}</p> : null}
+        </div>
+      ) : !isOffTrack(order.status) && order.status !== "delivered" && order.status !== "pending_payment" ? (
+        <p className="muted">{t("order.cancelLate")}</p>
+      ) : null}
 
       <ul className="lines">
         {order.lines.map((line) => (

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Catalogue, useProductStats } from "./Catalogue";
 import { CompanySettings } from "./CompanySettings";
 import { AdminProvider, api, useAdmin } from "./context";
+import { OrderDetailView, Orders } from "./Orders";
 import { ProductEditor } from "./ProductEditor";
 import { SignIn } from "./SignIn";
 
@@ -21,7 +22,7 @@ const NAV: { id: Section; label: MessageKey; roles?: Staff["role"][] }[] = [
 
 /**
  * KUMMIE admin: staff sign-in with mandatory 2FA, then the dashboard, catalogue editor and company
- * settings. Orders, batches and the hub arrive in later parts of M1/M2.
+ * settings and orders. Batches and the hub arrive in M2.
  */
 export function App() {
   const [locale, setLocale] = useState<Locale>("bg");
@@ -67,6 +68,7 @@ function Shell({ langButton, onSignOut }: { langButton: React.ReactNode; onSignO
   const { t, staff } = useAdmin();
   const [section, setSection] = useState<Section>("dashboard");
   const [editing, setEditing] = useState<string | "new" | null>(null);
+  const [openOrder, setOpenOrder] = useState<string | null>(null);
   const visible = NAV.filter((n) => !n.roles || n.roles.includes(staff.role));
   const current = NAV.find((n) => n.id === section) ?? NAV[0];
 
@@ -84,6 +86,7 @@ function Shell({ langButton, onSignOut }: { langButton: React.ReactNode; onSignO
                   onClick={() => {
                     setSection(n.id);
                     setEditing(null);
+                    setOpenOrder(null);
                   }}
                 >
                   {t(n.label)}
@@ -116,7 +119,11 @@ function Shell({ langButton, onSignOut }: { langButton: React.ReactNode; onSignO
           <ProductEditor id={editing} onClose={() => setEditing(null)} onCreated={setEditing} />
         ) : null}
         {section === "company" ? <CompanySettings /> : null}
-        {["orders", "batches", "hub"].includes(section) ? (
+        {section === "orders" && !openOrder ? <Orders onOpen={setOpenOrder} /> : null}
+        {section === "orders" && openOrder ? (
+          <OrderDetailView id={openOrder} onClose={() => setOpenOrder(null)} />
+        ) : null}
+        {["batches", "hub"].includes(section) ? (
           <section className="empty">
             <p>{t("admin.comingLater")}</p>
           </section>

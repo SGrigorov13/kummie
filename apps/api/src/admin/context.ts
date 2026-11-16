@@ -5,6 +5,7 @@ import type { SecretBox } from "../auth/crypto";
 import { sha256 } from "../auth/crypto";
 import type { Database } from "../db/client";
 import { auditLog, staffSessions, staffUsers } from "../db/schema";
+import type { ShopDeps } from "../shop/orders";
 
 export const STAFF_COOKIE = "kummie_staff";
 export const SESSION_HOURS = 12;
@@ -16,6 +17,8 @@ export type AdminDeps = {
   allowedOrigins: string[];
   /** Secure cookies everywhere except local http development. */
   cookieSecure: boolean;
+  /** Orders, refunds and e-mails; the order screens are on only when the shop is configured. */
+  shop?: ShopDeps;
 };
 
 declare module "fastify" {

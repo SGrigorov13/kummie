@@ -10,6 +10,7 @@ import {
 } from "./admin";
 import { CategoryList, GroupList } from "./catalogue";
 import { ApiRequestError, type FetchLike } from "./client";
+import { AdminOrder, AdminOrderList, type OrderStatusChange } from "./shop";
 
 /**
  * Client for the staff API. Uses the HTTP-only session cookie (credentials: "include"); every
@@ -71,6 +72,15 @@ export function createAdminClient({
       call("PUT", `/admin-api/products/${id}`, AdminProduct, input),
     publishProduct: (id: string) => call("POST", `/admin-api/products/${id}/publish`, AdminProduct, {}),
     unpublishProduct: (id: string) => call("POST", `/admin-api/products/${id}/unpublish`, AdminProduct, {}),
+    listOrders: (query: { status?: string; q?: string; page?: number } = {}) => {
+      const params = new URLSearchParams();
+      for (const [k, v] of Object.entries(query)) if (v !== undefined && v !== "") params.set(k, String(v));
+      const search = params.toString();
+      return call("GET", `/admin-api/orders${search ? `?${search}` : ""}`, AdminOrderList);
+    },
+    getOrder: (id: string) => call("GET", `/admin-api/orders/${id}`, AdminOrder),
+    changeOrderStatus: (id: string, change: OrderStatusChange) =>
+      call("POST", `/admin-api/orders/${id}/status`, AdminOrder, change),
     categories: () => call("GET", "/catalogue/categories", CategoryList),
     groups: () => call("GET", "/catalogue/groups", GroupList),
   };

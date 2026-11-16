@@ -160,6 +160,8 @@ export const OrderDetail = z.object({
   events: z.array(z.object({ status: OrderStatus, at: z.string() })),
   /** True while the order waits for payment, so the page can offer "Pay now". */
   canPay: z.boolean(),
+  /** True until the order joins a supplier batch (A10); a paid order is refunded in full. */
+  canCancel: z.boolean(),
 });
 export type OrderDetail = z.infer<typeof OrderDetail>;
 
@@ -174,3 +176,66 @@ export type OrderSummary = z.infer<typeof OrderSummary>;
 export const OrderList = z.object({ items: z.array(OrderSummary) });
 
 export const PayResponse = z.object({ redirectUrl: z.string() });
+
+// ---------- Admin: orders (M1 Task 7) ----------
+
+export const AdminOrderSummary = z.object({
+  id: z.string(),
+  number: z.string(),
+  status: OrderStatus,
+  createdAt: z.string(),
+  email: z.string(),
+  name: z.string(),
+  country: ShippingCountry,
+  totalCents: z.number().int(),
+  guest: z.boolean(),
+});
+export type AdminOrderSummary = z.infer<typeof AdminOrderSummary>;
+export const AdminOrderList = z.object({ items: z.array(AdminOrderSummary), total: z.number().int() });
+
+export const AdminOrderListQuery = z.object({
+  status: OrderStatus.optional(),
+  /** Order number (KUM-1001 or 1001) or part of the e-mail. */
+  q: z.string().trim().max(100).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+});
+
+export const AdminOrderEvent = z.object({
+  type: z.string(),
+  fromStatus: OrderStatus.nullable(),
+  toStatus: OrderStatus.nullable(),
+  actor: z.string(),
+  note: z.string().nullable(),
+  at: z.string(),
+});
+
+export const AdminOrder = OrderDetail.extend({
+  email: z.string(),
+  guest: z.boolean(),
+  history: z.array(AdminOrderEvent),
+  payments: z.array(
+    z.object({
+      provider: z.string(),
+      status: z.string(),
+      amountCents: z.number().int(),
+      createdAt: z.string(),
+    }),
+  ),
+  refunds: z.array(
+    z.object({
+      amountCents: z.number().int(),
+      reason: z.string(),
+      status: z.string(),
+      createdAt: z.string(),
+    }),
+  ),
+  /** Statuses staff may set from here (`staffNextStatuses` in @kummie/core). */
+  next: z.array(OrderStatus),
+});
+export type AdminOrder = z.infer<typeof AdminOrder>;
+
+export const OrderStatusChange = z.object({
+  to: OrderStatus,
+  note: z.string().trim().max(500).optional(),
+});
+export type OrderStatusChange = z.infer<typeof OrderStatusChange>;

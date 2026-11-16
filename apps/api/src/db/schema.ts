@@ -605,3 +605,43 @@ export const kummiesLedger = pgTable(
     uniqueIndex("kummies_ledger_order_kind_unique").on(t.orderId, t.kind),
   ],
 );
+
+export const refundReasonEnum = pgEnum("refund_reason", [
+  "shortage",
+  "withdrawal",
+  "cancelled",
+  "damaged",
+  "other",
+]);
+export const refundStatusEnum = pgEnum("refund_status", ["succeeded", "pending", "failed"]);
+
+/**
+ * Money returned to the customer through the provider. A full refund on cancellation now; partial
+ * refunds per line (shortages, withdrawals) in M2. Sales documents (credit notes) point here (Task 9).
+ */
+export const refunds = pgTable(
+  "refunds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    paymentId: uuid("payment_id")
+      .notNull()
+      .references(() => payments.id),
+    providerRefundId: text("provider_refund_id"),
+    amountCents: integer("amount_cents").notNull(),
+    reason: refundReasonEnum("reason").notNull(),
+    status: refundStatusEnum("status").notNull(),
+    /** "customer", "system" or "staff:<id>". */
+    actor: text("actor").notNull(),
+    /** Same key → the provider refunds once, even when we retry. */
+    idempotencyKey: text("idempotency_key").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("refunds_order_idx").on(t.orderId),
+    uniqueIndex("refunds_idempotency_unique").on(t.idempotencyKey),
+    check("refunds_amount", sql`${t.amountCents} > 0`),
+  ],
+);

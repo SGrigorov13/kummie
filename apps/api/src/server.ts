@@ -73,6 +73,7 @@ async function main() {
           secretBox: createSecretBox(config.STAFF_SECRET_KEY),
           allowedOrigins: originList(config.ADMIN_ORIGINS),
           cookieSecure,
+          ...(shop ? { shop } : {}),
         }
       : undefined;
   const app = buildApp({
