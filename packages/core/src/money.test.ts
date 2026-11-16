@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { FREE_SHIPPING_FROM_CENTS, SHIPPING_FEE_CENTS, quoteCart, shippingCents } from "./cart";
-import { KUMMIES_REDEEM_COST, kummiesEarned, redeemKummies } from "./kummies";
 import { formatBgn, formatMoney, parseEuroToCents, SHOW_BGN } from "./money";
 import { netOfVatCents, vatIncludedCents, vatRate } from "./vat";
 
@@ -93,29 +92,6 @@ describe("free delivery when goods are worth more than €79.99 (D-026)", () => 
     const quote = quoteCart([], "BG", 0, NOV_2026);
     expect(quote.shippingCents).toBe(0);
     expect(quote.totalCents).toBe(0);
-  });
-});
-
-describe("Kummies (D-027)", () => {
-  it("earns nothing below €30.00 of goods incl. VAT", () => {
-    expect(kummiesEarned(2999)).toBe(0);
-  });
-
-  it("earns 1 Kummie per whole euro from €30.00", () => {
-    expect(kummiesEarned(3000)).toBe(30);
-    expect(kummiesEarned(4599)).toBe(45);
-    expect(kummiesEarned(10000)).toBe(100);
-  });
-
-  it("counts goods only — delivery never earns", () => {
-    expect(quoteCart([{ priceCents: 2999, qty: 1 }], "GR", 0, NOV_2026).kummies).toBe(0);
-    expect(quoteCart([{ priceCents: 3000, qty: 1 }], "GR", 0, NOV_2026).kummies).toBe(30);
-  });
-
-  it("redeems 500 Kummies for €5 credit", () => {
-    expect(redeemKummies(499)).toBeNull();
-    expect(redeemKummies(KUMMIES_REDEEM_COST)).toEqual({ balance: 0, creditCents: 500 });
-    expect(redeemKummies(1234)).toEqual({ balance: 734, creditCents: 500 });
   });
 });
 

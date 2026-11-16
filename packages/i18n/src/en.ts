@@ -27,7 +27,7 @@ export const en: Messages = {
   open: "Open",
 
   // ---- Promo bar (D-007). Never rendered on Teen routes. ----
-  promoBar: "ORDER NOW * 1 KUMMIE FOR EVERY €1 ON ORDERS FROM €30 * FREE DELIVERY FROM €80",
+  promoBar: "ORDER NOW * 1 KUMMIE FOR EVERY €1 ON ORDERS FROM €30 * FREE DELIVERY OVER €79.99",
   promoRegion: "Promotion",
   dismiss: "Dismiss the promotion",
 
@@ -153,7 +153,7 @@ export const en: Messages = {
 
   // ---- Club ----
   kummies: "Kummies",
-  redeem: "Redeem 500 for €5",
+  redeem: "Redeem {cost} Kummies for {amount} off",
   history: "History",
   ageTitle: "Before the club and the tombola",
   ageUnder: "Under 18",
@@ -163,8 +163,16 @@ export const en: Messages = {
   tombola: "Tombola",
   tombolaBody:
     "This local test has no draw and no prize. A real campaign would publish the rules and the odds first, and anyone under 18 would need a parent's consent.",
-  redeemNote: "Redeemed for a €5 discount",
-  earnNote: "From order {id}",
+  redeemNote: "Redeemed for {amount} off",
+  earnNote: "From order {id} · valid until {date}",
+  kummiesExpiring: "Use your {count} Kummies by {date} — after that they expire and the discount is gone.",
+  kummiesValidity: "Kummies are valid for {months} months from the day the order is paid.",
+  // Expiry reminders (D-031): push ≤ 60 characters, e-mail subject + body. Sent 14, 3 and 1 day before.
+  "kummies.reminder14": "⭐ {count} Kummies expire in 14 days — treat yourself",
+  "kummies.reminder3": "⭐ {count} Kummies expire in 3 days — don't lose them",
+  "kummies.reminder1": "⭐ {count} Kummies expire tomorrow — use them today",
+  "kummies.reminderEmail":
+    "Hi! You have {count} Kummies worth {amount} off at KUMMIE. They are valid until {date} and disappear after that. We would love to see you use them on something nice.",
 
   // ---- Account and notifications ----
   alerts: "Notifications",
@@ -172,7 +180,9 @@ export const en: Messages = {
   restocks: "Restocks",
   orderAlerts: "Order status",
   orderAlertsNote: "Order status is a service message and is never bundled with marketing.",
-  drops: "Club drops",
+  drops: "Club drops and expiring-Kummies reminders",
+  kummiesEmailNote:
+    "Reminders about expiring Kummies also come by e-mail — they are part of the Club programme.",
   quiet: "Quiet hours 22:00–08:00. At most two marketing notifications a week. This demo sends no real push.",
   reset: "Clear local data",
 

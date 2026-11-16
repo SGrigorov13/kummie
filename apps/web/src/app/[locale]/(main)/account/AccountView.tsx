@@ -39,6 +39,7 @@ export function AccountView() {
           </label>
         ))}
         <p className="muted">{t("orderAlertsNote")}</p>
+        <p className="muted">{t("kummiesEmailNote")}</p>
       </fieldset>
       <h2 className="h3">{t("orders")}</h2>
       {state.orders.length === 0 ? (

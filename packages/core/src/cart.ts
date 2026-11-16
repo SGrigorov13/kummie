@@ -1,4 +1,4 @@
-import { kummiesEarned } from "./kummies";
+import { kummiesBaseCents, kummiesEarned } from "./kummies";
 import type { Country } from "./types";
 import { assertCents, vatIncludedCents, vatRate } from "./vat";
 
@@ -30,6 +30,8 @@ export type Quote = {
   vatCents: number;
   /** `totalCents` without VAT: what KUMMIE keeps before costs. Varies by country. */
   netCents: number;
+  /** Goods incl. VAT after the discount, without delivery — what Kummies are counted on. */
+  kummiesBaseCents: number;
   /** Kummies this order would earn. */
   kummies: number;
 };
@@ -72,6 +74,7 @@ export function quoteCart(
     vatRate: rate,
     vatCents: vat,
     netCents: total - vat,
-    kummies: kummiesEarned(goods),
+    kummiesBaseCents: kummiesBaseCents(goods, credit),
+    kummies: kummiesEarned(kummiesBaseCents(goods, credit)),
   };
 }

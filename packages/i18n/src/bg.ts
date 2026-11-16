@@ -28,7 +28,7 @@ export const bg = {
   open: "Отвори",
 
   // ---- Promo bar (D-028). Never rendered on Teen routes. Every claim must stay true. ----
-  promoBar: "ПОРЪЧАЙ СЕГА * 1 KUMMIE ЗА ВСЯКО ЕВРО ПРИ ПОРЪЧКА ОТ 30 € * БЕЗПЛАТНА ДОСТАВКА ОТ 80 €",
+  promoBar: "ПОРЪЧАЙ СЕГА * 1 KUMMIE ЗА ВСЯКО ЕВРО ПРИ ПОРЪЧКА ОТ 30 € * БЕЗПЛАТНА ДОСТАВКА СЛЕД 79,99 €",
   promoRegion: "Промоция",
   dismiss: "Затвори промоцията",
 
@@ -154,7 +154,7 @@ export const bg = {
 
   // ---- Club ----
   kummies: "Kummies",
-  redeem: "Обмени 500 за 5 €",
+  redeem: "Обмени {cost} Kummies за {amount} отстъпка",
   history: "История",
   ageTitle: "Преди клуба и томболата",
   ageUnder: "Под 18",
@@ -164,8 +164,16 @@ export const bg = {
   tombola: "Томбола",
   tombolaBody:
     "В локалния тест няма теглене и няма награда. При истинска кампания правилата и шансът се пишат предварително, а участието под 18 иска съгласие на родител.",
-  redeemNote: "Обмяна за 5 € отстъпка",
-  earnNote: "От поръчка {id}",
+  redeemNote: "Обмяна за {amount} отстъпка",
+  earnNote: "От поръчка {id} · валидни до {date}",
+  kummiesExpiring: "Използвай {count} Kummies до {date} — след това изтичат и отстъпката се губи.",
+  kummiesValidity: "Kummies важат {months} месеца от деня на плащане на поръчката.",
+  // Expiry reminders (D-031): push ≤ 60 characters, e-mail subject + body. Sent 14, 3 and 1 day before.
+  "kummies.reminder14": "⭐ {count} Kummies изтичат след 14 дни — вземи си отстъпка",
+  "kummies.reminder3": "⭐ {count} Kummies изтичат след 3 дни — не ги губи",
+  "kummies.reminder1": "⭐ Утре изтичат {count} Kummies — използвай ги днес",
+  "kummies.reminderEmail":
+    "Здравей! Имаш {count} Kummies, които можеш да използваш за {amount} отстъпка в KUMMIE. Валидни са до {date} — след това изчезват. Ще се радваме да ги използваш за нещо хубаво.",
 
   // ---- Account and notifications ----
   alerts: "Известия",
@@ -173,7 +181,8 @@ export const bg = {
   restocks: "Отново в наличност",
   orderAlerts: "Статус на поръчка",
   orderAlertsNote: "Статусът на поръчка е служебно съобщение и никога не се смесва с реклама.",
-  drops: "Club drops",
+  drops: "Club drops и напомняния за изтичащи Kummies",
+  kummiesEmailNote: "Напомнянията за изтичащи Kummies идват и по имейл — те са част от програмата на клуба.",
   quiet: "Тих режим 22:00–08:00. Най-много две рекламни известия седмично. В демото няма истински push.",
   reset: "Изчисти локалните данни",
 
