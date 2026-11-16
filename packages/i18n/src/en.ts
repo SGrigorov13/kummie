@@ -394,6 +394,39 @@ export const en: Messages = {
   "admin.reports.sales": "Sales journal for the accountant (CSV)",
   "admin.reports.oss": "OSS figures for Q{quarter} {year} (CSV)",
 
+  // ---- Storefront on the catalogue, trader and delivery pages (M1 Task 10) ----
+  "shop.offline": "The catalogue cannot be loaded right now. Please try again shortly.",
+  "shop.pages": "Pages",
+  "shop.prev": "← Previous",
+  "shop.next": "Next →",
+  "shop.pageOf": "Page {page} of {pages}",
+  "shop.searchFor": "Search: “{q}”",
+  "shop.clearSearch": "Clear search",
+  trader: "Trader information",
+  "trader.name": "Trader",
+  "trader.eik": "Company ID (ЕИК)",
+  "trader.vat": "VAT number",
+  "trader.address": "Registered office",
+  "trader.email": "E-mail",
+  "trader.phone": "Phone",
+  "trader.eShop": "E-shop number at the NRA",
+  "trader.pending": "These details are filled in before the shop opens.",
+  "trader.authority": "Supervisory authority",
+  "trader.authorityText":
+    "Commission for Consumer Protection (КЗП), www.kzp.bg. You can also complain to us directly — see “Complaints”.",
+  deliveryPage: "Payment and delivery",
+  "delivery.payTitle": "How to pay",
+  "delivery.payText":
+    "By bank card on the bank's secure page. Card details never pass through KUMMIE. Cash on delivery is not available yet.",
+  "delivery.whereTitle": "Where we deliver and what it costs",
+  "delivery.free": "Delivery is free for orders from {amount}.",
+  "delivery.whenTitle": "When it arrives",
+  "delivery.whenText":
+    "Every product shows its own dispatch time. Pre-orders and batched supplier shipments arrive at our hub in Bulgaria and then reach you by courier. Your order page shows each of the 7 steps.",
+  "delivery.pricesTitle": "Prices without surprises",
+  "delivery.pricesText":
+    "Prices include VAT and are the same for Bulgaria, Romania and Greece. No customs and no hidden fees — the amount before payment is the final amount.",
+
   // ---- Groups and calendar ----
   follow: "Follow",
   following: "Following",
