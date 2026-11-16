@@ -7,13 +7,16 @@ import {
   addMonths,
   KUMMIES_VALIDITY_MONTHS,
   kummiesBalance,
+  kummiesToRevoke,
   kummiesEarned,
+  kummiesReminderChannels,
   kummiesReminderDays,
   kummiesRemindersDue,
   kummiesValidUntil,
   newKummiesLot,
   nextKummiesExpiry,
   redeemKummies,
+  revokeKummies,
   spendKummies,
   type KummiesLot,
 } from "./kummies";
@@ -118,5 +121,40 @@ describe("spending (D-030)", () => {
     const lots = [lot("expired", "2020-01-01", 500), lot("fresh", "2026-11-01", 60)];
     expect(kummiesBalance(lots, "2026-11-20")).toBe(60);
     expect(spendKummies(lots, 100, "2026-11-20")).toBeNull();
+  });
+});
+
+describe("cancellations and refunds (D-032)", () => {
+  it("takes back everything on a full refund", () => {
+    expect(kummiesToRevoke(5000, 5000)).toBe(50);
+  });
+
+  it("re-counts the order on a partial refund", () => {
+    expect(kummiesToRevoke(5000, 1500)).toBe(15); // keeps €35 → 35 Kummies
+    expect(kummiesToRevoke(5000, 2500)).toBe(50); // keeps €25 → below €30, all go
+  });
+
+  it("takes points from the order first, then from the other points", () => {
+    const lots = [lot("KM-1", "2026-10-01", 40, 40), lot("KM-2", "2026-11-01", 50, 10)];
+    // KM-2 earned 50, but 40 were already spent: 10 from KM-2, 40 from KM-1.
+    const result = revokeKummies(lots, "KM-2", 50, "2026-11-20");
+    expect(result.uncovered).toBe(0);
+    expect(result.lots.map((l) => [l.id, l.remaining])).toEqual([
+      ["KM-1", 0],
+      ["KM-2", 0],
+    ]);
+  });
+
+  it("never goes negative and reports what could not be covered", () => {
+    const result = revokeKummies([lot("KM-3", "2026-11-01", 50, 5)], "KM-3", 50, "2026-11-20");
+    expect(result.lots[0]?.remaining).toBe(0);
+    expect(result.uncovered).toBe(45);
+  });
+});
+
+describe("reminder channels (D-031)", () => {
+  it("always e-mails; pushes only with the Club drops opt-in", () => {
+    expect(kummiesReminderChannels({ clubDropsPush: false })).toEqual(["email"]);
+    expect(kummiesReminderChannels({ clubDropsPush: true })).toEqual(["email", "push"]);
   });
 });

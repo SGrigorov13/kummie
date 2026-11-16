@@ -180,7 +180,9 @@ export const en: Messages = {
   restocks: "Restocks",
   orderAlerts: "Order status",
   orderAlertsNote: "Order status is a service message and is never bundled with marketing.",
-  drops: "Club drops",
+  drops: "Club drops and expiring-Kummies reminders",
+  kummiesEmailNote:
+    "Reminders about expiring Kummies also come by e-mail — they are part of the Club programme.",
   quiet: "Quiet hours 22:00–08:00. At most two marketing notifications a week. This demo sends no real push.",
   reset: "Clear local data",
 

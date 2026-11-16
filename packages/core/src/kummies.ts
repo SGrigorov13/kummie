@@ -173,3 +173,74 @@ export function kummiesRemindersDue(lots: readonly KummiesLot[], today: string):
   }
   return reminders;
 }
+
+// ---------- Cancellations and refunds (D-032) ----------
+
+/**
+ * How many points to take back when goods are refunded: the order is re-counted as if the refunded
+ * goods had never been bought. A full refund takes everything back; a partial one takes the
+ * difference — and everything when the rest drops below the €30 minimum.
+ */
+export function kummiesToRevoke(originalBaseCents: number, refundedGoodsCents: number): number {
+  assertCents(originalBaseCents);
+  assertCents(refundedGoodsCents);
+  const kept = Math.max(0, originalBaseCents - Math.max(0, refundedGoodsCents));
+  return kummiesEarned(originalBaseCents) - kummiesEarned(kept);
+}
+
+export type Revocation = {
+  lots: KummiesLot[];
+  /** Points that could not be taken back because the customer had already used them. */
+  uncovered: number;
+};
+
+/**
+ * Takes points back after a cancellation or refund: first from the order's own lot, then — if some
+ * of those points were already spent — from the customer's other valid points, soonest-expiring first.
+ * Whatever cannot be covered is reported as `uncovered` (never a negative balance); the refund flow
+ * in M2 decides whether to deduct it from the refund amount.
+ */
+export function revokeKummies(
+  lots: readonly KummiesLot[],
+  orderId: string,
+  amount: number,
+  today: string,
+): Revocation {
+  if (!Number.isInteger(amount) || amount <= 0) return { lots: [...lots], uncovered: 0 };
+  let left = amount;
+  const taken = new Map<string, number>();
+  const own = lots.find((lot) => lot.id === orderId);
+  if (own) {
+    const take = Math.min(own.remaining, left);
+    taken.set(own.id, take);
+    left -= take;
+  }
+  const others = lots
+    .filter((lot) => lot.id !== orderId && isValid(lot, today))
+    .toSorted((a, b) => a.validUntil.localeCompare(b.validUntil));
+  for (const lot of others) {
+    if (left === 0) break;
+    const take = Math.min(lot.remaining, left);
+    taken.set(lot.id, take);
+    left -= take;
+  }
+  return {
+    lots: lots.map((lot) =>
+      taken.has(lot.id) ? { ...lot, remaining: lot.remaining - (taken.get(lot.id) ?? 0) } : lot,
+    ),
+    uncovered: left,
+  };
+}
+
+// ---------- Reminder channels (D-031) ----------
+
+export type ReminderChannel = "email" | "push";
+
+/**
+ * E-mail reminders are service messages of the Kummies programme (described in the Club terms), so
+ * every member with expiring points gets them. App pushes only go to people who switched on the
+ * "Club drops" notifications. Quiet hours (22:00–08:00) apply to both.
+ */
+export function kummiesReminderChannels(prefs: { clubDropsPush: boolean }): ReminderChannel[] {
+  return prefs.clubDropsPush ? ["email", "push"] : ["email"];
+}
