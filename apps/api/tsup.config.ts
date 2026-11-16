@@ -8,7 +8,12 @@ import { defineConfig } from "tsup";
  * Workspace packages (@kummie/*) are bundled; npm dependencies stay external.
  */
 export default defineConfig({
-  entry: { server: "src/server.ts", tick: "src/jobs/tick.ts", migrate: "src/db/migrate.ts" },
+  entry: {
+    server: "src/server.ts",
+    tick: "src/jobs/tick.ts",
+    migrate: "src/db/migrate.ts",
+    seed: "src/db/seed.ts",
+  },
   format: ["esm"],
   platform: "node",
   target: "node24",

@@ -18,6 +18,8 @@ const EnvSchema = z.object({
   /** Shared hosting: keep the pool small (ARCHITECTURE §10, ≤ 10). */
   DB_POOL_MAX: z.coerce.number().int().min(1).max(10).default(5),
   LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
+  /** Public base URL of uploaded media (product images). */
+  MEDIA_BASE_URL: z.string().min(1).default("/media"),
   /** Folder with Drizzle SQL migrations, relative to the app root. */
   MIGRATIONS_DIR: z.string().min(1).default("drizzle"),
 });

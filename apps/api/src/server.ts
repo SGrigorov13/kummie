@@ -1,4 +1,5 @@
 import { buildApp } from "./app";
+import { createPgCatalogueRepository } from "./catalogue/pg-repository";
 import { loadConfig } from "./config";
 import { createDatabase, type DatabaseHandle } from "./db/client";
 import type { DbCheck } from "./routes/health";
@@ -30,7 +31,8 @@ async function main() {
     }
   };
 
-  const app = buildApp({ logger, checkDb });
+  const catalogue = database ? createPgCatalogueRepository(database.db, config.MEDIA_BASE_URL) : undefined;
+  const app = buildApp({ logger, checkDb, catalogue });
   if (!database)
     app.log.warn(
       "DATABASE_URL is not set — /health will report db: not_configured (see apps/api/.env.example)",
