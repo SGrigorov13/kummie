@@ -3,7 +3,7 @@ import { Tabs } from "expo-router";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { useColorScheme, type ColorValue } from "react-native";
 import { useLocale } from "@/components/locale";
-import { fonts, palette } from "@/theme";
+import { fontsFor, palette } from "@/theme";
 
 type TabDef = {
   name: string;
@@ -37,6 +37,7 @@ function tabIcon(name: SymbolViewProps["name"]) {
 export default function TabLayout() {
   const locale = useLocale();
   const colors = palette(useColorScheme() === "dark" ? "dark" : "light");
+  const fonts = fontsFor(locale);
   return (
     <Tabs
       screenOptions={{

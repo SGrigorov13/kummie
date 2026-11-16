@@ -17,6 +17,10 @@ Send these to Bulinfo support (24/7, 02 9699 100) and record the answers here.
 | 11 | Backup policy: frequency, retention, and how to restore a single database. | Disaster recovery | |
 | 12 | Server location (country / data centre). | GDPR and latency | |
 
-Recommended starting plan: **MAX (2 GB RAM)** or at least **PRO (1.4 GB)** — START (1 GB) is too
+**Chosen (2026-11-16): PRO, already paid, until 04.10.2027** (D-040). Domain kummie.eu registered
+there too; DNS on ns5/ns6.bulinfo.org, MX on the hosting. Questions 1, 2 and 6 matter most for PRO
+(two Node apps, Node version, memory per process).
+
+Original recommendation: **MAX (2 GB RAM)** or at least **PRO (1.4 GB)** — START (1 GB) is too
 small for two Node apps. Prices on bulinfo.net/en/hosting (checked 2026-11-16, incl. VAT):
 PRO €7.33/month, MAX €13.26/month on a 1-year contract.

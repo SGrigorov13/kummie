@@ -1,6 +1,6 @@
 import { t, type MessageKey } from "@kummie/i18n";
 import { ScrollView, Text, useColorScheme, View } from "react-native";
-import { palette, radius, sp, text } from "@/theme";
+import { palette, radius, sp, textStyles } from "@/theme";
 import { Equaliser } from "./Equaliser";
 import { useLocale } from "./locale";
 
@@ -8,6 +8,7 @@ import { useLocale } from "./locale";
 export function PlaceholderScreen({ title, lead }: { title: MessageKey; lead?: MessageKey }) {
   const locale = useLocale();
   const colors = palette(useColorScheme() === "dark" ? "dark" : "light");
+  const text = textStyles(locale);
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.background }}
