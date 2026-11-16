@@ -25,9 +25,11 @@ import {
   orders,
   products,
   variants,
+  salesDocuments,
 } from "../db/schema";
 import { customerCanCancel } from "@kummie/core";
 import { cartView, priceCart, pricedLines, resolveCart } from "./cart-store";
+import { documentFileName, renderDocumentPdf } from "../documents/pdf";
 import { changeOrderStatus, StatusChangeError } from "./lifecycle";
 import { orderDetail, orderNumber, startPayment, vatShares, type OrderRow, type ShopDeps } from "./orders";
 
@@ -317,6 +319,26 @@ export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
           }
           throw error;
         }
+      },
+    );
+
+    app.get<{ Params: { id: string; documentId: string } }>(
+      "/orders/:id/documents/:documentId",
+      { schema: { params: z.object({ id: z.string().uuid(), documentId: z.string().uuid() }) } },
+      async (request, reply) => {
+        const order = await accessibleOrder(request, request.params.id);
+        if (!order) return reply.code(404).send(notFound);
+        const [doc] = await db
+          .select()
+          .from(salesDocuments)
+          .where(and(eq(salesDocuments.id, request.params.documentId), eq(salesDocuments.orderId, order.id)));
+        if (!doc) return reply.code(404).send(notFound);
+        const pdf = await renderDocumentPdf(doc);
+        return reply
+          .header("content-type", "application/pdf")
+          .header("cache-control", "private, no-store")
+          .header("content-disposition", `attachment; filename="${documentFileName(doc)}"`)
+          .send(pdf);
       },
     );
 

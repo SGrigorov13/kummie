@@ -568,6 +568,10 @@ export const payments = pgTable(
     provider: text("provider").notNull(),
     sessionId: text("session_id").notNull(),
     providerPaymentId: text("provider_payment_id"),
+    /** From the bank on authorisation; printed on the Н-18 receipt and in the monthly XML. */
+    authCode: text("auth_code"),
+    terminalId: text("terminal_id"),
+    transactionRef: text("transaction_ref"),
     amountCents: integer("amount_cents").notNull(),
     status: paymentStatusEnum("status").notNull().default("pending"),
     failureReason: text("failure_reason"),
@@ -643,5 +647,90 @@ export const refunds = pgTable(
     index("refunds_order_idx").on(t.orderId),
     uniqueIndex("refunds_idempotency_unique").on(t.idempotencyKey),
     check("refunds_amount", sql`${t.amountCents} > 0`),
+  ],
+);
+
+// ---------- Sales documents (Н-18 чл. 52о, ЗДДС) — M1 Task 9 ----------
+
+export const documentKindEnum = pgEnum("document_kind", [
+  "receipt",
+  "receipt_storno",
+  "invoice",
+  "credit_note",
+]);
+
+/**
+ * Gapless numbering per series: "receipt" (чл. 52о documents and their storno) and "invoice"
+ * (invoices and credit notes share one series, ЗДДС). The row is locked by the UPDATE inside the
+ * transaction that issues the document, so two payments never get the same number, and a rolled
+ * back transaction gives its number back.
+ */
+export const documentSequences = pgTable("document_sequences", {
+  series: text("series").primaryKey(),
+  lastNumber: bigint("last_number", { mode: "number" }).notNull().default(0),
+});
+
+export type DocumentSnapshot = {
+  seller: {
+    legalName: string | null;
+    eik: string | null;
+    vatNumber: string | null;
+    address: string | null;
+    email: string | null;
+    eShopNumber: string | null;
+  };
+  buyer: {
+    kind: "person" | "company";
+    name: string;
+    address: string;
+    eik?: string;
+    vatNumber?: string | null;
+  } | null;
+  lines: { name: string; qty: number; unitPriceCents: number; totalCents: number; vatCents: number }[];
+  payment: {
+    method: string;
+    terminalId: string | null;
+    authCode: string | null;
+    transactionRef: string | null;
+  };
+  qr: string | null;
+  orderNumber: string;
+  orderDate: string;
+  vatCountry: string;
+  /** Number of the document this one corrects (storno / credit note). */
+  refersToNumber: string | null;
+};
+
+/**
+ * Issued sales documents. Amounts are frozen copies (negative for storno and credit notes); the
+ * snapshot holds the seller, buyer, lines and payment as printed, so a PDF can be reproduced
+ * exactly at any time even if company data or products change later.
+ */
+export const salesDocuments = pgTable(
+  "sales_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id),
+    kind: documentKindEnum("kind").notNull(),
+    series: text("series").notNull(),
+    number: bigint("number", { mode: "number" }).notNull(),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
+    /** Storno → original receipt; credit note → original invoice. */
+    refersToId: uuid("refers_to_id"),
+    refundId: uuid("refund_id").references(() => refunds.id),
+    totalCents: integer("total_cents").notNull(),
+    vatCents: integer("vat_cents").notNull(),
+    vatRateBp: integer("vat_rate_bp").notNull(),
+    snapshot: jsonb("snapshot").$type<DocumentSnapshot>().notNull(),
+  },
+  (t) => [
+    uniqueIndex("sales_documents_number_unique").on(t.series, t.number),
+    uniqueIndex("sales_documents_order_kind_unique")
+      .on(t.orderId, t.kind)
+      .where(sql`${t.kind} in ('receipt', 'invoice')`),
+    index("sales_documents_order_idx").on(t.orderId),
+    index("sales_documents_issued_idx").on(t.issuedAt),
   ],
 );

@@ -34,7 +34,14 @@ export type PaymentStatus =
   "pending" | "authorized" | "captured" | "failed" | "cancelled" | "refunded" | "partially_refunded";
 
 export type PaymentEvent =
-  | { type: "payment.authorized"; sessionId: string; paymentId: string; amount: Money }
+  | {
+      type: "payment.authorized";
+      sessionId: string;
+      paymentId: string;
+      amount: Money;
+      /** Card details for the Н-18 documents: authorisation code, vPOS terminal, transaction reference. */
+      card?: { authCode: string; terminalId: string; transactionRef: string };
+    }
   | { type: "payment.captured"; paymentId: string; amount: Money }
   | { type: "payment.failed"; sessionId: string; reason: string }
   | { type: "refund.succeeded"; paymentId: string; refundId: string; amount: Money }

@@ -12,6 +12,10 @@ export type EmailMessage = {
   html?: string;
   /** Main action, rendered as a button in the HTML version (the link also stays in the text). */
   cta?: { label: string; url: string };
+  /** Sales documents to attach as PDF (stored in the job; rendered at send time). */
+  documentIds?: string[];
+  /** Files to attach, filled in by the sender right before sending. */
+  attachments?: { filename: string; content: Uint8Array; contentType: string }[];
   locale: "bg" | "en";
   category: EmailCategory;
   /** De-duplicates retries from the tick worker. */

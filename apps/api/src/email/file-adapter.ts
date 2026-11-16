@@ -28,6 +28,9 @@ export function createFileEmailAdapter(dir: string): EmailAdapter {
       await writeFile(file, body, "utf8");
       // The HTML version next to it, to preview the design in a browser.
       if (message.html) await writeFile(file.replace(/\.txt$/, ".html"), message.html, "utf8");
+      for (const attachment of message.attachments ?? []) {
+        await writeFile(file.replace(/\.txt$/, `-${attachment.filename}`), attachment.content);
+      }
       return { messageId: file, accepted: true };
     },
   };

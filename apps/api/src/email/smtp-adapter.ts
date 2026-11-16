@@ -42,6 +42,15 @@ export function createSmtpEmailAdapter(
         subject: message.subject,
         text: message.text,
         ...(message.html ? { html: message.html } : {}),
+        ...(message.attachments
+          ? {
+              attachments: message.attachments.map((a) => ({
+                filename: a.filename,
+                content: Buffer.from(a.content),
+                contentType: a.contentType,
+              })),
+            }
+          : {}),
         headers: {
           // Tells mail servers and auto-responders this is an automatic, transactional message.
           "Auto-Submitted": "auto-generated",
