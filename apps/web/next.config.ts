@@ -9,7 +9,7 @@ const config: NextConfig = {
   outputFileTracingRoot: repoRoot,
   turbopack: { root: repoRoot },
   // Workspace packages ship TypeScript source.
-  transpilePackages: ["@kummie/core", "@kummie/brand", "@kummie/i18n"],
+  transpilePackages: ["@kummie/core", "@kummie/brand", "@kummie/i18n", "@kummie/contracts"],
   poweredByHeader: false,
   reactStrictMode: true,
 };

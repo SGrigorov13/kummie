@@ -14,7 +14,6 @@ export default async function AccountPage({ params }: Props) {
   return (
     <div className="wrap section narrow">
       <h1>{t(locale, "account")}</h1>
-      <p className="muted">{t(locale, "saved")}</p>
       <AccountView />
     </div>
   );

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@kummie/brand": "workspace:*",
+    "@kummie/contracts": "workspace:*",
     "@kummie/core": "workspace:*",
     "@kummie/i18n": "workspace:*",
     "next": "^16.4.6",
