@@ -27,7 +27,7 @@ export type DemoOrder = {
   city: string;
   address: string;
   country: ShippingCountry;
-  lines: { productId: string; qty: number; title: string; priceExVatCents: number }[];
+  lines: { productId: string; qty: number; title: string; priceCents: number }[];
   quote: Quote;
   status: OrderStatus;
 };
@@ -142,7 +142,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const quote = useMemo(() => {
     const lines = state.cart.flatMap((line) => {
       const product = productById(line.productId);
-      return product ? [{ priceExVatCents: product.priceExVatCents, qty: line.qty }] : [];
+      return product ? [{ priceCents: product.priceCents, qty: line.qty }] : [];
     });
     return quoteCart(lines, state.country, state.creditCents);
   }, [state.cart, state.country, state.creditCents]);
@@ -162,7 +162,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
                 productId: product.id,
                 qty: line.qty,
                 title: product.title,
-                priceExVatCents: product.priceExVatCents,
+                priceCents: product.priceCents,
               },
             ]
           : [];

@@ -66,7 +66,8 @@ export default async function ProductPage({ params }: Props) {
           {stateBadge ? <Badge id={stateBadge} locale={locale} /> : null}
         </div>
         <p className="demo-line">{t(locale, "demo")}</p>
-        <Price exVatCents={product.priceExVatCents} large />
+        <Price cents={product.priceCents} locale={locale} large />
+        <p className="muted price-note">{t(locale, "priceNote")}</p>
         <p>{product.summary[locale]}</p>
         <ProductActions productId={product.id} />
 

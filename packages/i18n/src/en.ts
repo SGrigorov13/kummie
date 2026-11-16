@@ -27,7 +27,7 @@ export const en: Messages = {
   open: "Open",
 
   // ---- Promo bar (D-007). Never rendered on Teen routes. ----
-  promoBar: "HURRY!!! ORDER IT NOW * COLLECT MORE KUMMIES AND WIN AWARD * FREE DELIVERY OVER 79.99 EUR",
+  promoBar: "ORDER NOW * 1 KUMMIE FOR EVERY €1 ON ORDERS FROM €30 * FREE DELIVERY FROM €80",
   promoRegion: "Promotion",
   dismiss: "Dismiss the promotion",
 
@@ -59,7 +59,8 @@ export const en: Messages = {
   bundleHint: "A starter set for cards: sleeves, a binder, and toploaders.",
   magazineLead: "Useful reading, not news about us.",
   guide: "Guide",
-  clubLead: "Kummies are added after a demo order of €15 or more before VAT.",
+  clubLead: "Get 1 Kummie for every euro on orders of €30 or more.",
+  kummiesLeft: "{amount} more and you start collecting Kummies.",
   clubCta: "See the club",
 
   // ---- Shop ----
@@ -79,7 +80,7 @@ export const en: Messages = {
   wishlist: "Wishlist",
   owned: "I own this",
   vat: "incl. VAT",
-  priceFor: "Price for {country}",
+  priceNote: "One price for Bulgaria, Romania and Greece.",
   facts: "Product information",
   version: "Version",
   sourcing: "Sourcing",
@@ -104,12 +105,13 @@ export const en: Messages = {
   // ---- Cart and demo checkout ----
   checkout: "To the demo checkout",
   demoNotice: "Demo checkout: nothing is charged and the order stays on this device only.",
-  subtotal: "Subtotal ex-VAT",
-  vatLine: "VAT {rate}%",
+  subtotal: "Items",
+  vatLine: "incl. VAT {rate}%",
   shipping: "Shipping",
   shippingFree: "Free",
-  freeShip: "Free shipping over €79.99 incl. VAT.",
-  freeShipLeft: "{amount} more for free shipping.",
+  freeShip: "Delivery is on us for orders from €80.",
+  freeShipLeft: "Add {amount} more and delivery is on us.",
+  freeShipReached: "Lovely — delivery is on us!",
   deliveryWindow: "Delivery window: per each item's dispatch date. No customs or hidden fees.",
   credit: "Kummies discount",
   total: "Total",

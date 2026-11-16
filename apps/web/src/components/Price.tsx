@@ -1,29 +1,28 @@
-"use client";
+import { formatBgn, formatMoney, SHOW_BGN, type Locale } from "@kummie/core";
+import { t } from "@kummie/i18n";
 
-import { formatBgn, formatMoney, SHOW_BGN, unitGrossCents } from "@kummie/core";
-import { useDemoStore } from "@/lib/demo-store";
-import { useLocale, useT } from "@/lib/locale";
-
-/** Gross price for the shopper's delivery country, always labelled "incl. VAT". */
+/**
+ * Consumer price incl. VAT — the same in every country (D-025), so it needs no client state and
+ * renders identically on the server and in the browser.
+ */
 export function Price({
-  exVatCents,
+  cents,
+  locale,
   qty = 1,
   large = false,
 }: {
-  exVatCents: number;
+  cents: number;
+  locale: Locale;
   qty?: number;
   large?: boolean;
 }) {
-  const locale = useLocale();
-  const t = useT();
-  const { state } = useDemoStore();
-  const gross = unitGrossCents(exVatCents, state.country) * qty;
+  const amount = cents * qty;
   return (
     <p className={large ? "price price--large" : "price"}>
-      <strong>{formatMoney(gross, locale)}</strong>
+      <strong>{formatMoney(amount, locale)}</strong>
       <span>
-        {SHOW_BGN ? `${formatBgn(gross, locale)} · ` : ""}
-        {t("vat")}
+        {SHOW_BGN ? `${formatBgn(amount, locale)} · ` : ""}
+        {t(locale, "vat")}
       </span>
     </p>
   );

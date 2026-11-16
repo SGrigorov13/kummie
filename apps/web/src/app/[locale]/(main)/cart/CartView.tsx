@@ -1,8 +1,9 @@
 "use client";
 
 import {
-  FREE_SHIPPING_GROSS_CENTS,
+  FREE_SHIPPING_FROM_CENTS,
   formatMoney,
+  KUMMIES_MIN_GOODS_CENTS,
   productById,
   SHIPPING_COUNTRIES,
   type ShippingCountry,
@@ -57,7 +58,8 @@ export function CartView() {
     if (id) router.push(href(locale, `/orders/${id}`));
   }
 
-  const missingForFree = FREE_SHIPPING_GROSS_CENTS - quote.grossCents;
+  const missingForFree = FREE_SHIPPING_FROM_CENTS - quote.goodsCents;
+  const missingForKummies = KUMMIES_MIN_GOODS_CENTS - quote.goodsCents;
 
   return (
     <form className="checkout" onSubmit={submit} noValidate>
@@ -72,7 +74,7 @@ export function CartView() {
                   <strong>{product.title}</strong>
                 </Link>
                 <p className="muted">{product.dispatchEstimate[locale]}</p>
-                <Price exVatCents={product.priceExVatCents} qty={line.qty} />
+                <Price cents={product.priceCents} locale={locale} qty={line.qty} />
               </div>
               <div className="line__qty">
                 <label htmlFor={`qty-${line.productId}`}>{t("qty")}</label>
@@ -146,11 +148,7 @@ export function CartView() {
         <dl className="totals">
           <div>
             <dt>{t("subtotal")}</dt>
-            <dd>{formatMoney(quote.exVatCents, locale)}</dd>
-          </div>
-          <div>
-            <dt>{t("vatLine", { rate: Math.round(quote.vatRate * 100) })}</dt>
-            <dd>{formatMoney(quote.vatCents, locale)}</dd>
+            <dd>{formatMoney(quote.goodsCents, locale)}</dd>
           </div>
           <div>
             <dt>{t("shipping")}</dt>
@@ -168,16 +166,24 @@ export function CartView() {
             <dt>{t("total")}</dt>
             <dd>{formatMoney(quote.totalCents, locale)}</dd>
           </div>
+          {/* Same total in every country; only the VAT inside it follows the destination (D-025). */}
+          <div className="totals__vat">
+            <dt>{t("vatLine", { rate: Math.round(quote.vatRate * 100) })}</dt>
+            <dd>{formatMoney(quote.vatCents, locale)}</dd>
+          </div>
         </dl>
         <p className="muted">
           {missingForFree > 0
             ? t("freeShipLeft", { amount: formatMoney(missingForFree, locale) })
-            : t("freeShip")}
+            : t("freeShipReached")}
         </p>
         <p className="muted">{t("deliveryWindow")}</p>
         <p>
           {t("points")}: <strong>{quote.kummies}</strong>
         </p>
+        {missingForKummies > 0 ? (
+          <p className="muted">{t("kummiesLeft", { amount: formatMoney(missingForKummies, locale) })}</p>
+        ) : null}
         <button className="btn btn--block" type="submit">
           {t("place")}
         </button>

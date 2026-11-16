@@ -23,7 +23,7 @@ export function ProductCard({ product, locale }: { product: Product; locale: Loc
         <div className="badges">
           <Badge id={product.sourcing} locale={locale} />
         </div>
-        <Price exVatCents={product.priceExVatCents} />
+        <Price cents={product.priceCents} locale={locale} />
         {stateBadge ? (
           <div className="badges">
             <Badge id={stateBadge} locale={locale} />

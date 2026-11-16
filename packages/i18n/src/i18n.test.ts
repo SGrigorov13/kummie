@@ -21,15 +21,16 @@ describe("i18n", () => {
   });
 
   it("formats placeholders", () => {
-    expect(t("en", "vatLine", { rate: 20 })).toBe("VAT 20%");
+    expect(t("en", "vatLine", { rate: 20 })).toBe("incl. VAT 20%");
     expect(t("bg", "stepOf", { n: 3 })).toBe("Стъпка 3 от 7");
     expect(format("{a} {b}", { a: 1 })).toBe("1 {b}");
   });
 
-  it("carries the D-007 promo bar copy", () => {
-    expect(messages.en.promoBar).toBe(
-      "HURRY!!! ORDER IT NOW * COLLECT MORE KUMMIES AND WIN AWARD * FREE DELIVERY OVER 79.99 EUR",
-    );
-    expect(messages.bg.promoBar).toContain("79,99");
+  it("keeps the promo bar in line with the delivery and Kummies rules (D-026, D-027, D-028)", () => {
+    for (const locale of ["bg", "en"] as const) {
+      expect(messages[locale].promoBar).toMatch(/80/);
+      expect(messages[locale].promoBar).toMatch(/30/);
+      expect(messages[locale].promoBar).not.toMatch(/79/);
+    }
   });
 });

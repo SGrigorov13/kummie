@@ -1198,3 +1198,16 @@ code {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Price note and VAT-included line ---------- */
+.price-note {
+  font-size: 14px;
+}
+.totals .totals__vat {
+  border-bottom: 0;
+  font-size: 14px;
+  color: var(--kum-body-muted);
+}
+.totals .totals__vat dd {
+  font-weight: 400;
+}

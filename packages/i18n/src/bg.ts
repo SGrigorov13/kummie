@@ -27,9 +27,8 @@ export const bg = {
   back: "Назад",
   open: "Отвори",
 
-  // ---- Promo bar (D-007). Never rendered on Teen routes. ----
-  promoBar:
-    "ПОБЪРЗАЙ!!! ПОРЪЧАЙ СЕГА * СЪБИРАЙ ОЩЕ KUMMIES И СПЕЧЕЛИ НАГРАДА * БЕЗПЛАТНА ДОСТАВКА НАД 79,99 EUR",
+  // ---- Promo bar (D-028). Never rendered on Teen routes. Every claim must stay true. ----
+  promoBar: "ПОРЪЧАЙ СЕГА * 1 KUMMIE ЗА ВСЯКО ЕВРО ПРИ ПОРЪЧКА ОТ 30 € * БЕЗПЛАТНА ДОСТАВКА ОТ 80 €",
   promoRegion: "Промоция",
   dismiss: "Затвори промоцията",
 
@@ -61,7 +60,8 @@ export const bg = {
   bundleHint: "Стартов комплект за карти: джобове, класьор и топлоудър.",
   magazineLead: "Полезни текстове, не новини за нас.",
   guide: "Наръчник",
-  clubLead: "Kummies се трупат след демо поръчка от 15 € без ДДС нагоре.",
+  clubLead: "Получаваш 1 Kummie за всяко евро от поръчка на стойност от 30 € нагоре.",
+  kummiesLeft: "Още {amount} и започваш да трупаш Kummies.",
   clubCta: "Виж клуба",
 
   // ---- Shop ----
@@ -81,7 +81,7 @@ export const bg = {
   wishlist: "Желани",
   owned: "Имам го",
   vat: "с ДДС",
-  priceFor: "Цена за {country}",
+  priceNote: "Една и съща цена за България, Румъния и Гърция.",
   facts: "Информация за продукта",
   version: "Версия",
   sourcing: "Произход",
@@ -106,12 +106,13 @@ export const bg = {
   // ---- Cart and demo checkout ----
   checkout: "Към демо касата",
   demoNotice: "Демо каса: нищо не се плаща и поръчката остава само на това устройство.",
-  subtotal: "Сума без ДДС",
-  vatLine: "ДДС {rate}%",
+  subtotal: "Стоки",
+  vatLine: "в т.ч. ДДС {rate}%",
   shipping: "Доставка",
   shippingFree: "Безплатна",
-  freeShip: "Безплатна доставка над 79,99 € с ДДС.",
-  freeShipLeft: "Още {amount} до безплатна доставка.",
+  freeShip: "Доставката е подарък от нас при поръчка от 80 € нагоре.",
+  freeShipLeft: "Добави още {amount} и доставката е подарък от нас.",
+  freeShipReached: "Чудесно — доставката е подарък от нас!",
   deliveryWindow: "Срок: според датата на изпращане на всеки артикул. Без мита и скрити такси.",
   credit: "Отстъпка от Kummies",
   total: "Общо",
