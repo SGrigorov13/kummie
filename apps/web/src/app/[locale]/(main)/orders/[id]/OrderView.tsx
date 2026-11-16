@@ -75,6 +75,21 @@ export function OrderView({ id }: { id: string }) {
     }
   }
 
+  /** PDFs come with the order key as a header (guests), so the key never ends up in a URL. */
+  async function download(documentId: string, number: string) {
+    try {
+      const blob = await shopApi.documentPdf(id, documentId, key);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `kummie-${number}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError(t("auth.error"));
+    }
+  }
+
   async function payNow() {
     setError(null);
     try {
@@ -199,6 +214,21 @@ export function OrderView({ id }: { id: string }) {
         </div>
       </dl>
       {order.kummies > 0 ? <p>{t("order.kummies", { kummies: order.kummies })}</p> : null}
+
+      {order.documents.length > 0 ? (
+        <>
+          <h2 className="h3">{t("order.documents")}</h2>
+          <ul className="plain">
+            {order.documents.map((d) => (
+              <li key={d.id}>
+                <button type="button" className="link-button" onClick={() => download(d.id, d.number)}>
+                  {t(`doc.${d.kind}`)} № {d.number}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
 
       <h2 className="h3">{t("order.deliverTo")}</h2>
       <p>
