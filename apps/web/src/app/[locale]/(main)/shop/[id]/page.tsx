@@ -67,7 +67,9 @@ export default async function ProductPage({ params }: Props) {
         </div>
         <p className="demo-line">{t(locale, "demo")}</p>
         <Price cents={product.priceCents} locale={locale} large />
-        <p className="muted price-note">{t(locale, "priceNote")}</p>
+        <p className="muted price-note">
+          {t(locale, "priceNote")} {t(locale, "deliveryFrom")}
+        </p>
         <p>{product.summary[locale]}</p>
         <ProductActions productId={product.id} />
 
