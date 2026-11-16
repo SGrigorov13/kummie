@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Star monogram: violet squircle, pink star at −20°. The K is dropped below 32px (logo-geometry.md). -->
+  <rect width="64" height="64" rx="16" fill="#5B14E5"/>
+  <g transform="translate(7.36 7.36) scale(0.4928) rotate(-20 50 50)">
+    <path fill="#FF2E9A" d="M50 0 L61 35 L98 35 L68 57 L79 91 L50 70 L21 91 L32 57 L2 35 L39 35 Z"/>
+  </g>
+</svg>

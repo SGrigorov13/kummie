@@ -93,6 +93,13 @@ export const en: Messages = {
   returnsNote: "Return exceptions",
   noReturnExceptions: "No exceptions beyond the legal ones. You have 14 days to withdraw after delivery.",
   group: "Group",
+  limited: "Limited",
+  status: "Status",
+  explore: "More from KUMMIE",
+  "sourcing.OFFICIAL": "Authentic product from a documented source.",
+  "sourcing.KUMMIE_ORIGINAL": "Own-brand product in an original design, with no third-party IP.",
+  "sourcing.LICENSED": "Third-party IP used under a documented licence.",
+  "sourcing.SUPPLIER_DIRECT": "Ships from the supplier, not from EU stock.",
 
   // ---- Cart and demo checkout ----
   checkout: "To the demo checkout",
