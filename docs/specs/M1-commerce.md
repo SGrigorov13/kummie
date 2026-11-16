@@ -10,8 +10,9 @@ e-mails and follow the order — on the hosted staging site.
 Read first: `CLAUDE.md`, `docs/ARCHITECTURE.md` (§3 domain, §4 order lifecycle, §6 money, §7
 payments, §8 identity), `docs/DECISIONS.md` (D-016, D-025 – D-032), concept v3 §1, §1a, §3, §7.
 
-Status: **spec — owner answered A1–A11 on 2026-11-16** (section A). Still open: A2 (lawyer), A6
-(UniCredit virtual POS under negotiation), A12–A15 (accountant/owner, see below).
+Status: **spec — all questions answered on 2026-11-16** (section A). Still open: A2 (lawyer) and
+A6 (UniCredit virtual POS — implemented when the contract is a fact). **Real sales stay switched
+off** until every go-live condition in Task 13 is met.
 
 ---
 
@@ -27,8 +28,11 @@ Status: **spec — owner answered A1–A11 on 2026-11-16** (section A). Still op
 Kummies при плащане и напомнянията (M3), истински плащания (след избор на доставчик), правните
 текстове (M6).
 
-**Отговорите ти са в раздел A.** Отворени остават: възрастта (A2, юрист), платежният доставчик
-(A6, преговори с УниКредит) и четири въпроса към счетоводителя и теб (A12–A15).
+**Отговорите ти са в раздел A.** Отворени остават само възрастта (A2, юрист) и платежният
+доставчик (A6, УниКредит). **Истинските продажби остават изключени** (скрита функционалност), докато
+не са изпълнени всички условия: регистрация по OSS, регистрация на магазина в НАП, платежен
+доставчик, данни на фирмата и правни текстове. В админ панела ще има страница „Готовност за
+продажби“, която показва кое е готово и кое не (задача 13).
 
 ---
 
@@ -47,10 +51,10 @@ Kummies при плащане и напомнянията (M3), истински
 | A9 | Hosting | **Bulinfo PRO, already paid**, only this domain, low traffic at start; scale-up options are reconsidered when traffic grows. Still needed from Bulinfo: Node versions and whether PRO runs two Node apps (web + API) — see the checklist. |
 | A10 | Free cancellation until the order is batched | **Yes.** |
 | A11 | First products | **Yes** — KUMMIE Originals / test products first, real supplier data when the first distributor answers. |
-| A12 | **OSS start date.** Until the voluntary OSS registration is active, RO and GR customers are charged **Bulgarian 20 % VAT** (accountant). | **Open — owner/accountant to give the date.** Core gets an `ossEffectiveFrom` setting: before it every sale uses the BG rate; from it, the destination rate. With one price everywhere (D-025) this only changes the VAT inside the price, not what the customer pays. |
-| A13 | **Romania's rate.** The accountant's note says 19 %; the EU TEDB database and our daily check show **21 % since 01.08.2025** (Law 141/2025). | **Open — accountant to confirm.** Code keeps 21 %; the daily check alerts if the official rate changes. |
-| A14 | **B2B customers.** BG companies need an invoice within 5 days; RO/GR companies with a valid VIES number are invoiced at 0 % (intra-EU supply, VIES return), outside OSS. | **Proposed:** M1 supports "Искам фактура" for individuals and Bulgarian companies (20 %); cross-border B2B with VIES validation and 0 % comes later, when the first such customer appears. |
-| A15 | **Registering the e-shop with НАП** (Приложение № 33 към Н-18, with КЕП) before real sales: domain, shop software, ePOS provider, company IBAN. | **Owner action before launch** — needs the payment provider (A6) first. Software name and version for the form come from the deploy (Task 12). |
+| A12 | **OSS start date.** Until the voluntary OSS registration is active, RO and GR customers would be charged **Bulgarian 20 % VAT** (accountant). | **Answered: the shop does not go live before the OSS registration is active.** Real sales stay switched off (Task 13), so every real sale uses the destination rate. The `ossEffectiveFrom` setting stays as a safety net (before it, the BG rate) and is a go-live condition. |
+| A13 | **Romania's rate.** The accountant's note says 19 %; the EU TEDB database shows **21 % since 01.08.2025**. | **Answered: the official EU database is leading.** RO = 21 %; the daily check keeps it in line with TEDB. |
+| A14 | **B2B customers.** BG companies need an invoice within 5 days; RO/GR companies with a valid VIES number are invoiced at 0 % (intra-EU supply, VIES return), outside OSS. | **Answered:** M1 supports "Искам фактура" for individuals and Bulgarian companies (20 %); cross-border B2B with VIES and 0 % is built when the first such customer appears. |
+| A15 | **Registering the e-shop with НАП** (Приложение № 33 към Н-18, with КЕП) before real sales. | **Owner registers.** The registration gives the shop its `RF` number and unique e-shop number (`E_SHOP_N`), which the platform needs for the receipts and the monthly XML (Task 9). Ongoing obligations after registration are in Task 9; any change to the declared facts (payment operator, vPOS terminal, domain, hosting, closing the shop) must be reported as an update of Приложение № 33 **within 7 days** — the admin reminds of it (Task 13). |
 
 ---
 
@@ -94,7 +98,8 @@ Drizzle tables (one migration per logical step, never edit an applied one):
 - Admin: product list, create/edit with live compliance checklist, publish/unpublish, image upload.
 - Admin **Settings → Company** (A4): legal name, ЕИК, VAT number, registered address, contact
   e-mail/phone, IBAN, EU responsible person (GPSR default), OSS effective date (A12), delivery
-  fee per country (A5). Changes are audited; sales documents store a snapshot of the company data.
+  fee per country (A5), **НАП e-shop data: `RF` number and `E_SHOP_N`, registration date** (A15).
+  Changes are audited; sales documents store a snapshot of the company data.
 
 ### 4. Customer accounts *(A2)*
 
@@ -148,28 +153,37 @@ Drizzle tables (one migration per logical step, never edit an applied one):
 
 ### 9. Sales documents under Наредба Н-18 and ЗДДС *(A3, A4, A12–A15)*
 
-Requirements from the accountant (2026-11-16), for card payments through a virtual POS / licensed
-payment operator with the money going straight to the company IBAN:
+Requirements from the accountant and the owner (2026-11-16). Regime: **alternative regime without
+a cash register (Н-18, чл. 52о)** for card / vPOS payments, money straight to the company IBAN,
+e-shop registered with НАП via Приложение № 33 (A15):
 
-- **No cash register and no fiscal receipt** (Н-18, чл. 3, ал. 17). Instead the platform issues a
-  **"документ за регистриране на продажба"** (non-fiscal system document, Н-18 чл. 52м–52о) when
-  the payment webhook confirms the payment.
-- **PDF e-mailed to the customer** with: unique 10-digit document number (sequential, no gaps),
-  date and time, company data incl. VAT number, description of the goods, **tax base, VAT rate and
-  VAT amount per rate**, total, payment method, and a **QR code** (ЕИК, document number, date,
-  time, amount).
-- **Monthly audit XML (Приложение № 38)** of all card-paid orders, generated at the end of each
-  month per the НАП XSD schema, for submission by the 15th of the next month (the file is offered
-  for download in admin; submission stays manual).
+- **No cash register and no fiscal receipt** (Н-18, чл. 3, ал. 17). For **every card-paid order** the
+  platform issues an **electronic system receipt** (документ по чл. 52о) when the payment webhook
+  confirms the payment.
+- **PDF e-mailed to the customer** with: unique document number (10 digits, sequential, no gaps),
+  date and time, trader data incl. VAT number, description of the goods, **tax base, VAT rate and
+  VAT amount per rate**, total, payment method, and a **two-dimensional barcode (QR code)
+  containing the shop's `RF` number** plus the fields Н-18 requires (exact QR content confirmed
+  with the accountant before go-live).
+- **Monthly standardised audit XML** for the previous month, submitted by the owner in the НАП
+  portal with КЕП **between the 1st and the 15th**. It contains **all orders, including refunded /
+  reversed ones with negative amounts**, and the shop's unique number `E_SHOP_N`. Generated by a
+  monthly job, validated against the official XSD, offered for download in admin; submission stays
+  manual.
+- **Refunds and cancellations** produce a reversal (storno) document with negative amounts that
+  references the original receipt, and appear in the monthly XML.
 - **Invoices:** B2C only on request ("Искам фактура"); B2B mandatory within 5 days of payment.
   Invoices have their own 10-digit numbering. Credit notes for refunds.
 - **Sales journal:** B2C sales without an invoice are summarised in the monthly VAT sales journal
   (by the 14th) — the platform exports what the accountant needs (CSV/XML for their software).
-- **OSS:** quarterly figures per country (RO, GR) exported once OSS is active (A12).
+- **OSS:** quarterly figures per country (RO, GR), submitted by the end of the month after the
+  quarter — exported from the platform.
 - Built behind a `ReceiptAdapter` so the format can change without touching checkout. Document
   numbering lives in the database under a lock, so two payments can never get the same number.
-- The exact XSD and the document layout are confirmed with the accountant before go-live; the XML
-  is validated against the official XSD in tests.
+- **Later (not M1): cash on delivery** without a cash register needs a written agreement with the
+  courier to pay the amounts as a postal money transfer (ППП) to the company account, and a
+  document with the details of Н-18 чл. 26, ал. 1, т. 1, 4, 7 и 8 attached to every parcel. Planned
+  a few months after launch together with the courier adapters.
 
 ### 10. Web storefront on the API *(no decision needed once Tasks 1–8 exist)*
 
@@ -177,6 +191,10 @@ payment operator with the money going straight to the company IBAN:
   (keep it only as seed data).
 - Product pages render from the database (static where possible, revalidated on publish).
 - Account, checkout, order pages; cookie banner stays "essential only" (no analytics yet).
+- **Trader information visible on the site (ЗЗП, GDPR):** a "Данни за търговеца" page (name, ЕИК,
+  registered office, contacts — from Settings → Company) and a "Плащане и доставка" page (payment
+  methods, delivery countries, fees and times), both linked from the footer next to the terms,
+  14-day withdrawal, returns, privacy, guarantee and complaints pages. Final legal texts in M6.
 
 ### 11. Admin *(no decision needed)*
 
@@ -195,7 +213,25 @@ payment operator with the money going straight to the company IBAN:
   Bulinfo answers. Until launch the whole site is behind HTTP basic auth and `robots: noindex`.
 - `docs/hosting/` gets the real runbook; the owner guide gets a "how a release happens" section.
 
-### 13. Tests *(throughout)*
+### 13. Go-live gate — sales stay off until everything is ready *(A6, A12, A15)*
+
+- A single **sales switch** in Settings, **off by default**. While it is off the shop can be
+  browsed (behind the site password until launch) but checkout cannot take real payments — only
+  the fake provider in test mode for staff.
+- An admin page **"Готовност за продажби"** lists every condition, each green or red, and the switch
+  can only be turned on when all are green:
+  1. Company data complete (A4).
+  2. OSS registration date set and reached (A12).
+  3. НАП e-shop registration: `RF` number and `E_SHOP_N` entered (A15).
+  4. A real payment provider configured and tested (A6).
+  5. Legal pages published: terms, 14-day withdrawal, returns, privacy, trader data, payment and
+     delivery (final texts in M6).
+  6. Delivery fees set per country (A5).
+- **7-day reminder for Приложение № 33:** when the payment provider, vPOS terminal, domain or
+  hosting settings change — or the shop is switched off for good — admin records the date and shows
+  a reminder to submit the update to НАП within 7 days, until someone marks it as submitted.
+
+### 14. Tests *(throughout)*
 
 - Unit tests for every new core rule (compliance gate, quote edge cases already covered).
 - API integration tests against a real PostgreSQL (CI service container; local: the owner's DB
@@ -212,7 +248,9 @@ payment operator with the money going straight to the company IBAN:
 - On kummie.eu (password-protected): register, verify e-mail, buy a test product with the fake
   provider, receive the confirmation e-mail with the sales-document PDF (QR code), follow the
   order steps, cancel and see the refund, the credit document and the Kummies revoked.
-- The monthly Приложение 38 XML validates against the official XSD.
+- The monthly audit XML (all orders incl. refunds with negative amounts, `E_SHOP_N`) validates
+  against the official XSD; receipts carry a QR code with the `RF` number.
+- The sales switch is off and cannot be turned on while any go-live condition is red.
 - No demo data left in storefront pages; demo store module removed.
 - Owner guide and `docs/DECISIONS.md` updated with everything decided in M1.
 
@@ -221,4 +259,5 @@ payment operator with the money going straight to the company IBAN:
 Batching, purchase orders, hub receiving/repacking, carriers and labels (M2); spending Kummies at
 checkout, expiry reminders, wishlist/collection sync, referrals (M3); Magazine/Teen as MDX, SEO
 (M4); mobile screens and push (M5); legal texts, analytics after consent, performance budgets,
-security review (M6); real payment provider (as soon as A6 is decided).
+security review (M6); real payment provider (as soon as A6 is a fact); cash on delivery (a few
+months after launch, Task 9); cross-border B2B with VIES (when the first such customer appears).
