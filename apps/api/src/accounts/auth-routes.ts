@@ -18,6 +18,7 @@ import type { Database } from "../db/client";
 import { consents, customers, customerSessions, customerTokens } from "../db/schema";
 import { accountEmail, type AccountEmailKind } from "../email/account-emails";
 import { enqueue } from "../jobs/outbox";
+import { mergeGuestCart } from "../shop/cart-store";
 import {
   CUSTOMER_COOKIE,
   loadAccountSettings,
@@ -183,15 +184,13 @@ export function customerAuthRoutes(deps: AccountDeps): FastifyPluginAsyncZod {
               .returning();
           }
           if (!row) throw new Error("customer not saved");
-          await tx
-            .insert(consents)
-            .values({
-              customerId: row.id,
-              kind: "terms",
-              granted: true,
-              source: "signup",
-              version: TERMS_VERSION,
-            });
+          await tx.insert(consents).values({
+            customerId: row.id,
+            kind: "terms",
+            granted: true,
+            source: "signup",
+            version: TERMS_VERSION,
+          });
           const token = await issueToken(tx, row.id, "verify_email");
           await queueEmail(tx, "verify", row, `verify:${sha256(token).slice(0, 16)}`, token);
         });
@@ -213,6 +212,8 @@ export function customerAuthRoutes(deps: AccountDeps): FastifyPluginAsyncZod {
             .where(eq(customers.id, row.id))
             .returning();
           await startSession(reply, tx, row.id, request.headers["user-agent"]);
+          // A guest cart started before signing in moves into the account.
+          await mergeGuestCart(tx, request, reply, row.id);
           return updated ?? null;
         });
         if (!customer) return reply.code(400).send(invalidToken);
@@ -259,6 +260,8 @@ export function customerAuthRoutes(deps: AccountDeps): FastifyPluginAsyncZod {
         }
         await db.update(customers).set({ lastLoginAt: new Date() }).where(eq(customers.id, row.id));
         await startSession(reply, db, row.id, request.headers["user-agent"]);
+        // A guest cart started before signing in moves into the account.
+        await mergeGuestCart(db, request, reply, row.id);
         return toAccount(row);
       },
     );
@@ -312,6 +315,8 @@ export function customerAuthRoutes(deps: AccountDeps): FastifyPluginAsyncZod {
             .where(eq(customers.id, row.id))
             .returning();
           await startSession(reply, tx, row.id, request.headers["user-agent"]);
+          // A guest cart started before signing in moves into the account.
+          await mergeGuestCart(tx, request, reply, row.id);
           return updated ?? null;
         });
         if (!customer) return reply.code(400).send(invalidToken);

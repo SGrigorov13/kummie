@@ -9,6 +9,8 @@ import type { AdminDeps } from "./admin/context";
 import { adminPlugin } from "./admin/plugin";
 import type { CatalogueRepository } from "./catalogue/repository";
 import { catalogueRoutes } from "./routes/catalogue";
+import type { ShopDeps } from "./shop/orders";
+import { shopPlugin } from "./shop/plugin";
 import { healthRoutes, type DbCheck } from "./routes/health";
 
 export type AppDeps = {
@@ -20,13 +22,16 @@ export type AppDeps = {
   admin?: AdminDeps;
   /** Customer accounts; registered only with a database. */
   accounts?: AccountDeps;
+  /** Cart, checkout, orders and payment webhooks; registered only with a database. */
+  shop?: ShopDeps;
   /** Proxies in front of the API whose X-Forwarded-For is trusted (for rate limits by client IP). */
   trustProxy?: FastifyServerOptions["trustProxy"];
 };
 
 /** Builds the Fastify app with Zod validation/serialisation. No listening here, so tests can inject. */
-export function buildApp({ logger, checkDb, catalogue, admin, accounts, trustProxy = false }: AppDeps) {
-  const app = Fastify({ logger, trustProxy }).withTypeProvider<ZodTypeProvider>();
+export function buildApp({ logger, checkDb, catalogue, admin, accounts, shop, trustProxy = false }: AppDeps) {
+  // Signed payment session ids travel in the path (fake provider page), so allow longer segments.
+  const app = Fastify({ logger, trustProxy, maxParamLength: 2048 }).withTypeProvider<ZodTypeProvider>();
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
   app.register(cookie);
@@ -35,7 +40,7 @@ export function buildApp({ logger, checkDb, catalogue, admin, accounts, trustPro
   // Browsers may send cookies only from our own apps: the staff API answers the admin origins only,
   // everything else the shop's origins (and the admin, which reads the public catalogue).
   const adminOrigins = admin?.allowedOrigins ?? [];
-  const webOrigins = accounts?.allowedOrigins ?? [];
+  const webOrigins = accounts?.allowedOrigins ?? shop?.allowedOrigins ?? [];
   if (adminOrigins.length > 0 || webOrigins.length > 0) {
     app.register(cors, {
       delegator: (request, callback) => {
@@ -53,5 +58,6 @@ export function buildApp({ logger, checkDb, catalogue, admin, accounts, trustPro
   if (catalogue) app.register(catalogueRoutes(catalogue));
   if (admin) app.register(adminPlugin(admin));
   if (accounts) app.register(accountsPlugin(accounts));
+  if (shop) app.register(shopPlugin(shop));
   return app;
 }
