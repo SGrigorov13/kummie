@@ -81,6 +81,13 @@ export function createAdminClient({
     getOrder: (id: string) => call("GET", `/admin-api/orders/${id}`, AdminOrder),
     changeOrderStatus: (id: string, change: OrderStatusChange) =>
       call("POST", `/admin-api/orders/${id}/status`, AdminOrder, change),
+    /** Direct links (the staff cookie goes along): document PDFs and the monthly reports. */
+    documentUrl: (orderId: string, documentId: string) =>
+      `${base}/admin-api/orders/${orderId}/documents/${documentId}`,
+    reportUrl: (report: "nap-audit" | "sales", year: number, month: number) =>
+      `${base}/admin-api/reports/${report}?year=${year}&month=${month}`,
+    ossReportUrl: (year: number, quarter: number) =>
+      `${base}/admin-api/reports/oss?year=${year}&quarter=${quarter}`,
     categories: () => call("GET", "/catalogue/categories", CategoryList),
     groups: () => call("GET", "/catalogue/groups", GroupList),
   };

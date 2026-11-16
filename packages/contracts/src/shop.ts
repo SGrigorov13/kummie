@@ -162,6 +162,15 @@ export const OrderDetail = z.object({
   canPay: z.boolean(),
   /** True until the order joins a supplier batch (A10); a paid order is refunded in full. */
   canCancel: z.boolean(),
+  /** Sales documents (Н-18 receipt, invoice, storno, credit note) as PDF downloads. */
+  documents: z.array(
+    z.object({
+      id: z.string(),
+      kind: z.enum(["receipt", "receipt_storno", "invoice", "credit_note"]),
+      number: z.string(),
+      issuedAt: z.string(),
+    }),
+  ),
 });
 export type OrderDetail = z.infer<typeof OrderDetail>;
 

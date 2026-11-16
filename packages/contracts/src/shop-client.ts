@@ -64,6 +64,15 @@ export function createShopClient({
     payAgain: (id: string, key?: string | null) =>
       call("POST", `/orders/${id}/pay`, PayResponse, {}, keyHeader(key)),
     myOrders: () => call("GET", "/account/orders", OrderList),
+    /** A sales document as PDF (guests send their order key as a header, never in the URL). */
+    documentPdf: async (orderId: string, documentId: string, key?: string | null): Promise<Blob> => {
+      const response = await fetchImpl(`${base}/orders/${orderId}/documents/${documentId}`, {
+        credentials: "include",
+        headers: keyHeader(key),
+      });
+      if (!response.ok) throw new ApiRequestError(response.status, null);
+      return response.blob();
+    },
     /** Cancels before the order is batched; a paid order is refunded in full (A10, D-032). */
     cancelOrder: (id: string, key?: string | null) =>
       call("POST", `/orders/${id}/cancel`, OrderDetail, {}, keyHeader(key)),
