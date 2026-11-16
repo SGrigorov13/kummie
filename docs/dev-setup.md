@@ -82,12 +82,26 @@ pnpm test
 pnpm build
 ```
 
+**Database tests.** The API's PostgreSQL tests run only when `TEST_DATABASE_URL` points to a
+database whose name ends in `_test` — they **wipe it** first. Locally that is `kummie_test` on the
+same server (created once, next to `kummie`):
+
+```powershell
+$env:TEST_DATABASE_URL = "postgres://postgres:YOUR_PASSWORD@localhost:5432/kummie_test"
+pnpm --filter api test
+Remove-Item Env:TEST_DATABASE_URL
+```
+
+CI runs them in a separate job with a PostgreSQL 17 container.
+
 ## 5. Other commands
 
 ```powershell
 pnpm --filter api tick          # run-once background worker (cPanel cron, every 5 minutes)
 pnpm --filter api tick:daily    # daily jobs, e.g. the VAT rate check against EU TEDB (cron, 06:00)
 pnpm --filter api db:generate   # write a new SQL migration after changing src/db/schema.ts
+pnpm --filter api db:migrate    # apply pending migrations to the database in apps/api/.env
+pnpm --filter api db:seed       # groups, categories and the demo products (safe to run again)
 pnpm --filter web dev           # one app only
 pnpm format                     # Prettier
 ```
