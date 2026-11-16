@@ -73,6 +73,26 @@ database name) — the API log shows the reason.
 | Admin | http://localhost:5173 |
 | API health | http://localhost:3001/health |
 
+### Staff accounts (admin sign-in)
+
+The staff API starts only when `apps/api/.env` has `DATABASE_URL` **and** `STAFF_SECRET_KEY`
+(32 random bytes, base64 — it encrypts the 2FA secrets; never change it once accounts exist):
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+Paste the output as `STAFF_SECRET_KEY=...` into `apps/api/.env`, restart `pnpm dev`, then create
+your own account (the password is asked for in the terminal and is not shown):
+
+```powershell
+pnpm --filter api staff:create --email you@example.com --name "Your Name" --role admin
+```
+
+Open http://localhost:5173, sign in, and scan the QR code with an authenticator app (Google
+Authenticator, Microsoft Authenticator, 1Password …) on the first sign-in. `ADMIN_ORIGINS` lists
+the addresses the admin may call the API from (default: `http://localhost:5173`).
+
 ## 4. Checks (a task is done only when all four pass)
 
 ```powershell
