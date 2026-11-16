@@ -31,8 +31,11 @@ export type Product = {
   isLimited: boolean;
   /** Exact version / variant. Required on every product page (GPSR Art. 19). */
   version: string;
-  /** Integer euro cents, excluding VAT. */
-  priceExVatCents: number;
+  /**
+   * Consumer price in integer euro cents, INCLUDING VAT. The same in every country (D-025); the VAT
+   * inside it depends on the destination and is worked out by `quoteCart`.
+   */
+  priceCents: number;
   currency: "EUR";
   dispatchEstimate: Localized;
   deliveryRegions: Country[];

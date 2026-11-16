@@ -1,42 +1,50 @@
 import { kummiesEarned } from "./kummies";
 import type { Country } from "./types";
-import { assertCents, vatCents, vatRate } from "./vat";
+import { assertCents, vatIncludedCents, vatRate } from "./vat";
 
-/** Free shipping from €79.99 incl. VAT (D-007). */
-export const FREE_SHIPPING_GROSS_CENTS = 7999;
-/** Flat shipping fee below the threshold. */
+/**
+ * Free delivery when the goods incl. VAT are worth MORE than €79.99, i.e. from €80.00 (D-026).
+ */
+export const FREE_SHIPPING_FROM_CENTS = 8000;
+/** Flat delivery fee below the threshold, incl. VAT. */
 export const SHIPPING_FEE_CENTS = 490;
 
 /** Countries we deliver to at launch. Poland follows about a month later. */
 export const SHIPPING_COUNTRIES = ["BG", "RO", "GR"] as const satisfies readonly Country[];
 export type ShippingCountry = (typeof SHIPPING_COUNTRIES)[number];
 
-export type CartLineInput = { priceExVatCents: number; qty: number };
+/** One cart line: the consumer price incl. VAT (same in every country) and a quantity. */
+export type CartLineInput = { priceCents: number; qty: number };
 
 export type Quote = {
-  exVatCents: number;
-  vatCents: number;
-  vatRate: number;
-  /** Merchandise incl. VAT. */
-  grossCents: number;
+  /** Goods incl. VAT — exactly the sum of the prices shown on the product cards. */
+  goodsCents: number;
   shippingCents: number;
   /** Store credit actually applied; never more than goods + shipping. */
   creditCents: number;
+  /** What the customer pays. Identical in BG, RO and GR for the same cart. */
   totalCents: number;
+  /** Destination-country rate used to work out the VAT inside the total. */
+  vatRate: number;
+  /** VAT contained in `totalCents` (goods and delivery are both standard-rated). */
+  vatCents: number;
+  /** `totalCents` without VAT: what KUMMIE keeps before costs. Varies by country. */
+  netCents: number;
   /** Kummies this order would earn. */
   kummies: number;
 };
 
-/** Shipping for a merchandise value incl. VAT. An empty cart ships nothing. */
-export function shippingCents(merchandiseGrossCents: number): number {
-  assertCents(merchandiseGrossCents);
-  if (merchandiseGrossCents <= 0) return 0;
-  return merchandiseGrossCents >= FREE_SHIPPING_GROSS_CENTS ? 0 : SHIPPING_FEE_CENTS;
+/** Delivery for a goods value incl. VAT. An empty cart ships nothing. */
+export function shippingCents(goodsCents: number): number {
+  assertCents(goodsCents);
+  if (goodsCents <= 0) return 0;
+  return goodsCents >= FREE_SHIPPING_FROM_CENTS ? 0 : SHIPPING_FEE_CENTS;
 }
 
 /**
- * Prices a cart for a destination country. VAT is rounded per unit, so the cart total always equals
- * the sum of the gross prices shown on product cards (D-016).
+ * Prices a cart. The customer pays the same total in every country (D-025); only the VAT inside it
+ * changes with the destination, so KUMMIE's net (`netCents`) is what moves. VAT is worked out once,
+ * on the amount actually paid, so a Kummies discount also lowers the VAT (D-016).
  */
 export function quoteCart(
   lines: readonly CartLineInput[],
@@ -45,26 +53,25 @@ export function quoteCart(
   date: Date = new Date(),
 ): Quote {
   assertCents(availableCreditCents);
-  const rate = vatRate(country, date);
-  let exVat = 0;
-  let vat = 0;
+  let goods = 0;
   for (const line of lines) {
-    assertCents(line.priceExVatCents);
+    assertCents(line.priceCents);
     if (!Number.isInteger(line.qty) || line.qty < 0) throw new Error(`Invalid quantity ${line.qty}`);
-    exVat += line.priceExVatCents * line.qty;
-    vat += vatCents(line.priceExVatCents, rate) * line.qty;
+    goods += line.priceCents * line.qty;
   }
-  const gross = exVat + vat;
-  const shipping = shippingCents(gross);
-  const credit = Math.min(Math.max(availableCreditCents, 0), gross + shipping);
+  const shipping = shippingCents(goods);
+  const credit = Math.min(Math.max(availableCreditCents, 0), goods + shipping);
+  const total = goods + shipping - credit;
+  const rate = vatRate(country, date);
+  const vat = vatIncludedCents(total, rate);
   return {
-    exVatCents: exVat,
-    vatCents: vat,
-    vatRate: rate,
-    grossCents: gross,
+    goodsCents: goods,
     shippingCents: shipping,
     creditCents: credit,
-    totalCents: gross + shipping - credit,
-    kummies: kummiesEarned(exVat),
+    totalCents: total,
+    vatRate: rate,
+    vatCents: vat,
+    netCents: total - vat,
+    kummies: kummiesEarned(goods),
   };
 }

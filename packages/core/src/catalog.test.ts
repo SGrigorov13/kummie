@@ -92,7 +92,7 @@ describe("groups seed", () => {
 describe("demo catalogue", () => {
   it("uses integer cents, known taxonomy and known groups", () => {
     for (const product of products) {
-      expect(Number.isInteger(product.priceExVatCents)).toBe(true);
+      expect(Number.isInteger(product.priceCents)).toBe(true);
       expect(isSubcategoryId(product.subcategory)).toBe(true);
       if (product.groupId) expect(groupById(product.groupId)).toBeDefined();
     }

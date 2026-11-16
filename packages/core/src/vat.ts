@@ -41,21 +41,20 @@ export function vatRate(country: Country, date: Date = new Date()): number {
 }
 
 /**
- * VAT on one unit, rounded half-up to whole cents. The rate is turned into basis points first so
- * the multiplication stays in integers.
+ * The VAT contained in a consumer price (D-025: one price incl. VAT for every country, so the VAT
+ * inside it depends on the destination). Rounded half-up to whole cents; the rate is turned into
+ * basis points so the arithmetic stays in integers.
+ *
+ *   vat = gross − round(gross / (1 + rate))
  */
-export function vatCents(exVatCents: number, rate: number): number {
-  assertCents(exVatCents);
+export function vatIncludedCents(grossCents: number, rate: number): number {
+  assertCents(grossCents);
   const basisPoints = Math.round(rate * 10_000);
-  return Math.round((exVatCents * basisPoints) / 10_000);
+  const net = Math.round((grossCents * 10_000) / (10_000 + basisPoints));
+  return grossCents - net;
 }
 
-/** Price incl. VAT for one unit. */
-export function grossCents(exVatCents: number, rate: number): number {
-  return exVatCents + vatCents(exVatCents, rate);
-}
-
-/** Price incl. VAT for one unit in a destination country. */
-export function unitGrossCents(exVatCents: number, country: Country, date: Date = new Date()): number {
-  return grossCents(exVatCents, vatRate(country, date));
+/** The part of a consumer price that is not VAT. */
+export function netOfVatCents(grossCents: number, rate: number): number {
+  return grossCents - vatIncludedCents(grossCents, rate);
 }

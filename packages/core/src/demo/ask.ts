@@ -1,7 +1,6 @@
 import { groupById } from "../groups";
 import { formatMoney, parseEuroToCents } from "../money";
 import type { Localized } from "../types";
-import { unitGrossCents } from "../vat";
 import { calendar } from "./content";
 import { products } from "./products";
 
@@ -34,25 +33,23 @@ function budgetCents(q: string): number | undefined {
 }
 
 /** @demo Answers a few question types from the demo catalogue. Never invents stock or dates. */
-export function askKummie(query: string, date: Date = new Date()): AssistantReply {
+export function askKummie(query: string): AssistantReply {
   const q = query.toLowerCase();
   const budget = budgetCents(q);
   const talksMoney =
     q.includes("куп") || q.includes("buy") || q.includes("взе") || q.includes("бюджет") || q.includes("имам");
 
   if (budget !== undefined && (talksMoney || /€|eur|евро/.test(q))) {
-    const picks = products
-      .filter((product) => unitGrossCents(product.priceExVatCents, "BG", date) <= budget)
-      .slice(0, 3);
+    const picks = products.filter((product) => product.priceCents <= budget).slice(0, 3);
     const names = picks.map((product) => product.title).join(", ");
     return withDisclaimer(
       {
         bg: names
-          ? `Под ${formatMoney(budget, "bg")} с ДДС за България в демо каталога влизат: ${names}.`
-          : `Под ${formatMoney(budget, "bg")} с ДДС за България няма артикул в демо каталога.`,
+          ? `Под ${formatMoney(budget, "bg")} с ДДС в демо каталога влизат: ${names}.`
+          : `Под ${formatMoney(budget, "bg")} с ДДС няма артикул в демо каталога.`,
         en: names
-          ? `Under ${formatMoney(budget, "en")} including Bulgarian VAT, the demo catalogue includes: ${names}.`
-          : `Nothing in the demo catalogue sits under ${formatMoney(budget, "en")} including Bulgarian VAT.`,
+          ? `Under ${formatMoney(budget, "en")} including VAT, the demo catalogue includes: ${names}.`
+          : `Nothing in the demo catalogue sits under ${formatMoney(budget, "en")} including VAT.`,
       },
       picks.map((product) => product.id),
     );

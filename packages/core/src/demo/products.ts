@@ -22,7 +22,7 @@ export const products: readonly Product[] = [
     state: "IN_STOCK_EU",
     isLimited: false,
     version: "A5 · 20 sheets",
-    priceExVatCents: 1833,
+    priceCents: 2200,
     currency: "EUR",
     summary: {
       bg: "Класьор за фотокарти с оригинален дизайн на KUMMIE. Без имена, лога или снимки на артисти.",
@@ -51,7 +51,7 @@ export const products: readonly Product[] = [
     state: "IN_STOCK_EU",
     isLimited: false,
     version: "50 sleeves",
-    priceExVatCents: 625,
+    priceCents: 750,
     currency: "EUR",
     summary: {
       bg: "Прозрачни джобове за стандартна фотокарта. Оригинален аксесоар, не официален мърч на група.",
@@ -81,7 +81,7 @@ export const products: readonly Product[] = [
     sourcing: "KUMMIE_ORIGINAL",
     isLimited: true,
     version: "10 pieces",
-    priceExVatCents: 917,
+    priceCents: 1100,
     currency: "EUR",
     summary: {
       bg: "Твърди протектори за карти, които искаш да показваш. Лимитираната визия е само на опаковката на KUMMIE.",
@@ -110,7 +110,7 @@ export const products: readonly Product[] = [
     state: "NEW_DROP",
     isLimited: false,
     version: "Holds 4 binders",
-    priceExVatCents: 1583,
+    priceCents: 1900,
     currency: "EUR",
     summary: {
       bg: "Кутия за класьори и джобове. Нова в демо каталога от последните 14 дни.",
@@ -134,7 +134,7 @@ export const products: readonly Product[] = [
     sourcing: "KUMMIE_ORIGINAL",
     isLimited: false,
     version: "Cotton · one size",
-    priceExVatCents: 1333,
+    priceCents: 1600,
     currency: "EUR",
     summary: {
       bg: "Памучна чанта със звездата на KUMMIE. Без артисти и без албумни визии.",
@@ -163,7 +163,7 @@ export const products: readonly Product[] = [
     state: "IN_STOCK_EU",
     isLimited: false,
     version: "6 stickers",
-    priceExVatCents: 417,
+    priceCents: 500,
     currency: "EUR",
     summary: {
       bg: "Стикери със звездата и еквалайзера. Поръчка само с този артикул е под прага за Kummies.",
@@ -189,7 +189,7 @@ export const products: readonly Product[] = [
     state: "PRE_ORDER",
     isLimited: false,
     version: "Demo version A",
-    priceExVatCents: 1500,
+    priceCents: 1800,
     currency: "EUR",
     summary: {
       bg: "Примерен официален албум в каталога, за да се види баджът и предзаказната страница. Не се продава и не е истински предзаказ.",
@@ -219,7 +219,7 @@ export const products: readonly Product[] = [
     state: "NEW_DROP",
     isLimited: false,
     version: "Demo version B",
-    priceExVatCents: 1417,
+    priceCents: 1700,
     currency: "EUR",
     summary: {
       bg: "Втори примерен албум за филтъра по група. Няма снимка на обложката нарочно.",
@@ -242,7 +242,7 @@ export const products: readonly Product[] = [
     sourcing: "OFFICIAL",
     isLimited: false,
     version: "Demo version C",
-    priceExVatCents: 1417,
+    priceCents: 1700,
     currency: "EUR",
     summary: {
       bg: "Примерен албум без бадж за състояние, за да се тества карта само с един sourcing бадж.",
@@ -266,7 +266,7 @@ export const products: readonly Product[] = [
     state: "PRE_ORDER",
     isLimited: false,
     version: "Generic hard case",
-    priceExVatCents: 1167,
+    priceCents: 1400,
     currency: "EUR",
     summary: {
       bg: "Кутия за лайтстик без лого на група. Баджът показва директна доставка от доставчик в демо модела.",
