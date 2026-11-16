@@ -10,8 +10,8 @@ e-mails and follow the order — on the hosted staging site.
 Read first: `CLAUDE.md`, `docs/ARCHITECTURE.md` (§3 domain, §4 order lifecycle, §6 money, §7
 payments, §8 identity), `docs/DECISIONS.md` (D-016, D-025 – D-032), concept v3 §1, §1a, §3, §7.
 
-Status: **spec — waiting for the owner's answers in "Decisions needed" (section A).** Tasks
-marked *(no decision needed)* can start as soon as the spec is approved.
+Status: **spec — owner answered A1–A11 on 2026-11-16** (section A). Still open: A2 (lawyer), A6
+(UniCredit virtual POS under negotiation), A12–A15 (accountant/owner, see below).
 
 ---
 
@@ -27,26 +27,30 @@ marked *(no decision needed)* can start as soon as the spec is approved.
 Kummies при плащане и напомнянията (M3), истински плащания (след избор на доставчик), правните
 текстове (M6).
 
-**Въпросите към теб са в раздел A** — всеки с препоръка. Без отговорите на A1–A4 можем да започнем
-технически, но не можем да завършим M1.
+**Отговорите ти са в раздел A.** Отворени остават: възрастта (A2, юрист), платежният доставчик
+(A6, преговори с УниКредит) и четири въпроса към счетоводителя и теб (A12–A15).
 
 ---
 
-## A. Decisions needed (owner / accountant)
+## A. Decisions (answered 2026-11-16 unless marked open)
 
-| # | Question | Why it matters | Recommendation | Needed by |
-|---|---|---|---|---|
-| A1 | **Guest checkout** or account required to buy? | Friction vs. Kummies/tracking | Allow guest checkout; offer "save as account" after payment. Kummies only for accounts. | Task 6 |
-| A2 | **Minimum age** for an account, and can under-18s pay themselves? | Teens 13–19 are the core audience; GDPR digital-consent age is 14 in BG, 15 in GR, 16 in RO | Accounts from **14**; under-18 accounts get the restrictions in CLAUDE.md; marketing consents only from the country's consent age; payment by the account holder's own card/wallet. Lawyer to confirm. | Task 4 |
-| A3 | **Receipts and invoices** — does the platform issue them, or the accountant's software? Which Bulgarian rules apply to an online shop paid by card (Наредба Н-18: fiscal receipt / "документ за регистриране на продажба", registration of the e-shop with НАП)? | Legal requirement for every sale | Ask the accountant. Build the platform side as an adapter (`ReceiptAdapter`) so either answer fits. | Task 9 |
-| A4 | **Company details**: legal name, ЕИК, VAT number, registered address, contact e-mail/phone, EU responsible person (GPSR) | Footer, invoices, product pages, e-mails | — (owner provides) | Tasks 3, 8, 9 |
-| A5 | **Delivery fee** — the same €4.90 in BG, RO and GR? | Courier costs differ by country; "one price everywhere" (D-025) suggests one fee | One fee everywhere until carrier quotes say otherwise | Task 6 |
-| A6 | **Payment provider** | Real payments | Keep building against the fake provider in M1; choose before launch (candidates to compare: Stripe, myPOS, a Bulgarian bank's virtual POS via Borica, Paysera). Needs a company account with the provider. | Before launch |
-| A7 | **E-mail sending**: Bulinfo mailbox (~300/hour) at start, or a transactional service (e.g. Brevo, Postmark, Amazon SES)? | Deliverability (spam folder) | Start with Bulinfo SMTP + SPF/DKIM/DMARC; switch through the adapter if volume grows | Task 8 |
-| A8 | **Domain and staging address**: `kummie.eu` confirmed? Staging on e.g. `staging.kummie.eu`? | Deploy, e-mail sender, Android package `eu.kummie.app` | Confirm kummie.eu; staging subdomain protected by a password until launch | Task 12 |
-| A9 | **Bulinfo answers** (`docs/hosting/bulinfo-checklist.md`) and the hosting plan | Deploy | MAX plan (2 GB) | Task 12 |
-| A10 | **Customer cancellation** — free until the batch closes (ARCHITECTURE §4)? In M1 there is no batching yet, so "until the order is batched". | Refund rules, e-mails | Confirm | Task 7 |
-| A11 | **Who enters the first real products, and from which supplier?** | Real catalogue needs supplier data (concept v3 §9) | Start with KUMMIE Originals / test products; real supplier data as soon as the first distributor answers | Task 3 |
+| # | Question | Answer |
+|---|---|---|
+| A1 | Guest checkout? | **Yes.** Guest checkout allowed; "save as account" offered after payment; Kummies only for accounts. |
+| A2 | Minimum age for an account | **Open — owner checks with a lawyer.** Build the age gate configurable (minimum age and under-18 restrictions as settings); default 14. |
+| A3 | Receipts, invoices, Наредба Н-18 | **The platform issues them** — the accountant's requirements are in Task 9. |
+| A4 | Company details | **Entered later in the admin panel** (Settings → Company) once the registration is done. Nothing is hard-coded: footer, sales documents, e-mails and product pages read them from there. Legal entity per the accountant: „СГ Корпорейшън“ ЕООД (SG Corporation LTD), VAT-registered under чл. 100, ал. 1 ЗДДС. |
+| A5 | Delivery fee | **Per country, set when a courier contract is signed.** Until then the fee is €4.90 everywhere and copy says **"Доставка от 4,90 €" / "Delivery from €4.90"**; the cart always shows the exact fee. Fees become a per-country admin setting. |
+| A6 | Payment provider | **Open — negotiating a virtual POS with UniCredit Bulbank.** M1 keeps the fake provider; the UniCredit adapter is added when its technical documentation arrives. Money goes straight to the company IBAN (a condition for Н-18, Task 9). |
+| A7 | E-mail sending | **Bulinfo SMTP** (MX for kummie.eu already points to the hosting); SPF/DKIM/DMARC set in cPanel. |
+| A8 | Domain | **kummie.eu is the real domain.** DNS is already on Bulinfo (ns5/ns6.bulinfo.org) and HTTPS answers. Until launch the site runs on kummie.eu itself behind a password (no separate staging domain). |
+| A9 | Hosting | **Bulinfo PRO, already paid**, only this domain, low traffic at start; scale-up options are reconsidered when traffic grows. Still needed from Bulinfo: Node versions and whether PRO runs two Node apps (web + API) — see the checklist. |
+| A10 | Free cancellation until the order is batched | **Yes.** |
+| A11 | First products | **Yes** — KUMMIE Originals / test products first, real supplier data when the first distributor answers. |
+| A12 | **OSS start date.** Until the voluntary OSS registration is active, RO and GR customers are charged **Bulgarian 20 % VAT** (accountant). | **Open — owner/accountant to give the date.** Core gets an `ossEffectiveFrom` setting: before it every sale uses the BG rate; from it, the destination rate. With one price everywhere (D-025) this only changes the VAT inside the price, not what the customer pays. |
+| A13 | **Romania's rate.** The accountant's note says 19 %; the EU TEDB database and our daily check show **21 % since 01.08.2025** (Law 141/2025). | **Open — accountant to confirm.** Code keeps 21 %; the daily check alerts if the official rate changes. |
+| A14 | **B2B customers.** BG companies need an invoice within 5 days; RO/GR companies with a valid VIES number are invoiced at 0 % (intra-EU supply, VIES return), outside OSS. | **Proposed:** M1 supports "Искам фактура" for individuals and Bulgarian companies (20 %); cross-border B2B with VIES validation and 0 % comes later, when the first such customer appears. |
+| A15 | **Registering the e-shop with НАП** (Приложение № 33 към Н-18, with КЕП) before real sales: domain, shop software, ePOS provider, company IBAN. | **Owner action before launch** — needs the payment provider (A6) first. Software name and version for the form come from the deploy (Task 12). |
 
 ---
 
@@ -77,7 +81,7 @@ Drizzle tables (one migration per logical step, never edit an applied one):
 - Seed command: `pnpm --filter api db:seed` (groups, taxonomy, one test product per badge
   combination — no artist imagery, no fake "official" claims).
 
-### 3. Catalogue and the compliance gate *(A4, A11 for real data)*
+### 3. Catalogue, compliance gate and company settings *(A4, A11)*
 
 - Public API: list/filter (category → subcategory, generation, group, limited, search), product
   detail, groups. Only `published` products are visible.
@@ -88,6 +92,9 @@ Drizzle tables (one migration per logical step, never edit an applied one):
 - Badges: exactly one sourcing badge, at most one state badge; LIMITED only from `is_limited`.
 - Images through the storage adapter (disk on Bulinfo); AVIF/WebP variants, explicit sizes.
 - Admin: product list, create/edit with live compliance checklist, publish/unpublish, image upload.
+- Admin **Settings → Company** (A4): legal name, ЕИК, VAT number, registered address, contact
+  e-mail/phone, IBAN, EU responsible person (GPSR default), OSS effective date (A12), delivery
+  fee per country (A5). Changes are audited; sales documents store a snapshot of the company data.
 
 ### 4. Customer accounts *(A2)*
 
@@ -108,8 +115,11 @@ Drizzle tables (one migration per logical step, never edit an applied one):
 ### 6. Cart and checkout *(A1, A5)*
 
 - Server-side cart (guest cart by cookie, merged into the account on login).
-- Quote from `@kummie/core` only (one price everywhere, VAT extracted per country, free delivery
-  over €79.99, Kummies preview) — the web never re-implements the maths.
+- Quote from `@kummie/core` only (one price everywhere, VAT extracted per country — the BG rate for
+  every sale before the OSS date (A12), free delivery over €79.99, delivery fee per country (A5),
+  Kummies preview) — the web never re-implements the maths.
+- **"Искам фактура"** option (A14): individual (name, address — no ЕГН collected) or Bulgarian
+  company (name, ЕИК, VAT number, address).
 - Checkout: contact, delivery address (BG/RO/GR), consent to terms + withdrawal information
   shown before payment, then a payment session through `PaymentProvider` (redirect/hosted page;
   card data never touches our servers; cards and wallets only, no cash on delivery).
@@ -136,11 +146,30 @@ Drizzle tables (one migration per logical step, never edit an applied one):
 - Sent by the `tick` worker from the `jobs` outbox (retries with backoff, idempotency key).
 - Order-status e-mails are transactional and never contain marketing.
 
-### 9. Receipts / invoices *(A3, A4)*
+### 9. Sales documents under Наредба Н-18 and ЗДДС *(A3, A4, A12–A15)*
 
-- `ReceiptAdapter` interface: issue a sales document for a paid order, cancel/credit on refund.
-- Implementation chosen after the accountant's answer (platform-generated PDF with Bulgarian
-  numbering rules, or an export to the accountant's software).
+Requirements from the accountant (2026-11-16), for card payments through a virtual POS / licensed
+payment operator with the money going straight to the company IBAN:
+
+- **No cash register and no fiscal receipt** (Н-18, чл. 3, ал. 17). Instead the platform issues a
+  **"документ за регистриране на продажба"** (non-fiscal system document, Н-18 чл. 52м–52о) when
+  the payment webhook confirms the payment.
+- **PDF e-mailed to the customer** with: unique 10-digit document number (sequential, no gaps),
+  date and time, company data incl. VAT number, description of the goods, **tax base, VAT rate and
+  VAT amount per rate**, total, payment method, and a **QR code** (ЕИК, document number, date,
+  time, amount).
+- **Monthly audit XML (Приложение № 38)** of all card-paid orders, generated at the end of each
+  month per the НАП XSD schema, for submission by the 15th of the next month (the file is offered
+  for download in admin; submission stays manual).
+- **Invoices:** B2C only on request ("Искам фактура"); B2B mandatory within 5 days of payment.
+  Invoices have their own 10-digit numbering. Credit notes for refunds.
+- **Sales journal:** B2C sales without an invoice are summarised in the monthly VAT sales journal
+  (by the 14th) — the platform exports what the accountant needs (CSV/XML for their software).
+- **OSS:** quarterly figures per country (RO, GR) exported once OSS is active (A12).
+- Built behind a `ReceiptAdapter` so the format can change without touching checkout. Document
+  numbering lives in the database under a lock, so two payments can never get the same number.
+- The exact XSD and the document layout are confirmed with the accountant before go-live; the XML
+  is validated against the official XSD in tests.
 
 ### 10. Web storefront on the API *(no decision needed once Tasks 1–8 exist)*
 
@@ -154,14 +183,16 @@ Drizzle tables (one migration per logical step, never edit an applied one):
 - Real staff login (Task 5), catalogue (Task 3), orders (Task 7), basic dashboard numbers
   (orders today, paid total, awaiting batch).
 
-### 12. Deploy to Bulinfo staging *(A8, A9)*
+### 12. Deploy to Bulinfo *(A8, A9)*
 
 - GitHub Actions deploy workflow on merge to `main`: build, upload over SSH/rsync, run
   `node dist/migrate.js`, restart the Node apps (Passenger).
 - cPanel cron: `node dist/tick.js` every 5 minutes, `node dist/tick.js --daily` at 06:00, cron
   e-mail set (D-029 alerts).
 - Nightly `pg_dump` backup copied off the server.
-- Staging protected by HTTP basic auth until launch; `robots: noindex`.
+- Bulinfo PRO, domain kummie.eu; API and admin on the subdomains `api.` and `admin.` if PRO runs
+  two Node apps, otherwise the API is served under a path of the main domain — decided with the
+  Bulinfo answers. Until launch the whole site is behind HTTP basic auth and `robots: noindex`.
 - `docs/hosting/` gets the real runbook; the owner guide gets a "how a release happens" section.
 
 ### 13. Tests *(throughout)*
@@ -178,8 +209,10 @@ Drizzle tables (one migration per logical step, never edit an applied one):
 
 - `pnpm lint && pnpm typecheck && pnpm test && pnpm build` pass in CI (Ubuntu + Windows).
 - A product cannot be published without its GPSR fields (API and admin).
-- On staging: register, verify e-mail, buy a test product with the fake provider, receive the
-  confirmation e-mail, follow the order steps, cancel and see the refund + Kummies revoked.
+- On kummie.eu (password-protected): register, verify e-mail, buy a test product with the fake
+  provider, receive the confirmation e-mail with the sales-document PDF (QR code), follow the
+  order steps, cancel and see the refund, the credit document and the Kummies revoked.
+- The monthly Приложение 38 XML validates against the official XSD.
 - No demo data left in storefront pages; demo store module removed.
 - Owner guide and `docs/DECISIONS.md` updated with everything decided in M1.
 
