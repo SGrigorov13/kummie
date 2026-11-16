@@ -9,6 +9,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -248,3 +249,144 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   updatedBy: uuid("updated_by").references(() => staffUsers.id),
 });
+
+// ---------- Customers (M1 Task 4) ----------
+
+export const accountLocaleEnum = pgEnum("account_locale", ["bg", "en"]);
+export const shippingCountryEnum = pgEnum("shipping_country", ["BG", "RO", "GR"]);
+export const customerTokenPurposeEnum = pgEnum("customer_token_purpose", ["verify_email", "reset_password"]);
+export const consentKindEnum = pgEnum("consent_kind", [
+  "terms",
+  "notify_comebacks",
+  "notify_restocks",
+  "notify_order_status",
+  "notify_club_drops",
+  "personalised_ads",
+]);
+
+/**
+ * One customer record for web and app. `deleted_at` closes the account at once (GDPR request);
+ * `erased_at` is set when the background job has removed the personal data.
+ */
+export const customers = pgTable(
+  "customers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull(),
+    /** argon2id hash; empty after erasure. */
+    passwordHash: text("password_hash").notNull(),
+    name: text("name").notNull(),
+    locale: accountLocaleEnum("locale").notNull().default("bg"),
+    /** Age gate (A2). Under 18 is derived from it every time, so it changes on the birthday. */
+    birthDate: date("birth_date", { mode: "string" }),
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    erasedAt: timestamp("erased_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("customers_email_unique").on(sql`lower(${t.email})`)],
+);
+
+/** Server-side customer sessions; only the SHA-256 of the cookie token is stored. */
+export const customerSessions = pgTable(
+  "customer_sessions",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    customerId: uuid("customer_id")
+      .notNull()
+      .references(() => customers.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    userAgent: text("user_agent"),
+  },
+  (t) => [index("customer_sessions_customer_idx").on(t.customerId)],
+);
+
+/** Single-use links sent by e-mail (verify e-mail, reset password); only the SHA-256 is stored. */
+export const customerTokens = pgTable(
+  "customer_tokens",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    customerId: uuid("customer_id")
+      .notNull()
+      .references(() => customers.id, { onDelete: "cascade" }),
+    purpose: customerTokenPurposeEnum("purpose").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("customer_tokens_customer_idx").on(t.customerId, t.purpose)],
+);
+
+export const addresses = pgTable(
+  "addresses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    customerId: uuid("customer_id")
+      .notNull()
+      .references(() => customers.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    line1: text("line1").notNull(),
+    line2: text("line2"),
+    city: text("city").notNull(),
+    postcode: text("postcode").notNull(),
+    country: shippingCountryEnum("country").notNull(),
+    phone: text("phone").notNull(),
+    isDefault: boolean("is_default").notNull().default(false),
+    ...timestamps,
+  },
+  (t) => [index("addresses_customer_idx").on(t.customerId)],
+);
+
+/**
+ * Append-only consent history (proof of consent, GDPR Art. 7): the latest row per kind is the
+ * current choice. Kept after erasure — it holds no personal data besides the customer id.
+ */
+export const consents = pgTable(
+  "consents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    customerId: uuid("customer_id")
+      .notNull()
+      .references(() => customers.id, { onDelete: "cascade" }),
+    kind: consentKindEnum("kind").notNull(),
+    granted: boolean("granted").notNull(),
+    /** Where it was given: "signup", "account", "system" (e.g. switched off for a minor). */
+    source: text("source").notNull(),
+    /** Version of the text agreed to (terms); null for simple switches. */
+    version: text("version"),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("consents_customer_kind_idx").on(t.customerId, t.kind, t.at)],
+);
+
+// ---------- Background jobs (outbox) ----------
+
+export const jobStatusEnum = pgEnum("job_status", ["pending", "running", "done", "failed"]);
+
+/**
+ * Outbox for work done outside the request: e-mails now, notifications and erasure later.
+ * Picked up right after the request and by the `tick` cron as the safety net (retries with backoff).
+ */
+export const jobs = pgTable(
+  "jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind").notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    /** The same key is never queued twice (e.g. one confirmation e-mail per order). */
+    idempotencyKey: text("idempotency_key").notNull(),
+    status: jobStatusEnum("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    runAt: timestamp("run_at", { withTimezone: true }).notNull().defaultNow(),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    doneAt: timestamp("done_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("jobs_idempotency_unique").on(t.idempotencyKey),
+    index("jobs_due_idx").on(t.status, t.runAt),
+  ],
+);

@@ -24,6 +24,19 @@ const EnvSchema = z.object({
   ADMIN_ORIGINS: z.string().default("http://localhost:5173,http://127.0.0.1:5173"),
   /** Secure (HTTPS-only) cookies; defaults to on in production. */
   COOKIE_SECURE: z.enum(["true", "false"]).optional(),
+  /** Public address of the shop, used in e-mail links (e.g. https://kummie.eu). */
+  WEB_URL: z.string().url().default("http://localhost:3000"),
+  /** Comma-separated shop origins allowed to call the account API with cookies. */
+  WEB_ORIGINS: z.string().default("http://localhost:3000,http://127.0.0.1:3000"),
+  /** "file" writes e-mails to MAIL_OUTBOX_DIR (development); SMTP (Bulinfo, A7) follows in M1 Task 8. */
+  EMAIL_TRANSPORT: z.enum(["file"]).default("file"),
+  /** Folder for development e-mails, relative to the app root (git-ignored). */
+  MAIL_OUTBOX_DIR: z.string().min(1).default("mail-outbox"),
+  /**
+   * Which proxies may set X-Forwarded-For (needed for per-client rate limits behind Apache):
+   * "false", "true", a hop count such as "1", or comma-separated IPs/CIDRs.
+   */
+  TRUST_PROXY: z.string().default("false"),
   /** Public base URL of uploaded media (product images). */
   MEDIA_BASE_URL: z.string().min(1).default("/media"),
   /** Folder with Drizzle SQL migrations, relative to the app root. */
@@ -49,4 +62,29 @@ export function loadConfig(
     throw new Error(`Invalid API configuration — ${problems}. See apps/api/.env.example.`);
   }
   return parsed.data;
+}
+
+/** Turns TRUST_PROXY into Fastify's trustProxy option. */
+export function trustProxyOption(
+  value: string,
+): boolean | string[] | ((address: string, hop: number) => boolean) {
+  if (value === "true") return true;
+  if (value === "false" || value === "") return false;
+  if (/^\d+$/.test(value)) {
+    // Trust the first N hops (e.g. Apache in front of Passenger = 1).
+    const hops = Number(value);
+    return (_address, hop) => hop < hops;
+  }
+  return value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+/** Splits a comma-separated origin list. */
+export function originList(value: string): string[] {
+  return value
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 }

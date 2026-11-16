@@ -49,17 +49,34 @@ export function jobsFor(list: readonly Job[], schedule: JobSchedule): Job[] {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const schedule: JobSchedule = process.argv.includes("--daily") ? "daily" : "frequent";
-  import("./registry")
-    .then(({ jobs }) => runTick(jobsFor(jobs, schedule)))
-    .then(
-      (results) => {
-        const failed = results.filter((result) => !result.ok).length;
-        console.info(`[tick:${schedule}] ${results.length} job(s), ${failed} failed`);
-        process.exit(failed > 0 ? 1 : 0);
-      },
-      (error: unknown) => {
-        console.error(error);
-        process.exit(1);
-      },
-    );
+  const main = async () => {
+    const [{ createJobs }, { loadConfig }, { createDatabase }, { createFileEmailAdapter }] =
+      await Promise.all([
+        import("./registry"),
+        import("../config"),
+        import("../db/client"),
+        import("../email/file-adapter"),
+      ]);
+    const config = loadConfig();
+    const handle = config.DATABASE_URL ? createDatabase(config.DATABASE_URL, 2) : undefined;
+    try {
+      const list = createJobs(
+        handle ? { db: handle.db, email: createFileEmailAdapter(config.MAIL_OUTBOX_DIR) } : {},
+      );
+      return await runTick(jobsFor(list, schedule));
+    } finally {
+      await handle?.close();
+    }
+  };
+  main().then(
+    (results) => {
+      const failed = results.filter((result) => !result.ok).length;
+      console.info(`[tick:${schedule}] ${results.length} job(s), ${failed} failed`);
+      process.exit(failed > 0 ? 1 : 0);
+    },
+    (error: unknown) => {
+      console.error(error);
+      process.exit(1);
+    },
+  );
 }
