@@ -2,11 +2,12 @@ import { t } from "@kummie/i18n";
 import { Link, Stack } from "expo-router";
 import { Text, useColorScheme, View } from "react-native";
 import { useLocale } from "@/components/locale";
-import { palette, sp, text } from "@/theme";
+import { palette, sp, textStyles } from "@/theme";
 
 export default function NotFoundScreen() {
   const locale = useLocale();
   const colors = palette(useColorScheme() === "dark" ? "dark" : "light");
+  const text = textStyles(locale);
   return (
     <>
       <Stack.Screen options={{ title: "404" }} />

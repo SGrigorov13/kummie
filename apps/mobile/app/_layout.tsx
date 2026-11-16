@@ -1,4 +1,7 @@
 import { ArchivoBlack_400Regular } from "@expo-google-fonts/archivo-black";
+import { JetBrainsMono_400Regular, JetBrainsMono_700Bold } from "@expo-google-fonts/jetbrains-mono";
+import { Montserrat_900Black } from "@expo-google-fonts/montserrat";
+import { Onest_400Regular, Onest_500Medium, Onest_700Bold } from "@expo-google-fonts/onest";
 import {
   SpaceGrotesk_400Regular,
   SpaceGrotesk_500Medium,
@@ -11,7 +14,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
-import { fonts, palette } from "@/theme";
+import { useLocale } from "@/components/locale";
+import { FONT_FAMILIES, fontsFor, palette } from "@/theme";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -21,14 +25,22 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
-/** Brand fonts (OFL). Cyrillic falls back to the system font per glyph (D-003). */
+const { latin, cyrillic } = FONT_FAMILIES;
+
+/** Brand fonts for Latin, chosen companions for Cyrillic (D-003). All SIL OFL. */
 const FONT_MAP = {
-  [fonts.display]: ArchivoBlack_400Regular,
-  [fonts.text]: SpaceGrotesk_400Regular,
-  [fonts.textMedium]: SpaceGrotesk_500Medium,
-  [fonts.textBold]: SpaceGrotesk_700Bold,
-  [fonts.mono]: SpaceMono_400Regular,
-  [fonts.monoBold]: SpaceMono_700Bold,
+  [latin.display]: ArchivoBlack_400Regular,
+  [latin.text]: SpaceGrotesk_400Regular,
+  [latin.textMedium]: SpaceGrotesk_500Medium,
+  [latin.textBold]: SpaceGrotesk_700Bold,
+  [latin.mono]: SpaceMono_400Regular,
+  [latin.monoBold]: SpaceMono_700Bold,
+  [cyrillic.display]: Montserrat_900Black,
+  [cyrillic.text]: Onest_400Regular,
+  [cyrillic.textMedium]: Onest_500Medium,
+  [cyrillic.textBold]: Onest_700Bold,
+  [cyrillic.mono]: JetBrainsMono_400Regular,
+  [cyrillic.monoBold]: JetBrainsMono_700Bold,
 };
 
 export default function RootLayout() {
@@ -49,6 +61,7 @@ export default function RootLayout() {
 function RootNavigator() {
   const scheme = useColorScheme() === "dark" ? "dark" : "light";
   const colors = palette(scheme);
+  const fonts = fontsFor(useLocale());
   const base = scheme === "dark" ? DarkTheme : DefaultTheme;
   const theme = {
     ...base,
@@ -64,8 +77,15 @@ function RootNavigator() {
   return (
     <ThemeProvider value={theme}>
       <StatusBar style="light" />
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.header },
+          headerTintColor: colors.headerText,
+          headerTitleStyle: { fontFamily: fonts.textBold },
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="product/[id]" />
       </Stack>
     </ThemeProvider>
   );
