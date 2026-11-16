@@ -166,7 +166,7 @@ export const en: Messages = {
   redeemNote: "Redeemed for {amount} off",
   earnNote: "From order {id} · valid until {date}",
   kummiesExpiring: "Use your {count} Kummies by {date} — after that they expire and the discount is gone.",
-  kummiesValidity: "Kummies are valid for {days} days from the day the order is paid.",
+  kummiesValidity: "Kummies are valid for {months} months from the day the order is paid.",
   // Expiry reminders (D-031): push ≤ 60 characters, e-mail subject + body. Sent 14, 3 and 1 day before.
   "kummies.reminder14": "⭐ {count} Kummies expire in 14 days — treat yourself",
   "kummies.reminder3": "⭐ {count} Kummies expire in 3 days — don't lose them",

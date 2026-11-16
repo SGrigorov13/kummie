@@ -165,8 +165,8 @@ Rules
   Flat delivery fee below it.
 - Kummies: **1 Kummie per whole euro** of the final goods amount incl. VAT (after any Kummies
   discount, without delivery), only when that amount is **≥ €30.00** (D-027); **100 Kummies = €5**
-  store credit (D-030). Points are recorded on the payment day and expire after a fixed validity
-  period; oldest points are spent first; reminders 14, 3 and 1 day before expiry (D-031).
+  store credit (D-030). Points are recorded on the payment day and stay valid for 6 calendar
+  months; oldest points are spent first; reminders 14, 3 and 1 day before expiry (D-031).
 
 ## 7. Payments
 

@@ -4,7 +4,8 @@ import {
   addDays,
   businessDay,
   KUMMIES_REDEEM_COST,
-  KUMMIES_VALIDITY_DAYS,
+  addMonths,
+  KUMMIES_VALIDITY_MONTHS,
   kummiesBalance,
   kummiesEarned,
   kummiesReminderDays,
@@ -53,16 +54,23 @@ describe("validity from the payment day (D-031)", () => {
     expect(newKummiesLot("o1", new Date("2026-11-15T23:30:00Z"), 40).earnedOn).toBe("2026-11-16");
   });
 
-  it("is valid for KUMMIES_VALIDITY_DAYS, last day inclusive", () => {
+  it("is valid for 6 calendar months, last day inclusive", () => {
+    expect(KUMMIES_VALIDITY_MONTHS).toBe(6);
     const until = kummiesValidUntil("2026-11-16");
-    expect(until).toBe(addDays("2026-11-16", KUMMIES_VALIDITY_DAYS));
+    expect(until).toBe("2027-05-16");
     const lots = [lot("a", "2026-11-16", 40)];
     expect(kummiesBalance(lots, until)).toBe(40);
     expect(kummiesBalance(lots, addDays(until, 1))).toBe(0);
   });
 
   it("schedules reminders 14, 3 and 1 day before expiry", () => {
-    expect(kummiesReminderDays("2026-11-16", 30)).toEqual(["2026-12-02", "2026-12-13", "2026-12-15"]);
+    expect(kummiesReminderDays("2026-11-16")).toEqual(["2027-05-02", "2027-05-13", "2027-05-15"]);
+  });
+
+  it("handles short months and leap years", () => {
+    expect(addMonths("2026-08-31", 6)).toBe("2027-02-28");
+    expect(addMonths("2027-08-31", 6)).toBe("2028-02-29");
+    expect(addMonths("2026-12-15", 6)).toBe("2027-06-15");
   });
 });
 
@@ -100,7 +108,7 @@ describe("spending (D-030)", () => {
   });
 
   it("uses the points that expire first, so none are lost unnecessarily", () => {
-    const lots = [lot("new", "2026-11-01", 80), lot("old", "2026-03-01", 50)];
+    const lots = [lot("new", "2026-11-01", 80), lot("old", "2026-08-01", 50)];
     const after = spendKummies(lots, 100, "2026-11-20");
     expect(after?.find((l) => l.id === "old")?.remaining).toBe(0);
     expect(after?.find((l) => l.id === "new")?.remaining).toBe(30);

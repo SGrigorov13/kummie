@@ -167,7 +167,7 @@ export const bg = {
   redeemNote: "Обмяна за {amount} отстъпка",
   earnNote: "От поръчка {id} · валидни до {date}",
   kummiesExpiring: "Използвай {count} Kummies до {date} — след това изтичат и отстъпката се губи.",
-  kummiesValidity: "Kummies важат {days} дни от деня на плащане на поръчката.",
+  kummiesValidity: "Kummies важат {months} месеца от деня на плащане на поръчката.",
   // Expiry reminders (D-031): push ≤ 60 characters, e-mail subject + body. Sent 14, 3 and 1 day before.
   "kummies.reminder14": "⭐ {count} Kummies изтичат след 14 дни — вземи си отстъпка",
   "kummies.reminder3": "⭐ {count} Kummies изтичат след 3 дни — не ги губи",

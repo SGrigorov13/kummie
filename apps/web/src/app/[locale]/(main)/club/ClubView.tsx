@@ -4,7 +4,7 @@ import {
   formatMoney,
   KUMMIES_REDEEM_COST,
   KUMMIES_REDEEM_CENTS,
-  KUMMIES_VALIDITY_DAYS,
+  KUMMIES_VALIDITY_MONTHS,
   kummiesBalance,
   nextKummiesExpiry,
   type Locale,
@@ -34,7 +34,7 @@ export function ClubView() {
         <span className="label">{t("kummies")}</span>
         <strong>{balance}</strong>
       </p>
-      <p className="muted">{t("kummiesValidity", { days: KUMMIES_VALIDITY_DAYS })}</p>
+      <p className="muted">{t("kummiesValidity", { months: KUMMIES_VALIDITY_MONTHS })}</p>
       {expiry ? (
         <p className="notice">
           {t("kummiesExpiring", { count: expiry.count, date: formatDay(expiry.validUntil, locale) })}

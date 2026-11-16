@@ -7,7 +7,7 @@ import { assertCents } from "./vat";
  * any Kummies discount) and without delivery; only when that amount is at least €30.00.
  * Spending: 100 Kummies = €5 off.
  * Validity: points are recorded on the day the order is paid (Bulgarian time) and expire
- * KUMMIES_VALIDITY_DAYS later. Reminders go out 14, 3 and 1 day before expiry.
+ * KUMMIES_VALIDITY_MONTHS calendar months later. Reminders go out 14, 3 and 1 day before expiry.
  */
 
 /** Minimum final goods amount incl. VAT (after discount, without delivery) to earn anything. */
@@ -18,10 +18,10 @@ export const KUMMIES_PER_EUR = 1;
 export const KUMMIES_REDEEM_COST = 100;
 export const KUMMIES_REDEEM_CENTS = 500;
 /**
- * How long points stay valid, counted from the payment day. PROPOSED value — the owner has not set
- * the period yet (D-031). Changing it only affects points earned afterwards.
+ * How long points stay valid: 6 calendar months from the payment day (D-031). Paid on 16 Nov →
+ * usable up to and including 16 May. Changing it only affects points earned afterwards.
  */
-export const KUMMIES_VALIDITY_DAYS = 365;
+export const KUMMIES_VALIDITY_MONTHS = 6;
 /** Reminder schedule before expiry (push if allowed in the app, and e-mail). */
 export const KUMMIES_REMINDER_DAYS_BEFORE = [14, 3, 1] as const;
 export type KummiesReminderDay = (typeof KUMMIES_REMINDER_DAYS_BEFORE)[number];
@@ -63,14 +63,24 @@ export function addDays(isoDay: string, days: number): string {
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
 }
 
+/**
+ * Adds calendar months to an ISO date. When the target month is shorter, the last day of that month
+ * is used (31 Aug + 6 months → 28/29 Feb).
+ */
+export function addMonths(isoDay: string, months: number): string {
+  const [y, m, d] = isoDay.split("-").map(Number) as [number, number, number];
+  const lastDay = new Date(Date.UTC(y, m - 1 + months + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(y, m - 1 + months, Math.min(d, lastDay))).toISOString().slice(0, 10);
+}
+
 /** Last day the points can be used (inclusive). */
-export function kummiesValidUntil(earnedOn: string, validityDays = KUMMIES_VALIDITY_DAYS): string {
-  return addDays(earnedOn, validityDays);
+export function kummiesValidUntil(earnedOn: string, validityMonths = KUMMIES_VALIDITY_MONTHS): string {
+  return addMonths(earnedOn, validityMonths);
 }
 
 /** The days on which the 14/3/1-day reminders are due. */
-export function kummiesReminderDays(earnedOn: string, validityDays = KUMMIES_VALIDITY_DAYS): string[] {
-  const until = kummiesValidUntil(earnedOn, validityDays);
+export function kummiesReminderDays(earnedOn: string, validityMonths = KUMMIES_VALIDITY_MONTHS): string[] {
+  const until = kummiesValidUntil(earnedOn, validityMonths);
   return KUMMIES_REMINDER_DAYS_BEFORE.map((before) => addDays(until, -before));
 }
 
