@@ -1,0 +1,182 @@
+/* KUMMIE admin — brand tokens only (@kummie/brand/tokens.css). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--kum-paper);
+  color: var(--kum-ink);
+  font: var(--kum-body);
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+h1 {
+  margin: 0 0 calc(var(--kum-space) * 4);
+  font: var(--kum-h2);
+  letter-spacing: var(--kum-track-display);
+}
+
+:focus-visible {
+  outline: 3px solid var(--kum-violet);
+  outline-offset: 2px;
+}
+.sidebar :focus-visible,
+.signin__brand :focus-visible {
+  outline-color: var(--kum-glow);
+}
+
+.label {
+  font: var(--kum-label-ty);
+  letter-spacing: var(--kum-track-label);
+  text-transform: uppercase;
+  color: var(--kum-label);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 calc(var(--kum-space) * 6);
+  border: 2px solid var(--kum-glow);
+  border-radius: var(--kum-radius-pill);
+  background: var(--kum-glow);
+  color: var(--kum-ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn--secondary {
+  border-color: var(--kum-ink);
+  background: transparent;
+}
+
+.link-button {
+  min-height: 44px;
+  padding: 0 calc(var(--kum-space) * 2);
+  border: 0;
+  background: none;
+  color: var(--kum-violet);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- Sign-in ---- */
+.signin {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  gap: calc(var(--kum-space) * 8);
+  padding: calc(var(--kum-space) * 6);
+  background: var(--kum-violet);
+}
+.signin__brand {
+  display: flex;
+  justify-content: center;
+}
+.signin__card {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--kum-space) * 2);
+  width: min(400px, 100%);
+  padding: calc(var(--kum-space) * 8);
+  border-radius: var(--kum-radius-lg);
+  background: var(--kum-paper);
+  box-shadow: var(--kum-shadow);
+}
+.signin__card label {
+  margin-top: calc(var(--kum-space) * 2);
+  font-weight: 500;
+}
+.signin__card input {
+  min-height: 44px;
+  padding: 0 calc(var(--kum-space) * 3);
+  border: 2px solid var(--kum-hairline);
+  border-radius: var(--kum-radius-sm);
+  background: var(--kum-white);
+}
+.signin__card .btn {
+  margin-top: calc(var(--kum-space) * 4);
+}
+.signin__lang {
+  display: flex;
+  justify-content: center;
+}
+.note {
+  margin: 0;
+  font: var(--kum-small);
+  color: var(--kum-body-muted);
+}
+
+/* ---- Shell ---- */
+.shell {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 240px 1fr;
+}
+@media (max-width: 767px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--kum-space) * 8);
+  padding: calc(var(--kum-space) * 6);
+  background: var(--kum-ink);
+  color: var(--kum-paper);
+}
+.sidebar ul {
+  display: grid;
+  gap: calc(var(--kum-space) * 1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sidebar button {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 calc(var(--kum-space) * 3);
+  border: 0;
+  border-radius: var(--kum-radius-sm);
+  background: transparent;
+  color: var(--kum-paper);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.sidebar button[aria-current="page"] {
+  background: var(--kum-glow);
+  color: var(--kum-ink);
+}
+.content {
+  padding: calc(var(--kum-space) * 8);
+}
+.content__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: calc(var(--kum-space) * 4);
+  margin-bottom: calc(var(--kum-space) * 6);
+}
+.content__tools {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--kum-space) * 2);
+}
+.empty {
+  padding: calc(var(--kum-space) * 10);
+  border: 2px dashed var(--kum-hairline);
+  border-radius: var(--kum-radius-md);
+  background: var(--kum-white);
+}
