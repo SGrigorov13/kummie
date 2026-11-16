@@ -1,0 +1,176 @@
+import { z } from "zod";
+import { AddressInput, ShippingCountry } from "./account";
+import { Localized } from "./catalogue";
+
+// ---------- Cart (M1 Task 6) ----------
+
+export const MAX_LINE_QTY = 20;
+
+export const CartLine = z.object({
+  variantId: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  version: z.string(),
+  sku: z.string(),
+  priceCents: z.number().int(),
+  qty: z.number().int().min(1),
+  lineTotalCents: z.number().int(),
+  dispatchEstimate: Localized,
+  /** False when the product was unpublished, the version switched off or it does not ship there. */
+  available: z.boolean(),
+});
+export type CartLine = z.infer<typeof CartLine>;
+
+/** Everything the customer must see before paying (CLAUDE.md: transparent prices). */
+export const CartQuote = z.object({
+  goodsCents: z.number().int(),
+  shippingCents: z.number().int(),
+  totalCents: z.number().int(),
+  vatRate: z.number(),
+  vatCents: z.number().int(),
+  /** Kummies the order earns — only for signed-in customers (A1). */
+  kummies: z.number().int(),
+  kummiesBaseCents: z.number().int(),
+  shippingFeeCents: z.number().int(),
+  freeShippingFromCents: z.number().int(),
+});
+export type CartQuote = z.infer<typeof CartQuote>;
+
+export const Cart = z.object({
+  lines: z.array(CartLine),
+  country: ShippingCountry,
+  count: z.number().int(),
+  quote: CartQuote,
+});
+export type Cart = z.infer<typeof Cart>;
+
+export const CartLineUpdate = z.object({
+  variantId: z.string().uuid(),
+  /** 0 removes the line. */
+  qty: z.number().int().min(0).max(MAX_LINE_QTY),
+  /** true adds to the current quantity (product page); false sets it (cart page). */
+  add: z.boolean().default(false),
+});
+export type CartLineUpdate = z.input<typeof CartLineUpdate>;
+
+export const CartCountryUpdate = z.object({ country: ShippingCountry });
+
+// ---------- Checkout ----------
+
+/** "Искам фактура" (A14): an individual (no ЕГН collected) or a Bulgarian company. */
+export const InvoiceRequest = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("person"),
+    name: z.string().trim().min(1).max(120),
+    address: z.string().trim().min(3).max(300),
+  }),
+  z.object({
+    kind: z.literal("company"),
+    name: z.string().trim().min(1).max(200),
+    eik: z.string().regex(/^(\d{9}|\d{13})$/),
+    vatNumber: z
+      .string()
+      .regex(/^BG\d{9,10}$/)
+      .nullable(),
+    address: z.string().trim().min(3).max(300),
+  }),
+]);
+export type InvoiceRequest = z.infer<typeof InvoiceRequest>;
+
+export const DeliveryAddress = AddressInput.omit({ isDefault: true });
+export type DeliveryAddress = z.infer<typeof DeliveryAddress>;
+
+export const CheckoutRequest = z.object({
+  /** Guests only; a signed-in customer's account e-mail is used. */
+  email: z.string().trim().toLowerCase().email().max(200).optional(),
+  locale: z.enum(["bg", "en"]),
+  address: DeliveryAddress,
+  invoice: InvoiceRequest.nullable(),
+  /** Terms and the withdrawal information were shown and accepted before payment. */
+  acceptTerms: z.literal(true),
+  /** Signed-in customers: keep this address in the account. */
+  saveAddress: z.boolean().default(false),
+});
+export type CheckoutRequest = z.input<typeof CheckoutRequest>;
+
+export const CheckoutResponse = z.object({
+  orderId: z.string(),
+  number: z.string(),
+  /** Guests: the key that opens the order page (also in the e-mail link). */
+  orderKey: z.string().nullable(),
+  /** Payment page of the provider; the browser goes there next. */
+  redirectUrl: z.string(),
+});
+export type CheckoutResponse = z.infer<typeof CheckoutResponse>;
+
+/** 409 from checkout: what changed in the cart since it was shown. */
+export const CartProblem = z.object({
+  variantId: z.string(),
+  reason: z.enum(["unavailable", "not_shipped_to_country"]),
+});
+
+// ---------- Orders ----------
+
+export const OrderStatus = z.enum([
+  "pending_payment",
+  "paid",
+  "batched",
+  "ordered_from_supplier",
+  "supplier_shipped",
+  "received_at_hub",
+  "packed",
+  "handed_to_carrier",
+  "out_for_delivery",
+  "delivered",
+  "cancelled",
+  "refunded",
+  "partially_refunded",
+  "exception",
+]);
+export type OrderStatus = z.infer<typeof OrderStatus>;
+
+export const OrderLine = z.object({
+  title: z.string(),
+  version: z.string(),
+  sku: z.string(),
+  unitPriceCents: z.number().int(),
+  qty: z.number().int(),
+  lineTotalCents: z.number().int(),
+  vatCents: z.number().int(),
+  dispatchEstimate: Localized,
+});
+
+export const OrderDetail = z.object({
+  id: z.string(),
+  number: z.string(),
+  status: OrderStatus,
+  createdAt: z.string(),
+  paidAt: z.string().nullable(),
+  country: ShippingCountry,
+  address: DeliveryAddress,
+  invoice: InvoiceRequest.nullable(),
+  lines: z.array(OrderLine),
+  goodsCents: z.number().int(),
+  shippingCents: z.number().int(),
+  totalCents: z.number().int(),
+  vatRate: z.number(),
+  vatCents: z.number().int(),
+  kummies: z.number().int(),
+  /** Status history for the timeline (oldest first). */
+  events: z.array(z.object({ status: OrderStatus, at: z.string() })),
+  /** True while the order waits for payment, so the page can offer "Pay now". */
+  canPay: z.boolean(),
+});
+export type OrderDetail = z.infer<typeof OrderDetail>;
+
+export const OrderSummary = OrderDetail.pick({
+  id: true,
+  number: true,
+  status: true,
+  createdAt: true,
+  totalCents: true,
+});
+export type OrderSummary = z.infer<typeof OrderSummary>;
+export const OrderList = z.object({ items: z.array(OrderSummary) });
+
+export const PayResponse = z.object({ redirectUrl: z.string() });
