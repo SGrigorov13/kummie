@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
 import { Footer } from "@/components/Footer";
 import { DemoStoreProvider } from "@/lib/demo-store";
+import { CartProvider } from "@/lib/shop";
 import { LocaleProvider } from "@/lib/locale";
 import { localeParam, staticLocales } from "@/lib/paths";
 import { promoBootScript } from "@/lib/promo";
@@ -48,12 +49,14 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body>
         <LocaleProvider locale={locale}>
           <DemoStoreProvider>
-            <a className="skip-link" href="#main">
-              {t(locale, "skipToContent")}
-            </a>
-            {children}
-            <Footer locale={locale} />
-            <CookieBanner />
+            <CartProvider>
+              <a className="skip-link" href="#main">
+                {t(locale, "skipToContent")}
+              </a>
+              {children}
+              <Footer locale={locale} />
+              <CookieBanner />
+            </CartProvider>
           </DemoStoreProvider>
         </LocaleProvider>
       </body>

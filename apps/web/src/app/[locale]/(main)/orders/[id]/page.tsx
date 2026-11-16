@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: t(localeParam((await params).locale), "order"), robots: { index: false } };
 }
 
-/** Demo orders live in the browser only, so this page is rendered on demand and filled client-side. */
+/** Filled client-side: guests open it with the key in the link fragment, accounts with their session. */
 export default async function OrderPage({ params }: Props) {
   const { id } = await params;
   return <OrderView id={id} />;

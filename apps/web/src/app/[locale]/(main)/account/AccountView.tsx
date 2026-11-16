@@ -1,15 +1,22 @@
 "use client";
 
-import type { Account, Address, AddressInput, Preferences, ShippingCountry } from "@kummie/contracts";
-import { customerStepNumber } from "@kummie/core";
+import type {
+  Account,
+  Address,
+  AddressInput,
+  OrderSummary,
+  Preferences,
+  ShippingCountry,
+} from "@kummie/contracts";
+import { customerStepNumber, formatMoney, isOffTrack } from "@kummie/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Field } from "@/components/Field";
 import { accountApi, commonErrorKey, statusOf } from "@/lib/account";
-import { useDemoStore } from "@/lib/demo-store";
 import { useLocale, useT } from "@/lib/locale";
 import { href } from "@/lib/paths";
+import { shopApi } from "@/lib/shop";
 
 /** Four separate opt-ins (CLAUDE.md). Order status is transactional, never bundled with marketing. */
 const ALERTS: {
@@ -64,7 +71,7 @@ export function AccountView() {
       <ProfileSection account={account} onSaved={setAccount} />
       <PreferencesSection minor={account.minor} />
       <AddressesSection />
-      <DemoOrders />
+      <MyOrders />
       <PrivacySection />
     </>
   );
@@ -378,25 +385,38 @@ function AddressForm({
   );
 }
 
-/** Orders still come from the demo checkout on this device until real checkout lands (M1 Task 6). */
-function DemoOrders() {
+function MyOrders() {
   const t = useT();
   const locale = useLocale();
-  const { state, hydrated } = useDemoStore();
-  if (!hydrated) return null;
+  const [items, setItems] = useState<OrderSummary[] | null>(null);
+  useEffect(() => {
+    shopApi.myOrders().then(
+      (r) => setItems(r.items),
+      () => setItems([]),
+    );
+  }, []);
+  if (!items) return null;
   return (
     <section className="panel">
-      <h2 className="h3">{t("acct.demoOrders")}</h2>
-      {state.orders.length === 0 ? (
+      <h2 className="h3">{t("order.myOrders")}</h2>
+      {items.length === 0 ? (
         <p>{t("noOrders")}</p>
       ) : (
         <ul className="history">
-          {state.orders.map((order) => (
-            <li key={order.id}>
-              <Link href={href(locale, `/orders/${order.id}`)}>{order.id}</Link> ·{" "}
-              {t("stepOf", { n: customerStepNumber(order.status) ?? 0 })}
-            </li>
-          ))}
+          {items.map((order) => {
+            const step = customerStepNumber(order.status);
+            return (
+              <li key={order.id}>
+                <Link href={href(locale, `/orders/${order.id}`)}>{order.number}</Link> ·{" "}
+                {formatMoney(order.totalCents, locale)} ·{" "}
+                {step
+                  ? t("stepOf", { n: step })
+                  : isOffTrack(order.status)
+                    ? t(`status.${order.status}`)
+                    : t("status.pending_payment")}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>
