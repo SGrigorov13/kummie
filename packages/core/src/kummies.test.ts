@@ -1,0 +1,114 @@
+import { describe, expect, it } from "vitest";
+import { quoteCart } from "./cart";
+import {
+  addDays,
+  businessDay,
+  KUMMIES_REDEEM_COST,
+  KUMMIES_VALIDITY_DAYS,
+  kummiesBalance,
+  kummiesEarned,
+  kummiesReminderDays,
+  kummiesRemindersDue,
+  kummiesValidUntil,
+  newKummiesLot,
+  nextKummiesExpiry,
+  redeemKummies,
+  spendKummies,
+  type KummiesLot,
+} from "./kummies";
+
+const NOV_2026 = new Date("2026-11-16T12:00:00Z");
+
+function lot(id: string, earnedOn: string, amount: number, remaining = amount): KummiesLot {
+  return { id, earnedOn, validUntil: kummiesValidUntil(earnedOn), amount, remaining };
+}
+
+describe("earning (D-027)", () => {
+  it("needs at least €30.00 of goods incl. VAT", () => {
+    expect(kummiesEarned(2999)).toBe(0);
+    expect(kummiesEarned(3000)).toBe(30);
+  });
+
+  it("gives 1 Kummie per whole euro", () => {
+    expect(kummiesEarned(4599)).toBe(45);
+    expect(kummiesEarned(10000)).toBe(100);
+  });
+
+  it("counts the final goods amount after the discount, never delivery", () => {
+    // €50 goods, €4.90 delivery, €10 Kummies discount → counted on €40.
+    const quote = quoteCart([{ priceCents: 5000, qty: 1 }], "BG", 1000, NOV_2026);
+    expect(quote.kummiesBaseCents).toBe(4000);
+    expect(quote.kummies).toBe(40);
+    // €32 goods with a €5 discount drops to €27 → below the €30 minimum.
+    expect(quoteCart([{ priceCents: 3200, qty: 1 }], "BG", 500, NOV_2026).kummies).toBe(0);
+    // Delivery alone never earns.
+    expect(quoteCart([{ priceCents: 2999, qty: 1 }], "BG", 0, NOV_2026).kummies).toBe(0);
+  });
+});
+
+describe("validity from the payment day (D-031)", () => {
+  it("uses the Bulgarian date of the payment", () => {
+    // 23:30 UTC on 15 Nov is already 16 Nov in Sofia (UTC+2).
+    expect(businessDay(new Date("2026-11-15T23:30:00Z"))).toBe("2026-11-16");
+    expect(newKummiesLot("o1", new Date("2026-11-15T23:30:00Z"), 40).earnedOn).toBe("2026-11-16");
+  });
+
+  it("is valid for KUMMIES_VALIDITY_DAYS, last day inclusive", () => {
+    const until = kummiesValidUntil("2026-11-16");
+    expect(until).toBe(addDays("2026-11-16", KUMMIES_VALIDITY_DAYS));
+    const lots = [lot("a", "2026-11-16", 40)];
+    expect(kummiesBalance(lots, until)).toBe(40);
+    expect(kummiesBalance(lots, addDays(until, 1))).toBe(0);
+  });
+
+  it("schedules reminders 14, 3 and 1 day before expiry", () => {
+    expect(kummiesReminderDays("2026-11-16", 30)).toEqual(["2026-12-02", "2026-12-13", "2026-12-15"]);
+  });
+});
+
+describe("reminders due", () => {
+  const lots = [lot("a", "2026-01-10", 40), lot("b", "2026-01-10", 25), lot("c", "2026-02-01", 60)];
+  const expiry = kummiesValidUntil("2026-01-10");
+
+  it("adds up the unused points of the same expiry day", () => {
+    expect(kummiesRemindersDue(lots, addDays(expiry, -14))).toEqual([
+      { daysBefore: 14, count: 65, validUntil: expiry },
+    ]);
+    expect(kummiesRemindersDue(lots, addDays(expiry, -3))[0]?.daysBefore).toBe(3);
+    expect(kummiesRemindersDue(lots, addDays(expiry, -1))[0]?.daysBefore).toBe(1);
+    expect(kummiesRemindersDue(lots, addDays(expiry, -2))).toEqual([]);
+  });
+
+  it("stays silent when the points were already used", () => {
+    const used = [lot("a", "2026-01-10", 40, 0)];
+    expect(kummiesRemindersDue(used, addDays(expiry, -14))).toEqual([]);
+  });
+
+  it("names the next expiry", () => {
+    expect(nextKummiesExpiry(lots, "2026-06-01")).toEqual({ count: 65, validUntil: expiry });
+    expect(nextKummiesExpiry([], "2026-06-01")).toBeNull();
+  });
+});
+
+describe("spending (D-030)", () => {
+  it("costs 100 Kummies for €5", () => {
+    expect(KUMMIES_REDEEM_COST).toBe(100);
+    const result = redeemKummies([lot("a", "2026-11-16", 120)], "2026-11-20");
+    expect(result?.creditCents).toBe(500);
+    expect(result?.lots[0]?.remaining).toBe(20);
+    expect(redeemKummies([lot("a", "2026-11-16", 99)], "2026-11-20")).toBeNull();
+  });
+
+  it("uses the points that expire first, so none are lost unnecessarily", () => {
+    const lots = [lot("new", "2026-11-01", 80), lot("old", "2026-03-01", 50)];
+    const after = spendKummies(lots, 100, "2026-11-20");
+    expect(after?.find((l) => l.id === "old")?.remaining).toBe(0);
+    expect(after?.find((l) => l.id === "new")?.remaining).toBe(30);
+  });
+
+  it("ignores expired points", () => {
+    const lots = [lot("expired", "2020-01-01", 500), lot("fresh", "2026-11-01", 60)];
+    expect(kummiesBalance(lots, "2026-11-20")).toBe(60);
+    expect(spendKummies(lots, 100, "2026-11-20")).toBeNull();
+  });
+});
