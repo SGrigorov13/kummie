@@ -93,6 +93,22 @@ Open http://localhost:5173, sign in, and scan the QR code with an authenticator 
 Authenticator, Microsoft Authenticator, 1Password …) on the first sign-in. `ADMIN_ORIGINS` lists
 the addresses the admin may call the API from (default: `http://localhost:5173`).
 
+### Customer accounts and e-mails (local)
+
+Sign-up, e-mail confirmation and password reset work locally without a mail server: every e-mail
+is written as a text file to `apps/api/mail-outbox/` (git-ignored — the files contain personal
+data, delete them when done). Open the newest file and paste its link into the browser.
+
+1. Run `pnpm --filter api db:migrate` once (creates the customer and job tables).
+2. Open http://localhost:3000/bg/signup, sign up, then open the link from the newest file in
+   `apps/api/mail-outbox/`.
+3. E-mails are sent right after the request; anything that failed is retried by
+   `pnpm --filter api tick` (on the server: the cPanel cron every 5 minutes).
+
+The shop must be listed in `WEB_ORIGINS` in `apps/api/.env` (default: http://localhost:3000), and
+`NEXT_PUBLIC_API_URL` in `apps/web/.env.local` must point to the API (default: http://localhost:3001).
+The minimum age for an account is the `accounts.minimumAge` setting (default 14, M1 spec A2).
+
 ## 4. Checks (a task is done only when all four pass)
 
 ```powershell
