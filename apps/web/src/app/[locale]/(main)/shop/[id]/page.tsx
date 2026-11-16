@@ -1,12 +1,4 @@
-import {
-  badgeSpec,
-  categoryOf,
-  groupById,
-  productById,
-  products,
-  stateBadgeOf,
-  subcategoryById,
-} from "@kummie/core";
+import { badgeSpec } from "@kummie/core";
 import { t } from "@kummie/i18n";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -14,20 +6,22 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/Badge";
 import { Price } from "@/components/Price";
 import { ProductShot } from "@/components/ProductShot";
+import { catalogue, subcategoryIndex, tryCatalogue } from "@/lib/catalogue-server";
 import { href, localeParam } from "@/lib/paths";
 import { ProductActions } from "./ProductActions";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
-export const dynamicParams = false;
+/** Rendered on first visit and refreshed every minute, so newly published products appear by themselves. */
+// Refreshed every minute (ISR): must be a literal number for Next.js.
+export const revalidate = 60;
 
-export function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }));
-}
+const SLUG = /^[a-z0-9-]{1,80}$/;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, id } = await params;
-  const product = productById(id);
+  if (!SLUG.test(id)) return {};
+  const product = await tryCatalogue(() => catalogue.getProduct(id));
   return product ? { title: product.title, description: product.summary[localeParam(locale)] } : {};
 }
 
@@ -39,45 +33,56 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({ params }: Props) {
   const { locale: rawLocale, id } = await params;
   const locale = localeParam(rawLocale);
-  const product = productById(id);
-  if (!product) notFound();
+  if (!SLUG.test(id)) notFound();
+  const [product, categories] = await Promise.all([
+    tryCatalogue(() => catalogue.getProduct(id)),
+    tryCatalogue(() => catalogue.listCategories()),
+  ]);
+  if (!product) {
+    return (
+      <div className="wrap section narrow">
+        <p className="notice">{t(locale, "shop.offline")}</p>
+      </div>
+    );
+  }
 
-  const stateBadge = stateBadgeOf(product);
-  const group = groupById(product.groupId);
-  const sub = subcategoryById(product.subcategory);
+  const sub = subcategoryIndex(categories?.items ?? []).get(product.subcategoryId);
   const { compliance } = product;
-  const hasSafety = Boolean(compliance.safetyInfo) || (compliance.warnings?.length ?? 0) > 0;
+  const hasSafety = Boolean(compliance.safetyInfo) || compliance.warnings.length > 0;
+  const versions = product.variants.map((v) => v.version).join(" · ");
 
   return (
     <div className="wrap section product">
       <div className="product__media">
-        <ProductShot product={product} />
+        <ProductShot product={product} locale={locale} />
       </div>
       <div className="product__info">
         <p className="label">
-          <Link href={href(locale, `/shop?cat=${categoryOf(product.subcategory).id}&sub=${sub.id}`)}>
-            {sub[locale]}
-          </Link>
-          {group ? ` · ${group.name}` : ""}
+          {sub ? (
+            <Link href={href(locale, `/shop?cat=${sub.category.id}&sub=${product.subcategoryId}`)}>
+              {sub[locale]}
+            </Link>
+          ) : null}
+          {product.groupName ? ` · ${product.groupName}` : ""}
         </p>
         <h1 className="product__title">{product.title}</h1>
         <div className="badges">
           <Badge id={product.sourcing} locale={locale} />
-          {stateBadge ? <Badge id={stateBadge} locale={locale} /> : null}
+          {product.stateBadge ? <Badge id={product.stateBadge} locale={locale} /> : null}
         </div>
-        <p className="demo-line">{t(locale, "demo")}</p>
+        {product.isDemo ? <p className="demo-line">{t(locale, "demo")}</p> : null}
         <Price cents={product.priceCents} locale={locale} large />
         <p className="muted price-note">
           {t(locale, "priceNote")} {t(locale, "deliveryFrom")}
         </p>
         <p>{product.summary[locale]}</p>
-        <ProductActions productId={product.id} />
+        <ProductActions slug={product.slug} variants={product.variants} />
 
         <h2 className="h3">{t(locale, "facts")}</h2>
         <dl className="facts">
           <div>
             <dt>{t(locale, "version")}</dt>
-            <dd>{product.version}</dd>
+            <dd>{versions}</dd>
           </div>
           <div>
             <dt>{t(locale, "sourcing")}</dt>
@@ -87,11 +92,11 @@ export default async function ProductPage({ params }: Props) {
           </div>
           <div>
             <dt>{t(locale, "dispatch")}</dt>
-            <dd>{product.dispatchEstimate[locale]}</dd>
+            <dd>{compliance.dispatchEstimate[locale]}</dd>
           </div>
           <div>
             <dt>{t(locale, "regions")}</dt>
-            <dd>{product.deliveryRegions.map((country) => t(locale, `country.${country}`)).join(", ")}</dd>
+            <dd>{compliance.deliveryRegions.map((country) => t(locale, `country.${country}`)).join(", ")}</dd>
           </div>
           <div>
             <dt>{t(locale, "maker")}</dt>
@@ -99,7 +104,7 @@ export default async function ProductPage({ params }: Props) {
           </div>
           <div>
             <dt>{t(locale, "responsible")}</dt>
-            <dd>{compliance.responsiblePerson}</dd>
+            <dd>{compliance.euResponsiblePerson}</dd>
           </div>
           <div>
             <dt>{t(locale, "safety")}</dt>
@@ -107,7 +112,7 @@ export default async function ProductPage({ params }: Props) {
               {hasSafety ? (
                 <ul className="plain">
                   {compliance.safetyInfo ? <li>{compliance.safetyInfo[locale]}</li> : null}
-                  {compliance.warnings?.map((warning) => (
+                  {compliance.warnings.map((warning) => (
                     <li key={warning.en}>{warning[locale]}</li>
                   ))}
                 </ul>
@@ -119,9 +124,9 @@ export default async function ProductPage({ params }: Props) {
           <div>
             <dt>{t(locale, "returnsNote")}</dt>
             <dd>
-              {product.returnExceptions?.length ? (
+              {compliance.returnExceptions.length > 0 ? (
                 <ul className="plain">
-                  {product.returnExceptions.map((note) => (
+                  {compliance.returnExceptions.map((note) => (
                     <li key={note.en}>{note[locale]}</li>
                   ))}
                 </ul>

@@ -8,6 +8,7 @@ import {
   type ProductListQuery,
 } from "./catalogue";
 import { Health } from "./health";
+import { TraderInfo } from "./site";
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -61,6 +62,7 @@ export function createApiClient({ baseUrl, fetch: fetchImpl = fetch, headers = {
     listGroups: () => get("/catalogue/groups", GroupList),
     listProducts: (query: ProductListQuery = {}) => get(`/catalogue/products${toSearch(query)}`, ProductList),
     getProduct: (slug: string) => get(`/catalogue/products/${encodeURIComponent(slug)}`, ProductDetail),
+    traderInfo: () => get("/site/trader", TraderInfo),
   };
 }
 

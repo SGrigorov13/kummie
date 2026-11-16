@@ -1,86 +1,45 @@
 "use client";
 
 /**
- * Local demo state for the M0 storefront: cart, wishlist, collection, Kummies, demo orders and
- * notification opt-ins, kept in this browser's localStorage only.
- *
- * This is the ONLY place the storefront keeps commerce state. M1 replaces this module with the
- * API client (packages/contracts) without touching the pages: keep the `useDemoStore()` shape.
+ * Browser-only state for the parts that are not on the server yet: wishlist and "I have it"
+ * (collection), followed groups and the Club's Kummies preview (M3), plus the cookie choice.
+ * Kept in this browser's localStorage only. Cart, checkout, orders and the account live on the API
+ * since M1 (see `lib/shop.tsx`, `lib/account.ts`).
  */
-import {
-  businessDay,
-  KUMMIES_REDEEM_COST,
-  newKummiesLot,
-  nextHappyStatus,
-  productById,
-  quoteCart,
-  redeemKummies,
-  type KummiesLot,
-  type OrderStatus,
-  type Quote,
-  type ShippingCountry,
-} from "@kummie/core";
+import { businessDay, KUMMIES_REDEEM_COST, redeemKummies, type KummiesLot } from "@kummie/core";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type Age = "unknown" | "under18" | "18plus";
-
-export type DemoOrder = {
-  id: string;
-  createdAt: string;
-  name: string;
-  city: string;
-  address: string;
-  country: ShippingCountry;
-  lines: { productId: string; qty: number; title: string; priceCents: number }[];
-  quote: Quote;
-  status: OrderStatus;
-};
-
-export type Alerts = { comebacks: boolean; restocks: boolean; orders: boolean; drops: boolean };
 
 export type HistoryEntry =
   | { id: string; kind: "earn"; delta: number; orderId: string; at: string; validUntil: string }
   | { id: string; kind: "redeem"; delta: number; creditCents: number; at: string };
 
 export type DemoState = {
-  country: ShippingCountry;
   cookies: "unknown" | "essential";
-  cart: { productId: string; qty: number }[];
+  /** Product addresses (slugs). */
   wishlist: string[];
   owned: string[];
   follows: string[];
-  /** One lot per paid order; validity runs from the payment day (D-031). */
+  /** Club preview until the Kummies ledger is shown in the account (M3). */
   kummieLots: KummiesLot[];
   creditCents: number;
   history: HistoryEntry[];
-  orders: DemoOrder[];
-  alerts: Alerts;
   age: Age;
-  name: string;
 };
 
-const defaultAlerts: Alerts = { comebacks: false, restocks: false, orders: true, drops: false };
-
 export const initialDemoState: DemoState = {
-  country: "BG",
   cookies: "unknown",
-  cart: [],
   wishlist: [],
   owned: [],
   follows: [],
   kummieLots: [],
   creditCents: 0,
   history: [],
-  orders: [],
-  alerts: defaultAlerts,
   age: "unknown",
-  name: "",
 };
 
-/**
- * v3: Kummies kept as dated lots (D-031). Older demo data (v1 floats, v2 plain balance) is
- * deliberately not migrated — it only ever lived in a test browser.
- */
+/** Same key as before: old demo fields (cart, orders) are simply ignored and dropped on save. */
 const STORAGE_KEY = "kummie-local-v3";
 
 function load(): DemoState {
@@ -89,9 +48,14 @@ function load(): DemoState {
     if (!raw) return initialDemoState;
     const parsed = JSON.parse(raw) as Partial<DemoState>;
     return {
-      ...initialDemoState,
-      ...parsed,
-      alerts: { ...defaultAlerts, ...parsed.alerts },
+      cookies: parsed.cookies ?? initialDemoState.cookies,
+      wishlist: parsed.wishlist ?? [],
+      owned: parsed.owned ?? [],
+      follows: parsed.follows ?? [],
+      kummieLots: parsed.kummieLots ?? [],
+      creditCents: parsed.creditCents ?? 0,
+      history: parsed.history ?? [],
+      age: parsed.age ?? "unknown",
     };
   } catch {
     return initialDemoState;
@@ -108,22 +72,12 @@ type DemoStore = {
   hydrated: boolean;
   /** Today's Bulgarian date (YYYY-MM-DD), set on the client after mount; "" before. */
   today: string;
-  quote: Quote;
-  cartCount: number;
-  setCountry: (country: ShippingCountry) => void;
   acceptEssentialCookies: () => void;
-  add: (productId: string) => void;
-  setQty: (productId: string, qty: number) => void;
-  toggleWishlist: (productId: string) => void;
-  toggleOwned: (productId: string) => void;
+  toggleWishlist: (slug: string) => void;
+  toggleOwned: (slug: string) => void;
   toggleFollow: (groupId: string) => void;
   setAge: (age: Age) => void;
-  setName: (name: string) => void;
-  toggleAlert: (key: keyof Alerts) => void;
   redeem: () => void;
-  placeOrder: (input: { name: string; city: string; address: string }) => string | null;
-  advance: (orderId: string) => void;
-  reset: () => void;
 };
 
 const Ctx = createContext<DemoStore | null>(null);
@@ -147,112 +101,22 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
-      // Storage full or blocked: the demo keeps working in memory.
+      // Storage full or blocked: keeps working in memory.
     }
   }, [hydrated, state]);
 
-  const quote = useMemo(() => {
-    const lines = state.cart.flatMap((line) => {
-      const product = productById(line.productId);
-      return product ? [{ priceCents: product.priceCents, qty: line.qty }] : [];
-    });
-    return quoteCart(lines, state.country, state.creditCents);
-  }, [state.cart, state.country, state.creditCents]);
-
   const update = useCallback((fn: (s: DemoState) => DemoState) => setState(fn), []);
-
-  const placeOrder = useCallback(
-    (input: { name: string; city: string; address: string }): string | null => {
-      if (state.cart.length === 0) return null;
-      const id = `KM-${Date.now().toString(36).toUpperCase()}`;
-      const createdAt = new Date().toISOString();
-      const lines = state.cart.flatMap((line) => {
-        const product = productById(line.productId);
-        return product
-          ? [
-              {
-                productId: product.id,
-                qty: line.qty,
-                title: product.title,
-                priceCents: product.priceCents,
-              },
-            ]
-          : [];
-      });
-      const order: DemoOrder = {
-        id,
-        createdAt,
-        name: input.name.trim(),
-        city: input.city.trim(),
-        address: input.address.trim(),
-        country: state.country,
-        lines,
-        quote,
-        status: "paid",
-      };
-      // Points are recorded on the payment day; the demo "pays" when the order is placed.
-      const earned = quote.kummies > 0 ? newKummiesLot(id, new Date(createdAt), quote.kummies) : null;
-      setState((s) => ({
-        ...s,
-        name: order.name,
-        cart: [],
-        creditCents: Math.max(0, s.creditCents - quote.creditCents),
-        orders: [order, ...s.orders],
-        ...(earned
-          ? {
-              kummieLots: [...s.kummieLots, earned],
-              history: [
-                {
-                  id: `h-${id}`,
-                  kind: "earn" as const,
-                  delta: earned.amount,
-                  orderId: id,
-                  at: createdAt,
-                  validUntil: earned.validUntil,
-                },
-                ...s.history,
-              ],
-            }
-          : {}),
-      }));
-      return id;
-    },
-    [quote, state.cart, state.country],
-  );
 
   const api = useMemo<DemoStore>(
     () => ({
       state,
       hydrated,
       today,
-      quote,
-      cartCount: state.cart.reduce((sum, line) => sum + line.qty, 0),
-      setCountry: (country) => update((s) => ({ ...s, country })),
       acceptEssentialCookies: () => update((s) => ({ ...s, cookies: "essential" })),
-      add: (productId) =>
-        update((s) => {
-          const existing = s.cart.find((line) => line.productId === productId);
-          const cart = existing
-            ? s.cart.map((line) => (line.productId === productId ? { ...line, qty: line.qty + 1 } : line))
-            : [...s.cart, { productId, qty: 1 }];
-          return { ...s, cart };
-        }),
-      setQty: (productId, qty) =>
-        update((s) => ({
-          ...s,
-          cart:
-            !Number.isInteger(qty) || qty <= 0
-              ? s.cart.filter((line) => line.productId !== productId)
-              : s.cart.map((line) =>
-                  line.productId === productId ? { ...line, qty: Math.min(qty, 99) } : line,
-                ),
-        })),
-      toggleWishlist: (productId) => update((s) => ({ ...s, wishlist: toggleId(s.wishlist, productId) })),
-      toggleOwned: (productId) => update((s) => ({ ...s, owned: toggleId(s.owned, productId) })),
+      toggleWishlist: (slug) => update((s) => ({ ...s, wishlist: toggleId(s.wishlist, slug) })),
+      toggleOwned: (slug) => update((s) => ({ ...s, owned: toggleId(s.owned, slug) })),
       toggleFollow: (groupId) => update((s) => ({ ...s, follows: toggleId(s.follows, groupId) })),
       setAge: (age) => update((s) => ({ ...s, age })),
-      setName: (name) => update((s) => ({ ...s, name })),
-      toggleAlert: (key) => update((s) => ({ ...s, alerts: { ...s.alerts, [key]: !s.alerts[key] } })),
       redeem: () =>
         update((s) => {
           const now = new Date();
@@ -274,26 +138,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
             ],
           };
         }),
-      placeOrder,
-      advance: (orderId) =>
-        update((s) => ({
-          ...s,
-          orders: s.orders.map((order) => {
-            if (order.id !== orderId) return order;
-            const next = nextHappyStatus(order.status);
-            return next ? { ...order, status: next } : order;
-          }),
-        })),
-      reset: () => {
-        try {
-          localStorage.removeItem(STORAGE_KEY);
-        } catch {
-          // ignore
-        }
-        setState(initialDemoState);
-      },
     }),
-    [hydrated, placeOrder, quote, state, today, update],
+    [hydrated, state, today, update],
   );
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;

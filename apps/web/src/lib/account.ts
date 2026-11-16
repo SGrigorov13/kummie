@@ -6,7 +6,7 @@ import type { MessageKey } from "@kummie/i18n";
  * and the API are on the same site (kummie.eu / api.kummie.eu, locally localhost:3000 / :3001).
  */
 export const accountApi = createAccountClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001",
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",
 });
 
 /** HTTP status of a failed call, or 0 for network errors. */

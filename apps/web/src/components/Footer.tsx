@@ -5,7 +5,10 @@ import { href } from "@/lib/paths";
 export const LEGAL_PAGES = ["withdrawal", "returns", "guarantee", "privacy", "terms", "complaints"] as const;
 export type LegalPage = (typeof LEGAL_PAGES)[number];
 
-/** Rendered on every page, Teen included: withdrawal, returns, guarantee, privacy, terms, complaints. */
+/**
+ * Rendered on every page, Teen included: withdrawal, returns, guarantee, privacy, terms, complaints,
+ * trader data and payment & delivery (ЗЗП).
+ */
 export function Footer({ locale }: { locale: Locale }) {
   return (
     <footer className="site-footer on-ink">
@@ -22,6 +25,12 @@ export function Footer({ locale }: { locale: Locale }) {
                 <Link href={href(locale, `/legal/${page}`)}>{t(locale, page)}</Link>
               </li>
             ))}
+            <li>
+              <Link href={href(locale, "/legal/trader")}>{t(locale, "trader")}</Link>
+            </li>
+            <li>
+              <Link href={href(locale, "/legal/delivery")}>{t(locale, "deliveryPage")}</Link>
+            </li>
           </ul>
         </nav>
         <nav aria-label={t(locale, "explore")}>
