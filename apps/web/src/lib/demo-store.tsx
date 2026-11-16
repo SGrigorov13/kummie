@@ -8,10 +8,14 @@
  * API client (packages/contracts) without touching the pages: keep the `useDemoStore()` shape.
  */
 import {
+  businessDay,
+  KUMMIES_REDEEM_COST,
+  newKummiesLot,
   nextHappyStatus,
   productById,
   quoteCart,
   redeemKummies,
+  type KummiesLot,
   type OrderStatus,
   type Quote,
   type ShippingCountry,
@@ -35,8 +39,8 @@ export type DemoOrder = {
 export type Alerts = { comebacks: boolean; restocks: boolean; orders: boolean; drops: boolean };
 
 export type HistoryEntry =
-  | { id: string; kind: "earn"; delta: number; orderId: string; at: string }
-  | { id: string; kind: "redeem"; delta: number; at: string };
+  | { id: string; kind: "earn"; delta: number; orderId: string; at: string; validUntil: string }
+  | { id: string; kind: "redeem"; delta: number; creditCents: number; at: string };
 
 export type DemoState = {
   country: ShippingCountry;
@@ -45,7 +49,8 @@ export type DemoState = {
   wishlist: string[];
   owned: string[];
   follows: string[];
-  kummies: number;
+  /** One lot per paid order; validity runs from the payment day (D-031). */
+  kummieLots: KummiesLot[];
   creditCents: number;
   history: HistoryEntry[];
   orders: DemoOrder[];
@@ -63,7 +68,7 @@ export const initialDemoState: DemoState = {
   wishlist: [],
   owned: [],
   follows: [],
-  kummies: 0,
+  kummieLots: [],
   creditCents: 0,
   history: [],
   orders: [],
@@ -72,8 +77,11 @@ export const initialDemoState: DemoState = {
   name: "",
 };
 
-/** v2: money moved to integer cents. v1 (prototype, floats) is deliberately not migrated. */
-const STORAGE_KEY = "kummie-local-v2";
+/**
+ * v3: Kummies kept as dated lots (D-031). Older demo data (v1 floats, v2 plain balance) is
+ * deliberately not migrated — it only ever lived in a test browser.
+ */
+const STORAGE_KEY = "kummie-local-v3";
 
 function load(): DemoState {
   try {
@@ -98,6 +106,8 @@ type DemoStore = {
   state: DemoState;
   /** False during server render and the first client render (state is still the default). */
   hydrated: boolean;
+  /** Today's Bulgarian date (YYYY-MM-DD), set on the client after mount; "" before. */
+  today: string;
   quote: Quote;
   cartCount: number;
   setCountry: (country: ShippingCountry) => void;
@@ -121,12 +131,14 @@ const Ctx = createContext<DemoStore | null>(null);
 export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DemoState>(initialDemoState);
   const [hydrated, setHydrated] = useState(false);
+  const [today, setToday] = useState("");
 
   // localStorage is an external system that does not exist during server render, so the saved state
   // can only be read after mount; reading it in a lazy initialiser would break hydration.
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect
     setState(load());
+    setToday(businessDay(new Date()));
     setHydrated(true);
   }, []);
 
@@ -178,20 +190,30 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         quote,
         status: "paid",
       };
+      // Points are recorded on the payment day; the demo "pays" when the order is placed.
+      const earned = quote.kummies > 0 ? newKummiesLot(id, new Date(createdAt), quote.kummies) : null;
       setState((s) => ({
         ...s,
         name: order.name,
         cart: [],
         creditCents: Math.max(0, s.creditCents - quote.creditCents),
-        kummies: s.kummies + quote.kummies,
         orders: [order, ...s.orders],
-        history:
-          quote.kummies > 0
-            ? [
-                { id: `h-${id}`, kind: "earn", delta: quote.kummies, orderId: id, at: createdAt },
+        ...(earned
+          ? {
+              kummieLots: [...s.kummieLots, earned],
+              history: [
+                {
+                  id: `h-${id}`,
+                  kind: "earn" as const,
+                  delta: earned.amount,
+                  orderId: id,
+                  at: createdAt,
+                  validUntil: earned.validUntil,
+                },
                 ...s.history,
-              ]
-            : s.history,
+              ],
+            }
+          : {}),
       }));
       return id;
     },
@@ -202,6 +224,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     () => ({
       state,
       hydrated,
+      today,
       quote,
       cartCount: state.cart.reduce((sum, line) => sum + line.qty, 0),
       setCountry: (country) => update((s) => ({ ...s, country })),
@@ -232,15 +255,21 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       toggleAlert: (key) => update((s) => ({ ...s, alerts: { ...s.alerts, [key]: !s.alerts[key] } })),
       redeem: () =>
         update((s) => {
-          const result = redeemKummies(s.kummies);
+          const now = new Date();
+          const result = redeemKummies(s.kummieLots, businessDay(now));
           if (!result) return s;
-          const at = new Date().toISOString();
           return {
             ...s,
-            kummies: result.balance,
+            kummieLots: result.lots,
             creditCents: s.creditCents + result.creditCents,
             history: [
-              { id: `h-${Date.now()}`, kind: "redeem", delta: result.balance - s.kummies, at },
+              {
+                id: `h-${now.getTime()}`,
+                kind: "redeem",
+                delta: -KUMMIES_REDEEM_COST,
+                creditCents: result.creditCents,
+                at: now.toISOString(),
+              },
               ...s.history,
             ],
           };
@@ -264,7 +293,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         setState(initialDemoState);
       },
     }),
-    [hydrated, placeOrder, quote, state, update],
+    [hydrated, placeOrder, quote, state, today, update],
   );
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;

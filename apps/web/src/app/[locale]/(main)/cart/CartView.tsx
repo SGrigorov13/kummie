@@ -3,7 +3,7 @@
 import {
   FREE_SHIPPING_FROM_CENTS,
   formatMoney,
-  KUMMIES_MIN_GOODS_CENTS,
+  KUMMIES_MIN_ORDER_CENTS,
   productById,
   SHIPPING_COUNTRIES,
   type ShippingCountry,
@@ -59,7 +59,7 @@ export function CartView() {
   }
 
   const missingForFree = FREE_SHIPPING_FROM_CENTS - quote.goodsCents;
-  const missingForKummies = KUMMIES_MIN_GOODS_CENTS - quote.goodsCents;
+  const missingForKummies = KUMMIES_MIN_ORDER_CENTS - quote.kummiesBaseCents;
 
   return (
     <form className="checkout" onSubmit={submit} noValidate>

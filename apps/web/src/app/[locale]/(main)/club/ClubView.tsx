@@ -1,19 +1,45 @@
 "use client";
 
-import { KUMMIES_REDEEM_COST } from "@kummie/core";
+import {
+  formatMoney,
+  KUMMIES_REDEEM_COST,
+  KUMMIES_REDEEM_CENTS,
+  KUMMIES_VALIDITY_DAYS,
+  kummiesBalance,
+  nextKummiesExpiry,
+  type Locale,
+} from "@kummie/core";
 import { useDemoStore } from "@/lib/demo-store";
-import { useT } from "@/lib/locale";
+import { useLocale, useT } from "@/lib/locale";
+
+function formatDay(isoDay: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === "bg" ? "bg-BG" : "en-GB", {
+    dateStyle: "long",
+    timeZone: "UTC",
+  }).format(new Date(`${isoDay}T00:00:00Z`));
+}
 
 export function ClubView() {
   const t = useT();
-  const { state, hydrated, setAge, redeem } = useDemoStore();
+  const locale = useLocale();
+  const { state, hydrated, today, setAge, redeem } = useDemoStore();
   if (!hydrated) return null;
+
+  const balance = kummiesBalance(state.kummieLots, today);
+  const expiry = nextKummiesExpiry(state.kummieLots, today);
+
   return (
     <>
       <p className="kummies">
         <span className="label">{t("kummies")}</span>
-        <strong>{state.kummies}</strong>
+        <strong>{balance}</strong>
       </p>
+      <p className="muted">{t("kummiesValidity", { days: KUMMIES_VALIDITY_DAYS })}</p>
+      {expiry ? (
+        <p className="notice">
+          {t("kummiesExpiring", { count: expiry.count, date: formatDay(expiry.validUntil, locale) })}
+        </p>
+      ) : null}
       {state.age === "unknown" ? (
         <div className="panel">
           <h2 className="h3">{t("ageTitle")}</h2>
@@ -30,8 +56,8 @@ export function ClubView() {
       ) : (
         <p>{state.age === "under18" ? t("ageNote") : t("saved")}</p>
       )}
-      <button type="button" className="btn" disabled={state.kummies < KUMMIES_REDEEM_COST} onClick={redeem}>
-        {t("redeem")}
+      <button type="button" className="btn" disabled={balance < KUMMIES_REDEEM_COST} onClick={redeem}>
+        {t("redeem", { cost: KUMMIES_REDEEM_COST, amount: formatMoney(KUMMIES_REDEEM_CENTS, locale) })}
       </button>
       {state.history.length > 0 ? (
         <>
@@ -40,7 +66,9 @@ export function ClubView() {
             {state.history.map((item) => (
               <li key={item.id}>
                 <b>{item.delta > 0 ? `+${item.delta}` : item.delta}</b>{" "}
-                {item.kind === "earn" ? t("earnNote", { id: item.orderId }) : t("redeemNote")}
+                {item.kind === "earn"
+                  ? t("earnNote", { id: item.orderId, date: formatDay(item.validUntil, locale) })
+                  : t("redeemNote", { amount: formatMoney(item.creditCents, locale) })}
               </li>
             ))}
           </ul>

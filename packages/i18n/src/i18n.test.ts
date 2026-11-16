@@ -28,9 +28,18 @@ describe("i18n", () => {
 
   it("keeps the promo bar in line with the delivery and Kummies rules (D-026, D-027, D-028)", () => {
     for (const locale of ["bg", "en"] as const) {
-      expect(messages[locale].promoBar).toMatch(/80/);
+      expect(messages[locale].promoBar).toMatch(/79[.,]99/);
       expect(messages[locale].promoBar).toMatch(/30/);
-      expect(messages[locale].promoBar).not.toMatch(/79/);
+    }
+  });
+});
+
+describe("Kummies expiry reminders (D-031)", () => {
+  it("keep push copy under 60 characters with a 4-digit count", () => {
+    for (const locale of ["bg", "en"] as const) {
+      for (const key of ["kummies.reminder14", "kummies.reminder3", "kummies.reminder1"] as const) {
+        expect(t(locale, key, { count: 1000 }).length, `${locale}.${key}`).toBeLessThanOrEqual(60);
+      }
     }
   });
 });
