@@ -1,7 +1,186 @@
 /**
- * Drizzle schema. M0 has no business tables yet — M1 adds catalogue, customers, carts and orders
- * here, then `pnpm --filter api db:generate` writes the SQL migration into ./drizzle.
- * Never edit an applied migration; add a new one.
+ * Drizzle schema. Change it here, then `pnpm --filter api db:generate` writes the SQL migration into
+ * ./drizzle. Never edit an applied migration; add a new one.
+ *
+ * Money is integer euro cents incl. VAT (D-025). Bilingual text is stored as `*_bg` / `*_en` columns
+ * for single strings and as `{ bg, en }` JSON for lists.
  */
-// oxlint-disable-next-line unicorn/require-module-specifiers
-export {};
+import { sql } from "drizzle-orm";
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+type Localized = { bg: string; en: string };
+
+export const sourcingEnum = pgEnum("sourcing", [
+  "OFFICIAL",
+  "KUMMIE_ORIGINAL",
+  "LICENSED",
+  "SUPPLIER_DIRECT",
+]);
+/** LIMITED is deliberately absent: it comes only from `products.is_limited` (badges.json rules). */
+export const productStateEnum = pgEnum("product_state", ["NEW_DROP", "IN_STOCK_EU", "PRE_ORDER"]);
+export const productStatusEnum = pgEnum("product_status", ["draft", "published", "archived"]);
+
+const timestamps = {
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+};
+
+// ---------- Catalogue reference data (seeded) ----------
+
+/** Artist/group metadata only — no logos, photos or artwork (D-012). */
+export const groups = pgTable(
+  "groups",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    generation: integer("generation").notNull(),
+    aka: text("aka"),
+    /** True until an editor confirms the entry. */
+    editorialCheck: boolean("editorial_check").notNull().default(true),
+  },
+  (t) => [check("groups_generation_range", sql`${t.generation} between 1 and 5`)],
+);
+
+export const categories = pgTable("categories", {
+  id: text("id").primaryKey(),
+  nameBg: text("name_bg").notNull(),
+  nameEn: text("name_en").notNull(),
+  position: integer("position").notNull(),
+});
+
+export const subcategories = pgTable(
+  "subcategories",
+  {
+    id: text("id").primaryKey(),
+    categoryId: text("category_id")
+      .notNull()
+      .references(() => categories.id),
+    nameBg: text("name_bg").notNull(),
+    nameEn: text("name_en").notNull(),
+    position: integer("position").notNull(),
+  },
+  (t) => [index("subcategories_category_idx").on(t.categoryId)],
+);
+
+// ---------- Products ----------
+
+export const products = pgTable(
+  "products",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** URL slug, e.g. "kum-binder". */
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    summaryBg: text("summary_bg").notNull().default(""),
+    summaryEn: text("summary_en").notNull().default(""),
+    subcategoryId: text("subcategory_id")
+      .notNull()
+      .references(() => subcategories.id),
+    groupId: text("group_id").references(() => groups.id),
+    sourcing: sourcingEnum("sourcing").notNull(),
+    state: productStateEnum("state"),
+    /** The ONLY thing that turns the UI pink. */
+    isLimited: boolean("is_limited").notNull().default(false),
+    status: productStatusEnum("status").notNull().default("draft"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    /** Sample data for testing; never real stock or authorisation. */
+    isDemo: boolean("is_demo").notNull().default(false),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("products_slug_unique").on(t.slug),
+    index("products_status_idx").on(t.status),
+    index("products_subcategory_idx").on(t.subcategoryId),
+    index("products_group_idx").on(t.groupId),
+  ],
+);
+
+/** A sellable version of a product (album version, size…). */
+export const variants = pgTable(
+  "variants",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    version: text("version").notNull(),
+    sku: text("sku").notNull(),
+    /** Consumer price incl. VAT, the same in every country (D-025). */
+    priceCents: integer("price_cents").notNull(),
+    position: integer("position").notNull().default(0),
+    active: boolean("active").notNull().default(true),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("variants_sku_unique").on(t.sku),
+    index("variants_product_idx").on(t.productId),
+    check("variants_price_positive", sql`${t.priceCents} > 0`),
+  ],
+);
+
+/** Everything the product page must show under GPSR Art. 19. One row per product. */
+export const productCompliance = pgTable("product_compliance", {
+  productId: uuid("product_id")
+    .primaryKey()
+    .references(() => products.id, { onDelete: "cascade" }),
+  dispatchEstimateBg: text("dispatch_estimate_bg"),
+  dispatchEstimateEn: text("dispatch_estimate_en"),
+  /** ISO country codes the product can be delivered to. */
+  deliveryRegions: text("delivery_regions")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+  manufacturer: text("manufacturer"),
+  euResponsiblePerson: text("eu_responsible_person"),
+  safetyInfo: jsonb("safety_info").$type<Localized | null>(),
+  warnings: jsonb("warnings").$type<Localized[]>().notNull().default([]),
+  /** Explicit "no specific safety information or warnings". */
+  safetyNone: boolean("safety_none").notNull().default(false),
+  returnExceptions: jsonb("return_exceptions").$type<Localized[]>().notNull().default([]),
+  /** Explicit "no exceptions beyond the legal ones". */
+  returnExceptionsNone: boolean("return_exceptions_none").notNull().default(false),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Product photos (never artist photos, logos or album art in our own assets). */
+export const productImages = pgTable(
+  "product_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    path: text("path").notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    altBg: text("alt_bg").notNull().default(""),
+    altEn: text("alt_en").notNull().default(""),
+    position: integer("position").notNull().default(0),
+  },
+  (t) => [index("product_images_product_idx").on(t.productId)],
+);
+
+/** Free-form search keywords per product (later: full-text search). */
+export const productKeywords = pgTable(
+  "product_keywords",
+  {
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    keyword: text("keyword").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.productId, t.keyword] })],
+);
