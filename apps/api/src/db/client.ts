@@ -29,7 +29,10 @@ export function createDatabase(url: string, poolMax: number): DatabaseHandle {
     ping: async (timeoutMs = 2_000) => {
       let timer: NodeJS.Timeout | undefined;
       const timeout = new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`database ping timed out after ${timeoutMs}ms`)), timeoutMs);
+        timer = setTimeout(
+          () => reject(new Error(`database ping timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        );
       });
       try {
         await Promise.race([db.execute(sql`select 1`), timeout]);

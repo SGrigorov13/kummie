@@ -9,7 +9,9 @@ type Props = { params: Promise<{ locale: string; slug: string }> };
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return articles.filter((article) => article.section === "magazine").map((article) => ({ slug: article.slug }));
+  return articles
+    .filter((article) => article.section === "magazine")
+    .map((article) => ({ slug: article.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  FREE_SHIPPING_GROSS_CENTS,
-  SHIPPING_FEE_CENTS,
-  quoteCart,
-  shippingCents,
-} from "./cart";
+import { FREE_SHIPPING_GROSS_CENTS, SHIPPING_FEE_CENTS, quoteCart, shippingCents } from "./cart";
 import { KUMMIES_REDEEM_COST, kummiesEarned, redeemKummies } from "./kummies";
 import { formatBgn, formatMoney, parseEuroToCents, SHOW_BGN } from "./money";
 import { grossCents, unitGrossCents, vatCents, vatRate } from "./vat";

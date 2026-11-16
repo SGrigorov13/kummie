@@ -157,7 +157,14 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       const lines = state.cart.flatMap((line) => {
         const product = productById(line.productId);
         return product
-          ? [{ productId: product.id, qty: line.qty, title: product.title, priceExVatCents: product.priceExVatCents }]
+          ? [
+              {
+                productId: product.id,
+                qty: line.qty,
+                title: product.title,
+                priceExVatCents: product.priceExVatCents,
+              },
+            ]
           : [];
       });
       const order: DemoOrder = {
@@ -180,7 +187,10 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         orders: [order, ...s.orders],
         history:
           quote.kummies > 0
-            ? [{ id: `h-${id}`, kind: "earn", delta: quote.kummies, orderId: id, at: createdAt }, ...s.history]
+            ? [
+                { id: `h-${id}`, kind: "earn", delta: quote.kummies, orderId: id, at: createdAt },
+                ...s.history,
+              ]
             : s.history,
       }));
       return id;
@@ -210,7 +220,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
           cart:
             !Number.isInteger(qty) || qty <= 0
               ? s.cart.filter((line) => line.productId !== productId)
-              : s.cart.map((line) => (line.productId === productId ? { ...line, qty: Math.min(qty, 99) } : line)),
+              : s.cart.map((line) =>
+                  line.productId === productId ? { ...line, qty: Math.min(qty, 99) } : line,
+                ),
         })),
       toggleWishlist: (productId) => update((s) => ({ ...s, wishlist: toggleId(s.wishlist, productId) })),
       toggleOwned: (productId) => update((s) => ({ ...s, owned: toggleId(s.owned, productId) })),
@@ -227,7 +239,10 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
             ...s,
             kummies: result.balance,
             creditCents: s.creditCents + result.creditCents,
-            history: [{ id: `h-${Date.now()}`, kind: "redeem", delta: result.balance - s.kummies, at }, ...s.history],
+            history: [
+              { id: `h-${Date.now()}`, kind: "redeem", delta: result.balance - s.kummies, at },
+              ...s.history,
+            ],
           };
         }),
       placeOrder,

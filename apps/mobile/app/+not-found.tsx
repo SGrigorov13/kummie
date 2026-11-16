@@ -10,7 +10,15 @@ export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "404" }} />
-      <View style={{ flex: 1, gap: sp(4), padding: sp(6), justifyContent: "center", backgroundColor: colors.background }}>
+      <View
+        style={{
+          flex: 1,
+          gap: sp(4),
+          padding: sp(6),
+          justifyContent: "center",
+          backgroundColor: colors.background,
+        }}
+      >
         <Text style={[text.h2, { color: colors.text }]}>{t(locale, "notFound")}</Text>
         <Link href="/" style={[text.body, { color: colors.tabActive }]}>
           {t(locale, "mobile.home")}

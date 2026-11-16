@@ -57,7 +57,12 @@ export class FakePaymentProvider implements PaymentProvider {
     return session;
   }
 
-  async handleWebhook({ rawBody }: { headers: Record<string, string | undefined>; rawBody: string }): Promise<PaymentEvent> {
+  async handleWebhook({
+    rawBody,
+  }: {
+    headers: Record<string, string | undefined>;
+    rawBody: string;
+  }): Promise<PaymentEvent> {
     let body: { type?: string; sessionId?: string; reason?: string };
     try {
       body = JSON.parse(rawBody) as typeof body;
@@ -95,7 +100,8 @@ export class FakePaymentProvider implements PaymentProvider {
     const payment = this.require(input.paymentId);
     const cents = input.amount.amountCents;
     if (!Number.isInteger(cents) || cents <= 0) throw new Error("refund must be positive integer cents");
-    if (payment.refundedCents + cents > payment.capturedCents) throw new Error("refund exceeds the captured amount");
+    if (payment.refundedCents + cents > payment.capturedCents)
+      throw new Error("refund exceeds the captured amount");
     payment.refundedCents += cents;
     payment.status = payment.refundedCents === payment.capturedCents ? "refunded" : "partially_refunded";
     const result: RefundResult = { refundId: `fr_${randomUUID()}`, status: "succeeded" };

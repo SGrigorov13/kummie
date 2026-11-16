@@ -27,7 +27,8 @@ function withDisclaimer(body: Localized, productIds: string[]): AssistantReply {
 }
 
 function budgetCents(q: string): number | undefined {
-  const match = q.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur|euro|евро)/i) ?? q.match(/(?:€)\s*(\d+(?:[.,]\d{1,2})?)/);
+  const match =
+    q.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur|euro|евро)/i) ?? q.match(/(?:€)\s*(\d+(?:[.,]\d{1,2})?)/);
   if (match?.[1]) return parseEuroToCents(match[1]);
   return q.includes("40") ? 4000 : undefined;
 }
@@ -40,7 +41,9 @@ export function askKummie(query: string, date: Date = new Date()): AssistantRepl
     q.includes("куп") || q.includes("buy") || q.includes("взе") || q.includes("бюджет") || q.includes("имам");
 
   if (budget !== undefined && (talksMoney || /€|eur|евро/.test(q))) {
-    const picks = products.filter((product) => unitGrossCents(product.priceExVatCents, "BG", date) <= budget).slice(0, 3);
+    const picks = products
+      .filter((product) => unitGrossCents(product.priceExVatCents, "BG", date) <= budget)
+      .slice(0, 3);
     const names = picks.map((product) => product.title).join(", ");
     return withDisclaimer(
       {
@@ -79,7 +82,9 @@ export function askKummie(query: string, date: Date = new Date()): AssistantRepl
     q.includes("calendar") ||
     q.includes("release")
   ) {
-    const lines = calendar.map((entry) => `${entry.when}: ${groupById(entry.groupId)?.name ?? ""}`).join("; ");
+    const lines = calendar
+      .map((entry) => `${entry.when}: ${groupById(entry.groupId)?.name ?? ""}`)
+      .join("; ");
     return withDisclaimer(
       {
         bg: `Примерният календар, не официален график: ${lines}.`,

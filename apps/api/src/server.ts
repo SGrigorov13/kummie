@@ -31,7 +31,10 @@ async function main() {
   };
 
   const app = buildApp({ logger, checkDb });
-  if (!database) app.log.warn("DATABASE_URL is not set — /health will report db: not_configured (see apps/api/.env.example)");
+  if (!database)
+    app.log.warn(
+      "DATABASE_URL is not set — /health will report db: not_configured (see apps/api/.env.example)",
+    );
 
   const shutdown = async (signal: string) => {
     app.log.info({ signal }, "shutting down");

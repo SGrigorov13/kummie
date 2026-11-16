@@ -20,7 +20,9 @@ export function Equaliser({ height = 32 }: { height?: number }) {
             width,
             height: height * ratio,
             borderRadius: width / equaliser.radiusDivisor,
-            backgroundColor: (equaliser.glowBars as readonly number[]).includes(index) ? colors.glow : colors.pink,
+            backgroundColor: (equaliser.glowBars as readonly number[]).includes(index)
+              ? colors.glow
+              : colors.pink,
           }}
         />
       ))}

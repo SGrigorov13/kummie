@@ -18,7 +18,11 @@ export function format(template: string, values: Readonly<Record<string, string 
 }
 
 /** Translates a key, optionally filling placeholders. */
-export function t(locale: Locale, key: MessageKey, values?: Readonly<Record<string, string | number>>): string {
+export function t(
+  locale: Locale,
+  key: MessageKey,
+  values?: Readonly<Record<string, string | number>>,
+): string {
   const message = messages[locale][key];
   return values ? format(message, values) : message;
 }

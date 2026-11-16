@@ -22,11 +22,21 @@ export function ProductActions({ productId }: { productId: string }) {
       >
         {t("add")}
       </button>
-      <button type="button" className="btn btn--secondary" aria-pressed={wished} onClick={() => toggleWishlist(productId)}>
+      <button
+        type="button"
+        className="btn btn--secondary"
+        aria-pressed={wished}
+        onClick={() => toggleWishlist(productId)}
+      >
         {t("wishlist")}
         {wished ? " ✓" : ""}
       </button>
-      <button type="button" className="btn btn--secondary" aria-pressed={owned} onClick={() => toggleOwned(productId)}>
+      <button
+        type="button"
+        className="btn btn--secondary"
+        aria-pressed={owned}
+        onClick={() => toggleOwned(productId)}
+      >
         {t("owned")}
         {owned ? " ✓" : ""}
       </button>

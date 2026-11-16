@@ -1,6 +1,17 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { colors, fontFamilies, motion, radius, shadow, space, star, surfaces, tracking, typeScale } from "./tokens";
+import {
+  colors,
+  fontFamilies,
+  motion,
+  radius,
+  shadow,
+  space,
+  star,
+  surfaces,
+  tracking,
+  typeScale,
+} from "./tokens";
 
 const read = (relative: string) => readFileSync(new URL(relative, import.meta.url), "utf8");
 
@@ -94,7 +105,8 @@ describe("tokens.ts mirrors tokens.css", () => {
 
   it("light and dark surfaces", () => {
     const dark = packageCss.match(/prefers-color-scheme:\s*dark\)\s*\{\s*:root\s*\{([\s\S]*?)\}/)?.[1] ?? "";
-    const light = packageCss.match(/prefers-color-scheme:\s*light\)\s*\{\s*:root\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+    const light =
+      packageCss.match(/prefers-color-scheme:\s*light\)\s*\{\s*:root\s*\{([\s\S]*?)\}/)?.[1] ?? "";
     const resolve = (block: string, prop: string) =>
       byName(block.match(new RegExp(`--kum-${prop}:\\s*var\\(--kum-([a-z-]+)\\)`))?.[1] ?? "");
     expect(resolve(dark, "surface")).toBe(surfaces.dark.surface);

@@ -32,7 +32,14 @@ export type Label = {
   carrierReference?: string;
 };
 
-export type TrackingStatus = "label_created" | "handed_to_carrier" | "in_transit" | "out_for_delivery" | "delivered" | "returned" | "exception";
+export type TrackingStatus =
+  | "label_created"
+  | "handed_to_carrier"
+  | "in_transit"
+  | "out_for_delivery"
+  | "delivered"
+  | "returned"
+  | "exception";
 
 export type TrackingEvent = { status: TrackingStatus; at: Date; location?: string; description?: string };
 

@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 type View = "signIn" | "dashboard";
 
-const SECTIONS: MessageKey[] = ["admin.dashboard", "admin.orders", "admin.batches", "admin.hub", "admin.catalog"];
+const SECTIONS: MessageKey[] = [
+  "admin.dashboard",
+  "admin.orders",
+  "admin.batches",
+  "admin.hub",
+  "admin.catalog",
+];
 
 /**
  * M0 admin shell: a sign-in placeholder and an empty dashboard. Nothing is sent anywhere — real

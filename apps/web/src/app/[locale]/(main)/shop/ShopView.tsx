@@ -65,7 +65,7 @@ export function ShopView() {
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
-  const subcategories = cat ? CATEGORIES.find((category) => category.id === cat)?.subcategories ?? [] : [];
+  const subcategories = cat ? (CATEGORIES.find((category) => category.id === cat)?.subcategories ?? []) : [];
 
   return (
     <>
@@ -94,7 +94,10 @@ export function ShopView() {
         {cat ? (
           <label className="select">
             <span>{t("subcategory")}</span>
-            <select value={sub ?? ""} onChange={(event) => setParam({ sub: event.target.value || undefined })}>
+            <select
+              value={sub ?? ""}
+              onChange={(event) => setParam({ sub: event.target.value || undefined })}
+            >
               <option value="">{t("all")}</option>
               {subcategories.map((item) => (
                 <option key={item.id} value={item.id}>

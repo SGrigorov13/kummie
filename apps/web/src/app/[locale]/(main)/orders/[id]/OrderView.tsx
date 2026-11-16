@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  CUSTOMER_STEPS,
-  customerStepNumber,
-  formatMoney,
-  isOffTrack,
-  nextHappyStatus,
-} from "@kummie/core";
+import { CUSTOMER_STEPS, customerStepNumber, formatMoney, isOffTrack, nextHappyStatus } from "@kummie/core";
 import { useDemoStore } from "@/lib/demo-store";
 import { useLocale, useT } from "@/lib/locale";
 
@@ -41,7 +35,11 @@ export function OrderView({ id }: { id: string }) {
             {CUSTOMER_STEPS.map((step, index) => {
               const done = index + 1 <= current;
               return (
-                <li key={step} className={done ? "steps__item steps__item--done" : "steps__item"} aria-current={index + 1 === current ? "step" : undefined}>
+                <li
+                  key={step}
+                  className={done ? "steps__item steps__item--done" : "steps__item"}
+                  aria-current={index + 1 === current ? "step" : undefined}
+                >
                   <span className="steps__n" aria-hidden="true">
                     {index + 1}
                   </span>

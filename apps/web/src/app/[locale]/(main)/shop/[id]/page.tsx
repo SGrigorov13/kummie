@@ -1,4 +1,12 @@
-import { badgeSpec, categoryOf, groupById, productById, products, stateBadgeOf, subcategoryById } from "@kummie/core";
+import {
+  badgeSpec,
+  categoryOf,
+  groupById,
+  productById,
+  products,
+  stateBadgeOf,
+  subcategoryById,
+} from "@kummie/core";
 import { t } from "@kummie/i18n";
 import type { Metadata } from "next";
 import Link from "next/link";

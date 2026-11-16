@@ -22,7 +22,11 @@ export type TickResult = { name: string; ok: boolean; ms: number; error?: string
 /** Registered jobs, in run order. Empty in M0. */
 export const jobs: readonly Job[] = [];
 
-export async function runTick(list: readonly Job[], log: JobLogger = console, now = new Date()): Promise<TickResult[]> {
+export async function runTick(
+  list: readonly Job[],
+  log: JobLogger = console,
+  now = new Date(),
+): Promise<TickResult[]> {
   const results: TickResult[] = [];
   for (const job of list) {
     const started = Date.now();

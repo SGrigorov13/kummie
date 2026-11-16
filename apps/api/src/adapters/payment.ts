@@ -30,7 +30,8 @@ export type PaymentSession = {
   expiresAt: Date;
 };
 
-export type PaymentStatus = "pending" | "authorized" | "captured" | "failed" | "cancelled" | "refunded" | "partially_refunded";
+export type PaymentStatus =
+  "pending" | "authorized" | "captured" | "failed" | "cancelled" | "refunded" | "partially_refunded";
 
 export type PaymentEvent =
   | { type: "payment.authorized"; sessionId: string; paymentId: string; amount: Money }
@@ -53,7 +54,10 @@ export interface PaymentProvider {
   readonly name: string;
   createSession(input: CreateSessionInput): Promise<PaymentSession>;
   /** Verifies the signature and turns a provider webhook into a typed event. */
-  handleWebhook(input: { headers: Record<string, string | undefined>; rawBody: string }): Promise<PaymentEvent>;
+  handleWebhook(input: {
+    headers: Record<string, string | undefined>;
+    rawBody: string;
+  }): Promise<PaymentEvent>;
   /** Captures an authorised payment (full amount when `amount` is omitted). */
   capture(paymentId: string, amount?: Money): Promise<{ status: PaymentStatus }>;
   refund(input: RefundInput): Promise<RefundResult>;

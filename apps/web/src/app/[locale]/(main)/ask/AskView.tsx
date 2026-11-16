@@ -29,7 +29,12 @@ export function AskView() {
         <label className="sr-only" htmlFor="ask-input">
           {t("ask")}
         </label>
-        <input id="ask-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("askPh")} />
+        <input
+          id="ask-input"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t("askPh")}
+        />
         <button className="btn" type="submit">
           <Equaliser compact height={16} />
           {t("ask")}

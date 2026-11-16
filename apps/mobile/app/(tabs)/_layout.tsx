@@ -21,7 +21,11 @@ const TABS: readonly TabDef[] = [
     icon: { ios: "rectangle.stack", android: "collections_bookmark", web: "collections_bookmark" },
   },
   { name: "drops", title: "mobile.drops", icon: { ios: "bolt", android: "bolt", web: "bolt" } },
-  { name: "chingu", title: "mobile.chingu", icon: { ios: "bubble.left", android: "chat_bubble", web: "chat_bubble" } },
+  {
+    name: "chingu",
+    title: "mobile.chingu",
+    icon: { ios: "bubble.left", android: "chat_bubble", web: "chat_bubble" },
+  },
 ];
 
 function tabIcon(name: SymbolViewProps["name"]) {

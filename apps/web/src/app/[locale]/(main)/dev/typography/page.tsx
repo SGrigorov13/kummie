@@ -9,12 +9,27 @@ type Props = { params: Promise<{ locale: string }> };
 export const metadata: Metadata = { title: "Typography", robots: { index: false, follow: false } };
 
 const STYLES: { id: string; token: string; className: string; sample: MessageKey }[] = [
-  { id: "Display", token: "--kum-display · Archivo Black 44/1.05", className: "display", sample: "dev.sampleDisplay" },
+  {
+    id: "Display",
+    token: "--kum-display · Archivo Black 44/1.05",
+    className: "display",
+    sample: "dev.sampleDisplay",
+  },
   { id: "H2", token: "--kum-h2 · Archivo Black 30/1.1", className: "h2", sample: "dev.sampleH2" },
   { id: "H3", token: "--kum-h3 · Space Grotesk 700 20/1.25", className: "h3", sample: "dev.sampleH3" },
   { id: "Body", token: "--kum-body · Space Grotesk 400 16/1.6", className: "body", sample: "dev.sampleBody" },
-  { id: "Small", token: "--kum-small · Space Grotesk 400 14/1.5", className: "small", sample: "dev.sampleSmall" },
-  { id: "Label", token: "--kum-label-ty · Space Mono 700 12, +0.12em, uppercase", className: "label", sample: "dev.sampleLabel" },
+  {
+    id: "Small",
+    token: "--kum-small · Space Grotesk 400 14/1.5",
+    className: "small",
+    sample: "dev.sampleSmall",
+  },
+  {
+    id: "Label",
+    token: "--kum-label-ty · Space Mono 700 12, +0.12em, uppercase",
+    className: "label",
+    sample: "dev.sampleLabel",
+  },
 ];
 
 const ALPHABET = {

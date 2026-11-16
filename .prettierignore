@@ -6,3 +6,8 @@ data/
 **/dist/
 **/.expo/
 **/coverage/
+packages/brand/tokens.css
+.vscode/
+.claude/
+**/.vscode/
+**/.claude/

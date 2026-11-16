@@ -15,7 +15,9 @@ const intlLocale: Record<Locale, string> = { bg: "bg-BG", en: "en-GB" };
 /** Formats integer euro cents as EUR, e.g. 2200 → "22,00 €" (bg) / "€22.00" (en). */
 export function formatMoney(cents: number, locale: Locale): string {
   assertCents(cents);
-  return new Intl.NumberFormat(intlLocale[locale], { style: "currency", currency: "EUR" }).format(cents / 100);
+  return new Intl.NumberFormat(intlLocale[locale], { style: "currency", currency: "EUR" }).format(
+    cents / 100,
+  );
 }
 
 /** Reference BGN amount for integer euro cents. Show only when `SHOW_BGN` is on. */

@@ -197,7 +197,8 @@ export const en: Messages = {
     "Consumer goods in the EU carry at least a two-year legal guarantee. This text is not a warranty card.",
   "legal.privacy":
     "The demo keeps the cart, wishlist, and orders in this browser's localStorage. There is no server, no ad cookie, and no profile of the young contributor behind KUMMIE Teen.",
-  "legal.terms": "This is a local prototype for review. The order button takes no money and creates no obligation.",
+  "legal.terms":
+    "This is a local prototype for review. The order button takes no money and creates no obligation.",
   "legal.complaints":
     "A complaint about a real seller goes to that seller and, if needed, to the authority. There is no seller here.",
 

@@ -28,7 +28,10 @@ describe("GET /health", () => {
 
 describe("config", () => {
   it("reads PORT and defaults", () => {
-    const config = loadConfig({ PORT: "4123", DATABASE_URL: "postgres://u:p@localhost:5432/kummie" }, "missing.env");
+    const config = loadConfig(
+      { PORT: "4123", DATABASE_URL: "postgres://u:p@localhost:5432/kummie" },
+      "missing.env",
+    );
     expect(config.PORT).toBe(4123);
     expect(config.HOST).toBe("127.0.0.1");
     expect(config.DB_POOL_MAX).toBe(5);
@@ -80,7 +83,10 @@ describe("FakePaymentProvider", () => {
 
   async function authorised(provider: FakePaymentProvider) {
     const { sessionId } = await provider.createSession(session);
-    const event = await provider.handleWebhook({ headers: {}, rawBody: JSON.stringify({ type: "authorize", sessionId }) });
+    const event = await provider.handleWebhook({
+      headers: {},
+      rawBody: JSON.stringify({ type: "authorize", sessionId }),
+    });
     if (event.type !== "payment.authorized") throw new Error("expected authorisation");
     return event.paymentId;
   }

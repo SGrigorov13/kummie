@@ -10,7 +10,8 @@ import { createDatabase } from "./client";
  */
 export async function runMigrations(): Promise<void> {
   const config = loadConfig();
-  if (!config.DATABASE_URL) throw new Error("DATABASE_URL is not set. Copy apps/api/.env.example to apps/api/.env.");
+  if (!config.DATABASE_URL)
+    throw new Error("DATABASE_URL is not set. Copy apps/api/.env.example to apps/api/.env.");
   const handle = createDatabase(config.DATABASE_URL, 1);
   try {
     const migrationsFolder = resolve(process.cwd(), config.MIGRATIONS_DIR);

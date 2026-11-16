@@ -53,7 +53,11 @@ export function HeaderTools() {
       <Link href={href(locale, "/account")} className="header-link">
         {t("account")}
       </Link>
-      <Link href={href(locale, "/cart")} className="header-link cart-link" aria-label={t("cartCount", { count: cartCount })}>
+      <Link
+        href={href(locale, "/cart")}
+        className="header-link cart-link"
+        aria-label={t("cartCount", { count: cartCount })}
+      >
         {t("cart")}
         <span className="cart-link__count" aria-hidden="true">
           {cartCount}

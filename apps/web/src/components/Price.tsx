@@ -5,7 +5,15 @@ import { useDemoStore } from "@/lib/demo-store";
 import { useLocale, useT } from "@/lib/locale";
 
 /** Gross price for the shopper's delivery country, always labelled "incl. VAT". */
-export function Price({ exVatCents, qty = 1, large = false }: { exVatCents: number; qty?: number; large?: boolean }) {
+export function Price({
+  exVatCents,
+  qty = 1,
+  large = false,
+}: {
+  exVatCents: number;
+  qty?: number;
+  large?: boolean;
+}) {
   const locale = useLocale();
   const t = useT();
   const { state } = useDemoStore();

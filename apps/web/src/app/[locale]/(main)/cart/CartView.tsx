@@ -85,7 +85,11 @@ export function CartView() {
                   value={line.qty}
                   onChange={(event) => setQty(line.productId, Number(event.target.value))}
                 />
-                <button type="button" className="btn btn--secondary btn--small" onClick={() => setQty(line.productId, 0)}>
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--small"
+                  onClick={() => setQty(line.productId, 0)}
+                >
                   {t("remove")}
                 </button>
               </div>
@@ -150,7 +154,9 @@ export function CartView() {
           </div>
           <div>
             <dt>{t("shipping")}</dt>
-            <dd>{quote.shippingCents === 0 ? t("shippingFree") : formatMoney(quote.shippingCents, locale)}</dd>
+            <dd>
+              {quote.shippingCents === 0 ? t("shippingFree") : formatMoney(quote.shippingCents, locale)}
+            </dd>
           </div>
           {quote.creditCents > 0 ? (
             <div>
@@ -164,7 +170,9 @@ export function CartView() {
           </div>
         </dl>
         <p className="muted">
-          {missingForFree > 0 ? t("freeShipLeft", { amount: formatMoney(missingForFree, locale) }) : t("freeShip")}
+          {missingForFree > 0
+            ? t("freeShipLeft", { amount: formatMoney(missingForFree, locale) })
+            : t("freeShip")}
         </p>
         <p className="muted">{t("deliveryWindow")}</p>
         <p>

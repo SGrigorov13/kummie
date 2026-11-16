@@ -78,8 +78,7 @@ export const motion = {
 export const star = {
   /** Fixed. Never change. */
   rotationDeg: -20,
-  clipPath:
-    "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)",
+  clipPath: "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)",
   /** The same polygon as an SVG path on a 100×100 viewBox (logo-geometry.md). */
   path: "M50 0 L61 35 L98 35 L68 57 L79 91 L50 70 L21 91 L32 57 L2 35 L39 35 Z",
 } as const;

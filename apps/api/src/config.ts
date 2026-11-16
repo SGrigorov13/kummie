@@ -28,11 +28,16 @@ export type Config = z.infer<typeof EnvSchema>;
  * Loads `.env` from the app root when present (never overrides real environment variables), then
  * validates. In production the variables come from the cPanel Node.js app settings instead.
  */
-export function loadConfig(env: NodeJS.ProcessEnv = process.env, envFile = resolve(process.cwd(), ".env")): Config {
+export function loadConfig(
+  env: NodeJS.ProcessEnv = process.env,
+  envFile = resolve(process.cwd(), ".env"),
+): Config {
   if (env === process.env && existsSync(envFile)) process.loadEnvFile(envFile);
   const parsed = EnvSchema.safeParse(env);
   if (!parsed.success) {
-    const problems = parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
+    const problems = parsed.error.issues
+      .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+      .join("; ");
     throw new Error(`Invalid API configuration — ${problems}. See apps/api/.env.example.`);
   }
   return parsed.data;

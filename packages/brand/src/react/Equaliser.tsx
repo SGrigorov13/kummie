@@ -27,7 +27,9 @@ export function Equaliser({ compact = false, height, animate = false, className 
       {bars.map((ratio, index) => (
         <i
           key={index}
-          className={!compact && (equaliser.glowBars as readonly number[]).includes(index) ? "kum-eq__glow" : undefined}
+          className={
+            !compact && (equaliser.glowBars as readonly number[]).includes(index) ? "kum-eq__glow" : undefined
+          }
           style={{ height: `${ratio * 100}%`, animationDelay: `${index * -140}ms` }}
         />
       ))}
