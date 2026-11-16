@@ -1,0 +1,63 @@
+/* KUMMIE design tokens — v1.0, direction 3B "Star & Sound"
+   Single source of truth. Do not introduce colours outside this file. */
+
+:root {
+  /* ---- Colour ---- */
+  --kum-violet:     #5B14E5;  /* brand ground: header, app chrome, packaging */
+  --kum-ink:        #2D0075;  /* ALL text, icons, rules. Never pure black */
+  --kum-glow:       #B4FF3A;  /* primary action, links on violet, NEW DROP */
+  --kum-pink:       #FF2E9A;  /* LIMITED / last-units ONLY, and the logo star */
+  --kum-spotlight:  #FFE44D;  /* OFFICIAL badge, editorial highlights */
+  --kum-paper:      #F4F2EF;  /* page background, cards, long-form reading */
+  --kum-white:      #FFFFFF;
+
+  /* Support tints (derived; do not add more) */
+  --kum-label:      #6B5FA0;  /* small uppercase meta labels on paper/white */
+  --kum-body-muted: #55507A;  /* secondary body text on paper/white */
+  --kum-hairline:   #E6E2DA;  /* 1px borders on paper/white */
+
+  /* ---- Typography ---- */
+  --kum-font-display: "Archivo Black", system-ui, sans-serif;  /* 400 only */
+  --kum-font-text:    "Space Grotesk", system-ui, sans-serif;  /* 400 500 700 */
+  --kum-font-mono:    "Space Mono", ui-monospace, monospace;   /* 400 700 */
+
+  --kum-display:  700 44px/1.05 var(--kum-font-display);
+  --kum-h2:       400 30px/1.1  var(--kum-font-display);
+  --kum-h3:       700 20px/1.25 var(--kum-font-text);
+  --kum-body:     400 16px/1.6  var(--kum-font-text);
+  --kum-small:    400 14px/1.5  var(--kum-font-text);
+  --kum-label-ty: 700 12px/1.2  var(--kum-font-mono);
+
+  --kum-track-display: -0.02em;
+  --kum-track-label:    0.12em;  /* uppercase mono labels */
+  --kum-track-tagline:  0.26em;  /* "YOUR K-POP CHINGU" */
+
+  /* ---- Geometry ---- */
+  --kum-space: 4px;            /* every spacing value is a multiple of 4 */
+  --kum-radius-sm:   8px;
+  --kum-radius-md:  14px;
+  --kum-radius-lg:  22px;
+  --kum-radius-pill: 999px;
+  --kum-shadow: 0 18px 46px -24px rgba(45, 0, 117, .28);
+
+  /* ---- Logo ---- */
+  --kum-star-clip: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  --kum-star-rotation: -20deg;  /* fixed. never change */
+  --kum-motion-fast: 180ms;
+  --kum-motion-base: 240ms;
+  --kum-ease: cubic-bezier(.2, .7, .3, 1);
+}
+
+/* Dark mode: Ink ground, Paper text, Glow actions */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kum-surface: var(--kum-ink);
+    --kum-on-surface: var(--kum-paper);
+  }
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --kum-surface: var(--kum-paper);
+    --kum-on-surface: var(--kum-ink);
+  }
+}

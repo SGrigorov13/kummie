@@ -1,0 +1,20 @@
+{
+  "name": "@kummie/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "KUMMIE domain rules shared by web, mobile, admin and api: money, VAT, shipping, Kummies, badges, order statuses, taxonomy.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./demo": "./src/demo/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.0"
+  }
+}

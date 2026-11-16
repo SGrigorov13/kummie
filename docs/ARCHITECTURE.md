@@ -151,15 +151,20 @@ Rules
 
 ## 6. Money, tax and currency
 
-- All amounts are integer **euro cents**. Prices are stored ex-VAT.
+- All amounts are integer **euro cents**. Prices are stored as the **consumer price incl. VAT**,
+  the same in every country (D-025).
 - VAT is charged at the **destination country** rate (BG / RO / GR, later PL) — intra-EU distance
-  sales under OSS (v3 §3.3). Rates live in a dated table in `packages/core`.
+  sales under OSS (v3 §3.3). Because the customer price is fixed, the VAT is *extracted* from the
+  amount paid and KUMMIE's net absorbs the difference (e.g. €18.00 → net €15.00 in BG, €14.52 in
+  GR). Rates live in a dated table in `packages/core`; a daily job compares it with the EU TEDB
+  database and alerts on any difference (D-029).
 - Display in EUR. Bulgaria's mandatory lev/euro dual display ended on 8 Aug 2026, so BGN display is
   off by default (config flag).
-- Free shipping threshold: **€79.99 incl. VAT** (brand concept). Flat shipping fee below it.
-- Kummies: earn only on merchandise ≥ €15 ex-VAT, 10 Kummies per €1; 500 Kummies = €5 store
-  credit (current values, open question whether points are granted at payment or after delivery
-  + withdrawal period).
+- Free delivery when the goods incl. VAT are worth **more than €79.99, i.e. from €80.00** (D-026).
+  Flat delivery fee below it.
+- Kummies: **1 Kummie per whole euro** of goods incl. VAT, only on orders with goods **≥ €30.00**
+  (D-027). Redemption 500 Kummies = €5 store credit is under review; whether points are granted at
+  payment or after delivery + withdrawal period is still open (D-002).
 
 ## 7. Payments
 

@@ -1,14 +1,33 @@
+# Dependencies
 node_modules/
+
+# Build outputs
 dist/
 build/
+out/
 .next/
-.expo/
-.turbo/
+next-env.d.ts
+*.tsbuildinfo
 coverage/
-*.log
+
+# Tooling caches
+.turbo/
+.expo/
+.metro-health-check*
+expo-env.d.ts
+web-build/
+
+# Generated native folders (Expo continuous native generation)
+apps/mobile/ios/
+apps/mobile/android/
+
+# Environment: never commit secrets, keep .env.example up to date
 .env
 .env.*
 !.env.example
+
+# Logs and OS files
+*.log
 .DS_Store
 Thumbs.db
 

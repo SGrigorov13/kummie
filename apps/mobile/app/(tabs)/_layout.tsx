@@ -1,70 +1,67 @@
-import { SymbolView } from 'expo-symbols';
-import { Link, Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
+import { t, type MessageKey } from "@kummie/i18n";
+import { Tabs } from "expo-router";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { useColorScheme, type ColorValue } from "react-native";
+import { useLocale } from "@/components/locale";
+import { fonts, palette } from "@/theme";
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+type TabDef = {
+  name: string;
+  title: MessageKey;
+  icon: SymbolViewProps["name"];
+};
+
+/** Five tabs per brand spec: Home · Shop · Collection · Drops · Chingu (Ask KUMMIE). */
+const TABS: readonly TabDef[] = [
+  { name: "index", title: "mobile.home", icon: { ios: "house", android: "home", web: "home" } },
+  { name: "shop", title: "mobile.shop", icon: { ios: "bag", android: "shopping_bag", web: "shopping_bag" } },
+  {
+    name: "collection",
+    title: "mobile.collection",
+    icon: { ios: "rectangle.stack", android: "collections_bookmark", web: "collections_bookmark" },
+  },
+  { name: "drops", title: "mobile.drops", icon: { ios: "bolt", android: "bolt", web: "bolt" } },
+  {
+    name: "chingu",
+    title: "mobile.chingu",
+    icon: { ios: "bubble.left", android: "chat_bubble", web: "chat_bubble" },
+  },
+];
+
+function tabIcon(name: SymbolViewProps["name"]) {
+  return function TabIcon({ color }: { color: ColorValue }) {
+    return <SymbolView name={name} tintColor={color} size={24} />;
+  };
+}
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+  const locale = useLocale();
+  const colors = palette(useColorScheme() === "dark" ? "dark" : "light");
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{ ios: 'info.circle', android: 'info', web: 'info' }}
-                    size={25}
-                    tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="two"
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-        }}
-      />
+        // Tab bar: Paper (light) / Ink (dark); active icon Violet (light) / Glow (dark).
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
+        tabBarStyle: { backgroundColor: colors.tabBar, borderTopColor: colors.border, minHeight: 56 },
+        tabBarLabelStyle: { fontFamily: fonts.textMedium, fontSize: 12 },
+        // App chrome is the violet brand ground with white titles.
+        headerStyle: { backgroundColor: colors.header },
+        headerTintColor: colors.headerText,
+        headerTitleStyle: { fontFamily: fonts.display, fontSize: 20 },
+      }}
+    >
+      {TABS.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: t(locale, tab.title),
+            headerTitle: tab.name === "index" ? "KUMMIE" : t(locale, tab.title),
+            tabBarIcon: tabIcon(tab.icon),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

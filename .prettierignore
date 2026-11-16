@@ -1,0 +1,13 @@
+pnpm-lock.yaml
+docs/
+data/
+**/drizzle/meta/
+**/.next/
+**/dist/
+**/.expo/
+**/coverage/
+packages/brand/tokens.css
+.vscode/
+.claude/
+**/.vscode/
+**/.claude/

@@ -1,0 +1,22 @@
+# OPTIONAL. Nothing in this repo requires Docker: the owner runs PostgreSQL natively on Windows
+# (see docs/dev-setup.md). Use this only on machines that have Docker installed.
+#   docker compose up -d
+# Then set DATABASE_URL=postgres://postgres:postgres@localhost:5432/kummie in apps/api/.env
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kummie
+    ports:
+      - "5432:5432"
+    volumes:
+      - kummie-pg:/var/lib/postgresql/data
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # web UI
+volumes:
+  kummie-pg:
