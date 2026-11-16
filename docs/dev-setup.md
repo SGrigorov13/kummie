@@ -109,6 +109,16 @@ The shop must be listed in `WEB_ORIGINS` in `apps/api/.env` (default: http://loc
 `NEXT_PUBLIC_API_URL` in `apps/web/.env.local` must point to the API (default: http://localhost:3001).
 The minimum age for an account is the `accounts.minimumAge` setting (default 14, M1 spec A2).
 
+### Checkout and test payments (local)
+
+Add a product on a product page, open the cart and go to the checkout. Payment opens the test page
+of the fake provider on the API (http://localhost:3001/fake-pay/…) with **Pay** and **Decline**;
+nothing is charged. After paying, the order page shows step 1 of 7 and the confirmation e-mail
+appears in `apps/api/mail-outbox/` (guests: its link carries the order key).
+
+Set `FAKE_PAYMENT_SECRET` in `apps/api/.env` (any long random string) so open test payments keep
+working after the API restarts; `API_URL` is the address the browser uses for the API.
+
 ## 4. Checks (a task is done only when all four pass)
 
 ```powershell
