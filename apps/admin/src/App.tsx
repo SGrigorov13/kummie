@@ -7,14 +7,16 @@ import { CompanySettings } from "./CompanySettings";
 import { AdminProvider, api, useAdmin } from "./context";
 import { OrderDetailView, Orders } from "./Orders";
 import { ProductEditor } from "./ProductEditor";
+import { Reports } from "./Reports";
 import { SignIn } from "./SignIn";
 
-type Section = "dashboard" | "catalog" | "company" | "orders" | "batches" | "hub";
+type Section = "dashboard" | "catalog" | "company" | "orders" | "reports" | "batches" | "hub";
 
 const NAV: { id: Section; label: MessageKey; roles?: Staff["role"][] }[] = [
   { id: "dashboard", label: "admin.dashboard" },
   { id: "catalog", label: "admin.catalog", roles: ["admin", "content"] },
   { id: "orders", label: "admin.orders" },
+  { id: "reports", label: "admin.reports", roles: ["admin"] },
   { id: "batches", label: "admin.batches" },
   { id: "hub", label: "admin.hub" },
   { id: "company", label: "admin.company", roles: ["admin"] },
@@ -119,6 +121,7 @@ function Shell({ langButton, onSignOut }: { langButton: React.ReactNode; onSignO
           <ProductEditor id={editing} onClose={() => setEditing(null)} onCreated={setEditing} />
         ) : null}
         {section === "company" ? <CompanySettings /> : null}
+        {section === "reports" ? <Reports /> : null}
         {section === "orders" && !openOrder ? <Orders onOpen={setOpenOrder} /> : null}
         {section === "orders" && openOrder ? (
           <OrderDetailView id={openOrder} onClose={() => setOpenOrder(null)} />

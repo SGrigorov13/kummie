@@ -279,6 +279,21 @@ export function OrderDetailView({ id, onClose }: { id: string; onClose: () => vo
             ))}
           </tbody>
         </table>
+        {order.documents.length > 0 ? (
+          <>
+            <h2>{t("admin.order.documents")}</h2>
+            <ul>
+              {order.documents.map((d) => (
+                <li key={d.id}>
+                  <a href={api.documentUrl(order.id, d.id)}>
+                    {t(`doc.${d.kind}`)} № {d.number}
+                  </a>{" "}
+                  · {date(d.issuedAt)}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
         <h2>{t("admin.order.payments")}</h2>
         <ul>
           {order.payments.map((p, i) => (

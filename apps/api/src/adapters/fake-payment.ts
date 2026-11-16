@@ -155,7 +155,14 @@ export class FakePaymentProvider implements PaymentProvider {
     const amount: Money = { amountCents: session.amountCents, currency: "EUR" };
     if (body.type === "authorize") {
       const paymentId = `fp_${this.seal({ s: body.sessionId.slice(-24), a: session.amountCents })}`;
-      return { type: "payment.authorized", sessionId: body.sessionId, paymentId, amount };
+      // Stable test values derived from the payment, shaped like a bank's (6-digit code, terminal, reference).
+      const digest = createHash("sha256").update(paymentId).digest("hex");
+      const card = {
+        authCode: String(parseInt(digest.slice(0, 8), 16) % 1_000_000).padStart(6, "0"),
+        terminalId: "FAKEPOS1",
+        transactionRef: digest.slice(8, 20).toUpperCase(),
+      };
+      return { type: "payment.authorized", sessionId: body.sessionId, paymentId, amount, card };
     }
     if (body.type === "fail") {
       return { type: "payment.failed", sessionId: body.sessionId, reason: body.reason ?? "declined" };

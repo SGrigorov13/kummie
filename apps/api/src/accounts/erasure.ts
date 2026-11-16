@@ -3,6 +3,7 @@ import type { EmailAdapter, EmailMessage } from "../adapters/email";
 import type { Database } from "../db/client";
 import { addresses, customers, customerSessions, customerTokens, jobs } from "../db/schema";
 import { loadCompanySettings } from "../admin/settings-routes";
+import { documentAttachments } from "../documents/attachments";
 import { renderEmailHtml } from "../email/layout";
 import type { JobHandler } from "../jobs/outbox";
 
@@ -58,7 +59,12 @@ export function accountJobHandlers(email: EmailAdapter): Record<string, JobHandl
         cta: message.cta,
         company,
       });
-      const result = await email.send({ ...message, html });
+      const attachments = await documentAttachments(db, message.documentIds ?? []);
+      const result = await email.send({
+        ...message,
+        html,
+        ...(attachments.length > 0 ? { attachments } : {}),
+      });
       if (!result.accepted) throw new Error("e-mail not accepted");
     },
     account_erasure: async (payload, { db, now }) => {

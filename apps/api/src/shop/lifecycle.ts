@@ -3,6 +3,7 @@ import type { OrderStatus } from "@kummie/contracts";
 import { t, type MessageKey } from "@kummie/i18n";
 import { and, eq, inArray } from "drizzle-orm";
 import { kummiesLedger, orders, payments, refunds } from "../db/schema";
+import { issueRefundDocuments } from "../documents/issue";
 import { enqueue } from "../jobs/outbox";
 import { orderLink, orderNumber, transition, type OrderRow, type ShopDeps, type Tx } from "./orders";
 
@@ -25,7 +26,14 @@ function statusLine(locale: "bg" | "en", status: OrderStatus): string {
 }
 
 /** Status e-mail (transactional, never with marketing): one per step the customer can see. */
-async function queueStatusEmail(deps: ShopDeps, tx: Tx, order: OrderRow, to: OrderStatus, refundCents = 0) {
+async function queueStatusEmail(
+  deps: ShopDeps,
+  tx: Tx,
+  order: OrderRow,
+  to: OrderStatus,
+  refundCents = 0,
+  documentIds: string[] = [],
+) {
   const locale = order.locale;
   const site = `${deps.webUrl.replace(/\/$/, "")}/${locale}`;
   const link = orderLink(deps, order);
@@ -48,6 +56,7 @@ async function queueStatusEmail(deps: ShopDeps, tx: Tx, order: OrderRow, to: Ord
     category: "transactional",
     idempotencyKey: key,
     cta: { label: t(locale, "email.cta.order"), url: link },
+    ...(documentIds.length > 0 ? { documentIds } : {}),
   };
   await enqueue(tx, "email", message, key);
 }
@@ -94,7 +103,7 @@ async function cancel(deps: ShopDeps, order: OrderRow, actor: string, note: stri
 
   await db.transaction(async (tx) => {
     await transition(tx, order, "cancelled", actor, "cancelled", note ? { note } : {});
-    await tx
+    const [refund] = await tx
       .insert(refunds)
       .values({
         orderId: order.id,
@@ -106,7 +115,8 @@ async function cancel(deps: ShopDeps, order: OrderRow, actor: string, note: stri
         actor,
         idempotencyKey,
       })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ id: refunds.id });
     await tx
       .update(payments)
       .set({ status: "refunded", updatedAt: new Date() })
@@ -126,7 +136,16 @@ async function cancel(deps: ShopDeps, order: OrderRow, actor: string, note: stri
           .onConflictDoNothing();
       }
     }
-    await queueStatusEmail(deps, tx, order, "refunded", payment.amountCents);
+    // Storno of the receipt (and a credit note if there was an invoice), attached to the e-mail.
+    const documents = refund ? await issueRefundDocuments(tx, order, refund.id) : [];
+    await queueStatusEmail(
+      deps,
+      tx,
+      order,
+      "refunded",
+      payment.amountCents,
+      documents.map((d) => d.id),
+    );
   });
 }
 

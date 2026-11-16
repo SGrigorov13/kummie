@@ -375,6 +375,25 @@ export const en: Messages = {
   "email.cta.signin": "Sign in to KUMMIE",
   "email.cta.order": "View your order",
 
+  // ---- Sales documents and tax reports (M1 Task 9) ----
+  "order.documents": "Documents",
+  "doc.receipt": "Sales document",
+  "doc.receipt_storno": "Reversal document",
+  "doc.invoice": "Invoice",
+  "doc.credit_note": "Credit note",
+  "admin.order.documents": "Documents",
+  "admin.reports": "Tax reports",
+  "admin.reports.month": "Month",
+  "admin.reports.year": "Year",
+  "admin.reports.napAudit": "Monthly NRA file (XML)",
+  "admin.reports.napNote":
+    "You submit it in the NRA portal with your qualified e-signature between the 1st and the 15th, for the previous month.",
+  "admin.reports.confirm":
+    "The structure follows the NRA sample file. Check it with the accountant and the NRA XSD before the first submission.",
+  "admin.reports.missing": "Missing in Admin → Company: {fields}. The NRA file will be incomplete.",
+  "admin.reports.sales": "Sales journal for the accountant (CSV)",
+  "admin.reports.oss": "OSS figures for Q{quarter} {year} (CSV)",
+
   // ---- Groups and calendar ----
   follow: "Follow",
   following: "Following",

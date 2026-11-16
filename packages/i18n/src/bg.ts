@@ -371,6 +371,25 @@ export const bg = {
   "email.cta.signin": "Вход в KUMMIE",
   "email.cta.order": "Виж поръчката",
 
+  // ---- Sales documents and tax reports (M1 Task 9) ----
+  "order.documents": "Документи",
+  "doc.receipt": "Документ за продажба",
+  "doc.receipt_storno": "Сторно документ",
+  "doc.invoice": "Фактура",
+  "doc.credit_note": "Кредитно известие",
+  "admin.order.documents": "Документи",
+  "admin.reports": "Отчети за НАП",
+  "admin.reports.month": "Месец",
+  "admin.reports.year": "Година",
+  "admin.reports.napAudit": "Месечен файл за НАП (XML)",
+  "admin.reports.napNote":
+    "Подаваш го ти в портала на НАП с КЕП между 1-во и 15-о число, за предходния месец.",
+  "admin.reports.confirm":
+    "Структурата следва примерния файл на НАП. Преди първото подаване я сверете със счетоводителя и с XSD схемата на НАП.",
+  "admin.reports.missing": "Липсват данни в Админ → Фирма: {fields}. Файлът за НАП ще е непълен.",
+  "admin.reports.sales": "Дневник на продажбите за счетоводителя (CSV)",
+  "admin.reports.oss": "OSS справка за Q{quarter} {year} (CSV)",
+
   // ---- Groups and calendar ----
   follow: "Следвай",
   following: "Следваш",

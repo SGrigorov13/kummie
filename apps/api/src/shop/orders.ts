@@ -1,25 +1,32 @@
 import type { OrderDetail } from "@kummie/contracts";
-import { businessDay, customerCanCancel, formatMoney, kummiesValidUntil, splitCents } from "@kummie/core";
+import {
+  businessDay,
+  customerCanCancel,
+  formatDocNumber,
+  formatMoney,
+  kummiesValidUntil,
+  splitCents,
+} from "@kummie/core";
 import { t } from "@kummie/i18n";
 import { asc, eq } from "drizzle-orm";
 import type { PaymentEvent, PaymentProvider } from "../adapters/payment";
 import type { FakePaymentProvider } from "../adapters/fake-payment";
 import type { AccountDeps } from "../accounts/context";
 import type { Database } from "../db/client";
-import { kummiesLedger, orderEvents, orderLines, orders, payments } from "../db/schema";
+import { kummiesLedger, orderEvents, orderLines, orders, payments, salesDocuments } from "../db/schema";
 import { enqueue } from "../jobs/outbox";
+import { loadCompanySettings } from "../admin/settings-routes";
+import { issueSaleDocuments } from "../documents/issue";
+import { orderNumber, type OrderRow, type Tx } from "./basics";
 import { clearBought } from "./cart-store";
+
+export { orderNumber, type OrderRow, type Tx } from "./basics";
 
 export type ShopDeps = AccountDeps & {
   payments: PaymentProvider;
   /** Present when PAYMENT_PROVIDER=fake: serves the hosted "pay / fail" test page. */
   fakePayments?: FakePaymentProvider;
 };
-
-export type OrderRow = typeof orders.$inferSelect;
-export type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
-
-export const orderNumber = (seq: number | null) => `KUM-${seq ?? 0}`;
 
 /** Where the provider sends the browser back. Guests carry their key in the fragment. */
 function orderUrls(deps: ShopDeps, order: OrderRow, key: string | null) {
@@ -83,7 +90,7 @@ export function orderLink(deps: Pick<ShopDeps, "webUrl">, order: OrderRow): stri
   return !order.customerId && order.accessKey ? `${base}#k=${order.accessKey}` : base;
 }
 
-function paidEmail(deps: ShopDeps, order: OrderRow, dispatch: string, key: string) {
+function paidEmail(deps: ShopDeps, order: OrderRow, dispatch: string, key: string, documentIds: string[]) {
   const locale = order.locale;
   const site = `${deps.webUrl.replace(/\/$/, "")}/${locale}`;
   const text = [
@@ -111,6 +118,7 @@ function paidEmail(deps: ShopDeps, order: OrderRow, dispatch: string, key: strin
     category: "transactional",
     idempotencyKey: key,
     cta: { label: t(locale, "email.cta.order"), url: orderLink(deps, order) },
+    documentIds,
   };
 }
 
@@ -149,6 +157,7 @@ export async function processPaymentEvent(
     throw new Error("authorised amount differs from the order");
   const [order] = await db.select().from(orders).where(eq(orders.id, payment.orderId));
   if (!order || order.status !== "pending_payment") return "ignored";
+  const company = await loadCompanySettings(db);
   // Capture right away: pre-orders take weeks and card authorisations expire after days.
   await deps.payments.capture(event.paymentId);
 
@@ -157,9 +166,27 @@ export async function processPaymentEvent(
     if (!locked || locked.status !== "pending_payment") return false;
     await tx
       .update(payments)
-      .set({ status: "captured", providerPaymentId: event.paymentId, updatedAt: new Date() })
+      .set({
+        status: "captured",
+        providerPaymentId: event.paymentId,
+        authCode: event.card?.authCode ?? null,
+        terminalId: event.card?.terminalId ?? null,
+        transactionRef: event.card?.transactionRef ?? null,
+        updatedAt: new Date(),
+      })
       .where(eq(payments.id, payment.id));
     await transition(tx, locked, "paid", "provider", "paid", { paymentId: payment.id });
+    // Н-18 чл. 52о: the sales document is issued when the payment is confirmed (and an invoice on request).
+    const documents = await issueSaleDocuments(
+      tx,
+      locked,
+      {
+        terminalId: event.card?.terminalId ?? null,
+        authCode: event.card?.authCode ?? null,
+        transactionRef: event.card?.transactionRef ?? null,
+      },
+      company,
+    );
     const lines = await tx.select().from(orderLines).where(eq(orderLines.orderId, locked.id));
     if (locked.customerId && locked.kummies > 0) {
       const earnedOn = businessDay(new Date());
@@ -189,7 +216,13 @@ export async function processPaymentEvent(
     await enqueue(
       tx,
       "email",
-      paidEmail(deps, locked, dispatch, key) as unknown as Record<string, unknown>,
+      paidEmail(
+        deps,
+        locked,
+        dispatch,
+        key,
+        documents.map((d) => d.id),
+      ) as unknown as Record<string, unknown>,
       key,
     );
     return true;
@@ -200,9 +233,14 @@ export async function processPaymentEvent(
 
 /** The order as the customer sees it. */
 export async function orderDetail(db: Database, order: OrderRow): Promise<OrderDetail> {
-  const [lines, events] = await Promise.all([
+  const [lines, events, documents] = await Promise.all([
     db.select().from(orderLines).where(eq(orderLines.orderId, order.id)).orderBy(asc(orderLines.position)),
     db.select().from(orderEvents).where(eq(orderEvents.orderId, order.id)).orderBy(asc(orderEvents.at)),
+    db
+      .select()
+      .from(salesDocuments)
+      .where(eq(salesDocuments.orderId, order.id))
+      .orderBy(asc(salesDocuments.issuedAt), asc(salesDocuments.number)),
   ]);
   return {
     id: order.id,
@@ -234,5 +272,11 @@ export async function orderDetail(db: Database, order: OrderRow): Promise<OrderD
       .map((e) => ({ status: e.toStatus as OrderRow["status"], at: e.at.toISOString() })),
     canPay: order.status === "pending_payment",
     canCancel: customerCanCancel(order.status),
+    documents: documents.map((d) => ({
+      id: d.id,
+      kind: d.kind,
+      number: formatDocNumber(d.number),
+      issuedAt: d.issuedAt.toISOString(),
+    })),
   };
 }

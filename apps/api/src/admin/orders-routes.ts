@@ -10,7 +10,11 @@ import { and, asc, desc, eq, ilike, sql, type SQL } from "drizzle-orm";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import type { Database } from "../db/client";
-import { orderEvents, orders, payments, refunds } from "../db/schema";
+import { orderEvents, orders, payments, refunds, salesDocuments } from "../db/schema";
+import { toWindows1251 } from "@kummie/core";
+import { documentFileName, renderDocumentPdf } from "../documents/pdf";
+import { napAuditFile, ossQuarterCsv, salesJournalCsv } from "../documents/reports";
+import { loadCompanySettings } from "./settings-routes";
 import { changeOrderStatus, StatusChangeError } from "../shop/lifecycle";
 import { orderDetail, orderNumber, type OrderRow, type ShopDeps } from "../shop/orders";
 import { audit, requireStaff, type AdminDeps } from "./context";
@@ -59,7 +63,86 @@ export function ordersAdminRoutes(deps: AdminDeps & { shop: ShopDeps }): Fastify
   const canView = requireStaff(db, ["admin", "hub"]);
   const onlyAdmin = requireStaff(db, ["admin"]);
 
+  const MonthQuery = z.object({
+    year: z.coerce.number().int().min(2024).max(2100),
+    month: z.coerce.number().int().min(1).max(12),
+  });
+  const QuarterQuery = z.object({
+    year: z.coerce.number().int().min(2024).max(2100),
+    quarter: z.coerce.number().int().min(1).max(4),
+  });
+
   return async (app) => {
+    app.get(
+      "/admin-api/orders/:id/documents/:documentId",
+      {
+        preHandler: canView,
+        schema: { params: z.object({ id: z.string().uuid(), documentId: z.string().uuid() }) },
+      },
+      async (request, reply) => {
+        const [doc] = await db
+          .select()
+          .from(salesDocuments)
+          .where(
+            and(
+              eq(salesDocuments.id, request.params.documentId),
+              eq(salesDocuments.orderId, request.params.id),
+            ),
+          );
+        if (!doc) return reply.code(404).send({ error: "not_found", message: "No such document" });
+        return reply
+          .header("content-type", "application/pdf")
+          .header("cache-control", "private, no-store")
+          .header("content-disposition", `attachment; filename="${documentFileName(doc)}"`)
+          .send(await renderDocumentPdf(doc));
+      },
+    );
+
+    // Monthly file for НАП (Приложение № 38), submitted by the owner between the 1st and the 15th.
+    app.get(
+      "/admin-api/reports/nap-audit",
+      { preHandler: onlyAdmin, schema: { querystring: MonthQuery } },
+      async (request, reply) => {
+        const { year, month } = request.query;
+        const xml = await napAuditFile(db, await loadCompanySettings(db), shop.webUrl, year, month);
+        await audit(db, request.staff?.id ?? null, "report.nap_audit", "report", `${year}-${month}`);
+        return reply
+          .header("content-type", "application/xml; charset=windows-1251")
+          .header(
+            "content-disposition",
+            `attachment; filename="nap-audit-${year}-${String(month).padStart(2, "0")}.xml"`,
+          )
+          .send(Buffer.from(toWindows1251(xml)));
+      },
+    );
+
+    app.get(
+      "/admin-api/reports/sales",
+      { preHandler: onlyAdmin, schema: { querystring: MonthQuery } },
+      async (request, reply) => {
+        const { year, month } = request.query;
+        return reply
+          .header("content-type", "text/csv; charset=utf-8")
+          .header(
+            "content-disposition",
+            `attachment; filename="sales-${year}-${String(month).padStart(2, "0")}.csv"`,
+          )
+          .send(await salesJournalCsv(db, year, month));
+      },
+    );
+
+    app.get(
+      "/admin-api/reports/oss",
+      { preHandler: onlyAdmin, schema: { querystring: QuarterQuery } },
+      async (request, reply) => {
+        const { year, quarter } = request.query;
+        return reply
+          .header("content-type", "text/csv; charset=utf-8")
+          .header("content-disposition", `attachment; filename="oss-${year}-Q${quarter}.csv"`)
+          .send(await ossQuarterCsv(db, year, quarter));
+      },
+    );
+
     app.get(
       "/admin-api/orders",
       {
