@@ -78,8 +78,10 @@ seed data, templates and copy.
 ## Engineering rules
 
 - TypeScript `strict` everywhere. No `any` without a comment explaining why.
-- **Money is integer euro cents** (`number` of cents, never floats). Prices are stored ex-VAT;
-  VAT is applied by destination country using the rates table in `packages/core`.
+- **Money is integer euro cents** (`number` of cents, never floats). Prices are stored as the
+  **consumer price incl. VAT, identical in every country** (D-025); the VAT inside it is worked out
+  per destination country from the dated rates table in `packages/core`, and KUMMIE's margin
+  absorbs the difference.
 - Business rules live in `packages/core` with unit tests. Apps call them; they do not re-implement them.
 - Every external service sits behind an **adapter interface** in `apps/api/src/adapters/`:
   payments, carriers, email, push, file storage, supplier purchase-order dispatch.

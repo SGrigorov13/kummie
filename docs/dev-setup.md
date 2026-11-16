@@ -85,7 +85,8 @@ pnpm build
 ## 5. Other commands
 
 ```powershell
-pnpm --filter api tick          # run-once background worker (what cPanel cron will call)
+pnpm --filter api tick          # run-once background worker (cPanel cron, every 5 minutes)
+pnpm --filter api tick:daily    # daily jobs, e.g. the VAT rate check against EU TEDB (cron, 06:00)
 pnpm --filter api db:generate   # write a new SQL migration after changing src/db/schema.ts
 pnpm --filter web dev           # one app only
 pnpm format                     # Prettier
