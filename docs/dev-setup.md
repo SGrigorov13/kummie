@@ -73,6 +73,26 @@ database name) — the API log shows the reason.
 | Admin | http://localhost:5173 |
 | API health | http://localhost:3001/health |
 
+### Staff accounts (admin sign-in)
+
+The staff API starts only when `apps/api/.env` has `DATABASE_URL` **and** `STAFF_SECRET_KEY`
+(32 random bytes, base64 — it encrypts the 2FA secrets; never change it once accounts exist):
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+Paste the output as `STAFF_SECRET_KEY=...` into `apps/api/.env`, restart `pnpm dev`, then create
+your own account (the password is asked for in the terminal and is not shown):
+
+```powershell
+pnpm --filter api staff:create --email you@example.com --name "Your Name" --role admin
+```
+
+Open http://localhost:5173, sign in, and scan the QR code with an authenticator app (Google
+Authenticator, Microsoft Authenticator, 1Password …) on the first sign-in. `ADMIN_ORIGINS` lists
+the addresses the admin may call the API from (default: `http://localhost:5173`).
+
 ## 4. Checks (a task is done only when all four pass)
 
 ```powershell
@@ -82,12 +102,26 @@ pnpm test
 pnpm build
 ```
 
+**Database tests.** The API's PostgreSQL tests run only when `TEST_DATABASE_URL` points to a
+database whose name ends in `_test` — they **wipe it** first. Locally that is `kummie_test` on the
+same server (created once, next to `kummie`):
+
+```powershell
+$env:TEST_DATABASE_URL = "postgres://postgres:YOUR_PASSWORD@localhost:5432/kummie_test"
+pnpm --filter api test
+Remove-Item Env:TEST_DATABASE_URL
+```
+
+CI runs them in a separate job with a PostgreSQL 17 container.
+
 ## 5. Other commands
 
 ```powershell
 pnpm --filter api tick          # run-once background worker (cPanel cron, every 5 minutes)
 pnpm --filter api tick:daily    # daily jobs, e.g. the VAT rate check against EU TEDB (cron, 06:00)
 pnpm --filter api db:generate   # write a new SQL migration after changing src/db/schema.ts
+pnpm --filter api db:migrate    # apply pending migrations to the database in apps/api/.env
+pnpm --filter api db:seed       # groups, categories and the demo products (safe to run again)
 pnpm --filter web dev           # one app only
 pnpm format                     # Prettier
 ```

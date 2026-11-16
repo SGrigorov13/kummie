@@ -50,3 +50,36 @@ jobs:
         run: pnpm turbo run build --filter=web --filter=api --filter=admin
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+
+  api-database:
+    name: API integration tests (PostgreSQL 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: kummie_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      # The database name must end in "_test": the suite wipes it before running.
+      - name: Migrations, seed and catalogue queries against a real database
+        run: pnpm --filter api test
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/kummie_test

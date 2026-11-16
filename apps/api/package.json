@@ -14,9 +14,15 @@
     "tick": "tsx src/jobs/tick.ts",
     "tick:daily": "tsx src/jobs/tick.ts --daily",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "staff:create": "tsx src/admin/staff-cli.ts"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.1.5",
+    "@fastify/cors": "^11.4.3",
+    "@fastify/rate-limit": "^11.2.2",
+    "@node-rs/argon2": "^2.2.2",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.8",
     "fastify-type-provider-zod": "^7.0.0",
@@ -24,6 +30,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@kummie/contracts": "workspace:*",
     "@kummie/core": "workspace:*",
     "@types/node": "^24.12.0",
     "@types/pg": "^8.23.1",
