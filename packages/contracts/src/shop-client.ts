@@ -64,6 +64,9 @@ export function createShopClient({
     payAgain: (id: string, key?: string | null) =>
       call("POST", `/orders/${id}/pay`, PayResponse, {}, keyHeader(key)),
     myOrders: () => call("GET", "/account/orders", OrderList),
+    /** Cancels before the order is batched; a paid order is refunded in full (A10, D-032). */
+    cancelOrder: (id: string, key?: string | null) =>
+      call("POST", `/orders/${id}/cancel`, OrderDetail, {}, keyHeader(key)),
   };
 }
 
