@@ -1,26 +1,15 @@
 import { pathToFileURL } from "node:url";
+import type { Job, JobLogger, JobSchedule, TickResult } from "./types";
+
+export type { Job, JobLogger, JobSchedule, TickResult } from "./types";
 
 /**
- * Run-once background worker. cPanel cron calls it every few minutes (ARCHITECTURE §2, §10):
- *   node dist/tick.js        (production)
- *   pnpm --filter api tick   (local)
- * Each job must be idempotent and finish within its time budget. M0 has no jobs yet; M1/M2 add
- * batch closing, notifications and emails backed by a `jobs` table in PostgreSQL.
+ * Run-once background worker, started by cPanel cron (ARCHITECTURE §2, §10):
+ *   every 5 minutes:  node dist/tick.js            (local: pnpm --filter api tick)
+ *   daily at 06:00:   node dist/tick.js --daily    (local: pnpm --filter api tick:daily)
+ * Each job must be idempotent and finish within its time budget. The process exits with code 1
+ * when a job fails, so cron's e-mailed output works as the alert.
  */
-
-export type JobLogger = Pick<Console, "info" | "error">;
-
-export type Job = {
-  name: string;
-  /** Time budget; a job still running after this is reported as failed and the tick moves on. */
-  timeoutMs: number;
-  run: (ctx: { now: Date; signal: AbortSignal; log: JobLogger }) => Promise<void>;
-};
-
-export type TickResult = { name: string; ok: boolean; ms: number; error?: string };
-
-/** Registered jobs, in run order. Empty in M0. */
-export const jobs: readonly Job[] = [];
 
 export async function runTick(
   list: readonly Job[],
@@ -54,16 +43,23 @@ export async function runTick(
   return results;
 }
 
+export function jobsFor(list: readonly Job[], schedule: JobSchedule): Job[] {
+  return list.filter((job) => job.schedule === schedule);
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  runTick(jobs).then(
-    (results) => {
-      const failed = results.filter((result) => !result.ok).length;
-      console.info(`[tick] ${results.length} job(s), ${failed} failed`);
-      process.exit(failed > 0 ? 1 : 0);
-    },
-    (error: unknown) => {
-      console.error(error);
-      process.exit(1);
-    },
-  );
+  const schedule: JobSchedule = process.argv.includes("--daily") ? "daily" : "frequent";
+  import("./registry")
+    .then(({ jobs }) => runTick(jobsFor(jobs, schedule)))
+    .then(
+      (results) => {
+        const failed = results.filter((result) => !result.ok).length;
+        console.info(`[tick:${schedule}] ${results.length} job(s), ${failed} failed`);
+        process.exit(failed > 0 ? 1 : 0);
+      },
+      (error: unknown) => {
+        console.error(error);
+        process.exit(1);
+      },
+    );
 }

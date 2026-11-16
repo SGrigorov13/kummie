@@ -50,15 +50,21 @@ describe("tick worker", () => {
 
   it("isolates failures and enforces the time budget", async () => {
     const jobs: Job[] = [
-      { name: "ok", timeoutMs: 1000, run: async () => {} },
+      { name: "ok", schedule: "frequent", timeoutMs: 1000, run: async () => {} },
       {
         name: "boom",
+        schedule: "frequent",
         timeoutMs: 1000,
         run: async () => {
           throw new Error("nope");
         },
       },
-      { name: "slow", timeoutMs: 20, run: () => new Promise((resolve) => setTimeout(resolve, 500)) },
+      {
+        name: "slow",
+        schedule: "frequent",
+        timeoutMs: 20,
+        run: () => new Promise((resolve) => setTimeout(resolve, 500)),
+      },
     ];
     const results = await runTick(jobs, silent);
     expect(results.map((result) => [result.name, result.ok])).toEqual([

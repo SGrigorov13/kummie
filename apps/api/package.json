@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "tick": "tsx src/jobs/tick.ts",
+    "tick:daily": "tsx src/jobs/tick.ts --daily",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts"
   },
@@ -23,6 +24,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@kummie/core": "workspace:*",
     "@types/node": "^24.12.0",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.11",
