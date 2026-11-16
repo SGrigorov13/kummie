@@ -26,7 +26,9 @@ import {
   products,
   variants,
 } from "../db/schema";
+import { customerCanCancel } from "@kummie/core";
 import { cartView, priceCart, pricedLines, resolveCart } from "./cart-store";
+import { changeOrderStatus, StatusChangeError } from "./lifecycle";
 import { orderDetail, orderNumber, startPayment, vatShares, type OrderRow, type ShopDeps } from "./orders";
 
 const ApiError = z.object({ error: z.string(), message: z.string() });
@@ -279,6 +281,41 @@ export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
           return reply
             .code(502)
             .send({ error: "payment_unavailable", message: "Payment is not available right now" });
+        }
+      },
+    );
+
+    app.post(
+      "/orders/:id/cancel",
+      {
+        config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+        schema: {
+          params: IdParams,
+          response: { 200: OrderDetail, 404: ApiError, 409: ApiError, 502: ApiError },
+        },
+      },
+      async (request, reply) => {
+        const order = await accessibleOrder(request, request.params.id);
+        if (!order) return reply.code(404).send(notFound);
+        if (!customerCanCancel(order.status)) {
+          return reply
+            .code(409)
+            .send({ error: "not_cancellable", message: "The order is already with the supplier" });
+        }
+        try {
+          const updated = await changeOrderStatus(deps, order.id, "cancelled", "customer");
+          return orderDetail(db, updated);
+        } catch (error) {
+          if (error instanceof StatusChangeError && error.code === "refund_failed") {
+            request.log.error({ err: error, orderId: order.id }, "refund failed");
+            return reply
+              .code(502)
+              .send({ error: "refund_failed", message: "The refund could not be made now" });
+          }
+          if (error instanceof StatusChangeError) {
+            return reply.code(409).send({ error: "not_cancellable", message: error.message });
+          }
+          throw error;
         }
       },
     );

@@ -1,5 +1,5 @@
 import type { OrderDetail } from "@kummie/contracts";
-import { businessDay, formatMoney, kummiesValidUntil, splitCents } from "@kummie/core";
+import { businessDay, customerCanCancel, formatMoney, kummiesValidUntil, splitCents } from "@kummie/core";
 import { t } from "@kummie/i18n";
 import { asc, eq } from "drizzle-orm";
 import type { PaymentEvent, PaymentProvider } from "../adapters/payment";
@@ -17,7 +17,7 @@ export type ShopDeps = AccountDeps & {
 };
 
 export type OrderRow = typeof orders.$inferSelect;
-type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
+export type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 export const orderNumber = (seq: number | null) => `KUM-${seq ?? 0}`;
 
@@ -60,7 +60,7 @@ export function vatShares(lineTotals: number[], shippingCents: number, vatCents:
   return { lines: shares.slice(0, lineTotals.length), shipping: shares[lineTotals.length] ?? 0 };
 }
 
-async function transition(
+export async function transition(
   tx: Tx,
   order: OrderRow,
   to: OrderRow["status"],
@@ -226,5 +226,6 @@ export async function orderDetail(db: Database, order: OrderRow): Promise<OrderD
       .filter((e) => e.toStatus !== null)
       .map((e) => ({ status: e.toStatus as OrderRow["status"], at: e.at.toISOString() })),
     canPay: order.status === "pending_payment",
+    canCancel: customerCanCancel(order.status),
   };
 }

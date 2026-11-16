@@ -1,6 +1,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { authRoutes } from "./auth-routes";
 import type { AdminDeps } from "./context";
+import { ordersAdminRoutes } from "./orders-routes";
 import { productsAdminRoutes } from "./products-routes";
 import { settingsRoutes } from "./settings-routes";
 
@@ -24,5 +25,6 @@ export function adminPlugin(deps: AdminDeps): FastifyPluginAsyncZod {
     await app.register(authRoutes(deps));
     await app.register(settingsRoutes(deps));
     await app.register(productsAdminRoutes(deps));
+    if (deps.shop) await app.register(ordersAdminRoutes({ ...deps, shop: deps.shop }));
   };
 }
