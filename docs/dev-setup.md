@@ -119,6 +119,17 @@ appears in `apps/api/mail-outbox/` (guests: its link carries the order key).
 Set `FAKE_PAYMENT_SECRET` in `apps/api/.env` (any long random string) so open test payments keep
 working after the API restarts; `API_URL` is the address the browser uses for the API.
 
+### E-mail design preview and real sending
+
+With `EMAIL_TRANSPORT=file` every e-mail is written twice to `apps/api/mail-outbox/`: `.txt` (the
+plain-text part) and `.html`. Open the `.html` file in a browser to see the design.
+
+To send real e-mails locally (e.g. to your own address), set in `apps/api/.env`:
+`EMAIL_TRANSPORT=smtp`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`,
+`EMAIL_FROM` (see `.env.example`), then restart `pnpm dev`. The API refuses to start if one is
+missing. Optional: Mailpit (`docker compose up -d`) catches all e-mails at http://localhost:8025 —
+use `SMTP_HOST=localhost`, `SMTP_PORT=1025`, `SMTP_SECURE=false` and any user/password.
+
 ## 4. Checks (a task is done only when all four pass)
 
 ```powershell

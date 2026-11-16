@@ -2,6 +2,8 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import type { EmailAdapter, EmailMessage } from "../adapters/email";
 import type { Database } from "../db/client";
 import { addresses, customers, customerSessions, customerTokens, jobs } from "../db/schema";
+import { loadCompanySettings } from "../admin/settings-routes";
+import { renderEmailHtml } from "../email/layout";
 import type { JobHandler } from "../jobs/outbox";
 
 /**
@@ -45,8 +47,18 @@ export async function eraseCustomer(db: Database, customerId: string, now = new 
 /** Background job handlers for accounts and e-mail. */
 export function accountJobHandlers(email: EmailAdapter): Record<string, JobHandler> {
   return {
-    email: async (payload) => {
-      const result = await email.send(payload as unknown as EmailMessage);
+    email: async (payload, { db }) => {
+      const message = payload as unknown as EmailMessage;
+      // Rendered at send time, so the footer carries the current company data (A4).
+      const company = await loadCompanySettings(db).catch(() => null);
+      const html = renderEmailHtml({
+        locale: message.locale,
+        subject: message.subject,
+        text: message.text,
+        cta: message.cta,
+        company,
+      });
+      const result = await email.send({ ...message, html });
       if (!result.accepted) throw new Error("e-mail not accepted");
     },
     account_erasure: async (payload, { db, now }) => {

@@ -364,6 +364,13 @@ export const bg = {
   "admin.orderStatus.partially_refunded": "Частично върната",
   "admin.orderStatus.exception": "Проблем",
 
+  // ---- E-mail layout (M1 Task 8) ----
+  "email.serviceNote": "Това е служебно писмо за твоя профил или поръчка в KUMMIE. В него няма реклама.",
+  "email.cta.verify": "Потвърди имейла",
+  "email.cta.reset": "Задай нова парола",
+  "email.cta.signin": "Вход в KUMMIE",
+  "email.cta.order": "Виж поръчката",
+
   // ---- Groups and calendar ----
   follow: "Следвай",
   following: "Следваш",

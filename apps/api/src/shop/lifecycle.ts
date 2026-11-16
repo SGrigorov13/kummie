@@ -4,7 +4,7 @@ import { t, type MessageKey } from "@kummie/i18n";
 import { and, eq, inArray } from "drizzle-orm";
 import { kummiesLedger, orders, payments, refunds } from "../db/schema";
 import { enqueue } from "../jobs/outbox";
-import { orderNumber, transition, type OrderRow, type ShopDeps, type Tx } from "./orders";
+import { orderLink, orderNumber, transition, type OrderRow, type ShopDeps, type Tx } from "./orders";
 
 export class StatusChangeError extends Error {
   constructor(
@@ -28,7 +28,7 @@ function statusLine(locale: "bg" | "en", status: OrderStatus): string {
 async function queueStatusEmail(deps: ShopDeps, tx: Tx, order: OrderRow, to: OrderStatus, refundCents = 0) {
   const locale = order.locale;
   const site = `${deps.webUrl.replace(/\/$/, "")}/${locale}`;
-  const link = `${site}/orders/${order.id}${!order.customerId && order.accessKey ? `#k=${order.accessKey}` : ""}`;
+  const link = orderLink(deps, order);
   const number = orderNumber(order.seq);
   const line =
     to === "refunded"
@@ -47,6 +47,7 @@ async function queueStatusEmail(deps: ShopDeps, tx: Tx, order: OrderRow, to: Ord
     locale,
     category: "transactional",
     idempotencyKey: key,
+    cta: { label: t(locale, "email.cta.order"), url: link },
   };
   await enqueue(tx, "email", message, key);
 }

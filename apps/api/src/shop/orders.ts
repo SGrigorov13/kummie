@@ -77,6 +77,12 @@ export async function transition(
     .values({ orderId: order.id, type, fromStatus: order.status, toStatus: to, actor, data });
 }
 
+/** Link to the order page; guests carry their key in the fragment (never sent to servers). */
+export function orderLink(deps: Pick<ShopDeps, "webUrl">, order: OrderRow): string {
+  const base = `${deps.webUrl.replace(/\/$/, "")}/${order.locale}/orders/${order.id}`;
+  return !order.customerId && order.accessKey ? `${base}#k=${order.accessKey}` : base;
+}
+
 function paidEmail(deps: ShopDeps, order: OrderRow, dispatch: string, key: string) {
   const locale = order.locale;
   const site = `${deps.webUrl.replace(/\/$/, "")}/${locale}`;
@@ -91,7 +97,7 @@ function paidEmail(deps: ShopDeps, order: OrderRow, dispatch: string, key: strin
         order.shippingCents === 0 ? t(locale, "shippingFree") : formatMoney(order.shippingCents, locale),
       dispatch,
       // Guests open the order with their key; accounts simply sign in.
-      link: `${site}/orders/${order.id}${!order.customerId && order.accessKey ? `#k=${order.accessKey}` : ""}`,
+      link: orderLink(deps, order),
       withdrawal: `${site}/legal/withdrawal`,
     }),
     "",
@@ -104,6 +110,7 @@ function paidEmail(deps: ShopDeps, order: OrderRow, dispatch: string, key: strin
     locale,
     category: "transactional",
     idempotencyKey: key,
+    cta: { label: t(locale, "email.cta.order"), url: orderLink(deps, order) },
   };
 }
 

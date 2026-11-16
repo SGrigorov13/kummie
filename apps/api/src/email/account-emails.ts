@@ -33,5 +33,14 @@ export function accountEmail(
     locale: input.locale,
     category: "transactional",
     idempotencyKey: input.key,
+    ...(kind === "verify" && values.link
+      ? { cta: { label: t(input.locale, "email.cta.verify"), url: values.link } }
+      : {}),
+    ...(kind === "reset" && values.link
+      ? { cta: { label: t(input.locale, "email.cta.reset"), url: values.link } }
+      : {}),
+    ...(kind === "existing"
+      ? { cta: { label: t(input.locale, "email.cta.signin"), url: values.signin } }
+      : {}),
   };
 }

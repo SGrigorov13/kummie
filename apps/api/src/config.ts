@@ -28,8 +28,19 @@ const EnvSchema = z.object({
   WEB_URL: z.string().url().default("http://localhost:3000"),
   /** Comma-separated shop origins allowed to call the account API with cookies. */
   WEB_ORIGINS: z.string().default("http://localhost:3000,http://127.0.0.1:3000"),
-  /** "file" writes e-mails to MAIL_OUTBOX_DIR (development); SMTP (Bulinfo, A7) follows in M1 Task 8. */
-  EMAIL_TRANSPORT: z.enum(["file"]).default("file"),
+  /** "smtp" sends through the mail server (Bulinfo, A7); "file" writes e-mails to MAIL_OUTBOX_DIR. */
+  EMAIL_TRANSPORT: z.enum(["file", "smtp"]).default("file"),
+  /** SMTP server of the hosting (cPanel → Email Accounts → Connect Devices), e.g. mail.kummie.eu. */
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().default(465),
+  /** "true" for port 465 (SSL), "false" for 587 (STARTTLS). */
+  SMTP_SECURE: z.enum(["true", "false"]).default("true"),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  /** Sender, a mailbox of the domain: "KUMMIE <hello@kummie.eu>". */
+  EMAIL_FROM: z.string().optional(),
+  /** Where customer replies go (optional), e.g. the support mailbox. */
+  EMAIL_REPLY_TO: z.string().optional(),
   /** Folder for development e-mails, relative to the app root (git-ignored). */
   MAIL_OUTBOX_DIR: z.string().min(1).default("mail-outbox"),
   /**

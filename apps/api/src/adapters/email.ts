@@ -10,6 +10,8 @@ export type EmailMessage = {
   subject: string;
   text: string;
   html?: string;
+  /** Main action, rendered as a button in the HTML version (the link also stays in the text). */
+  cta?: { label: string; url: string };
   locale: "bg" | "en";
   category: EmailCategory;
   /** De-duplicates retries from the tick worker. */

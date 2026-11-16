@@ -50,19 +50,16 @@ export function jobsFor(list: readonly Job[], schedule: JobSchedule): Job[] {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const schedule: JobSchedule = process.argv.includes("--daily") ? "daily" : "frequent";
   const main = async () => {
-    const [{ createJobs }, { loadConfig }, { createDatabase }, { createFileEmailAdapter }] =
-      await Promise.all([
-        import("./registry"),
-        import("../config"),
-        import("../db/client"),
-        import("../email/file-adapter"),
-      ]);
+    const [{ createJobs }, { loadConfig }, { createDatabase }, { createEmailAdapter }] = await Promise.all([
+      import("./registry"),
+      import("../config"),
+      import("../db/client"),
+      import("../email/factory"),
+    ]);
     const config = loadConfig();
     const handle = config.DATABASE_URL ? createDatabase(config.DATABASE_URL, 2) : undefined;
     try {
-      const list = createJobs(
-        handle ? { db: handle.db, email: createFileEmailAdapter(config.MAIL_OUTBOX_DIR) } : {},
-      );
+      const list = createJobs(handle ? { db: handle.db, email: createEmailAdapter(config) } : {});
       return await runTick(jobsFor(list, schedule));
     } finally {
       await handle?.close();
