@@ -1,19 +1,27 @@
 import { Equaliser, Star } from "@kummie/brand/react";
-import { articles, badgeSpec, categoryById, productById, products, type Product } from "@kummie/core";
+import { articles, badgeSpec, categoryById } from "@kummie/core";
 import { t } from "@kummie/i18n";
 import Link from "next/link";
 import { PhotocardGlyph } from "@/components/Icons";
 import { ProductCard } from "@/components/ProductCard";
+import { catalogue, tryCatalogue } from "@/lib/catalogue-server";
 import { href, localeParam } from "@/lib/paths";
 
-const PICKS = ["kum-binder", "kum-sleeves", "kum-toploader", "demo-album-skz"];
+/** Refreshed every minute from the catalogue (ISR). */
+// Refreshed every minute (ISR): must be a literal number for Next.js.
+export const revalidate = 60;
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const locale = localeParam((await params).locale);
-  const picks = PICKS.map((id) => productById(id)).filter((item): item is Product => item !== undefined);
+  // Newest published products; the list comes from the admin, not from code.
+  const [latest, limitedList] = await Promise.all([
+    tryCatalogue(() => catalogue.listProducts({ pageSize: 4 })),
+    tryCatalogue(() => catalogue.listProducts({ limited: true, pageSize: 1 })),
+  ]);
+  const picks = latest?.items ?? [];
   const reads = articles.filter((article) => article.section === "magazine").slice(0, 3);
   // The pink tile is a scarcity claim, so it only appears when the data has a limited product.
-  const hasLimited = products.some((product) => product.isLimited);
+  const hasLimited = (limitedList?.total ?? 0) > 0;
 
   return (
     <>
@@ -71,7 +79,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <p className="muted">{t(locale, "bundleHint")}</p>
         <div className="grid">
           {picks.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} />
+            <ProductCard key={product.slug} product={product} locale={locale} />
           ))}
         </div>
       </section>

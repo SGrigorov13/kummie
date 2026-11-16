@@ -647,6 +647,13 @@ code {
 .shot--merch .shot__star {
   color: var(--kum-label);
 }
+.shot--photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  background: var(--kum-paper);
+}
 .product__media .shot {
   border-radius: var(--kum-radius-lg);
 }

@@ -3,7 +3,7 @@
 import { createApiClient, createShopClient, type Cart } from "@kummie/contracts";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 /** Cart, checkout and orders (cookies on the API host, same site as the shop). */
 export const shopApi = createShopClient({ baseUrl });

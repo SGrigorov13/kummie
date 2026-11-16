@@ -1,10 +1,11 @@
 "use client";
 
 import { Equaliser } from "@kummie/brand/react";
-import { askKummie, productById, type AssistantReply, type Product } from "@kummie/core";
+import { askKummie, type AssistantReply } from "@kummie/core";
 import { useState, type FormEvent } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { useLocale, useT } from "@/lib/locale";
+import { useProductCards } from "@/lib/product-cards";
 
 /** Ask KUMMIE (rule-based demo). Answers are labelled as recommendations. */
 export function AskView() {
@@ -19,9 +20,8 @@ export function AskView() {
     setReply(askKummie(query));
   }
 
-  const picks = (reply?.productIds ?? [])
-    .map((id) => productById(id))
-    .filter((product): product is Product => product !== undefined);
+  // Suggestions are shown only if the product is published right now (never invented stock).
+  const picks = useProductCards(reply?.productIds ?? []) ?? [];
 
   return (
     <>
@@ -51,7 +51,7 @@ export function AskView() {
       {picks.length > 0 ? (
         <div className="grid">
           {picks.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} />
+            <ProductCard key={product.slug} product={product} locale={locale} />
           ))}
         </div>
       ) : null}
