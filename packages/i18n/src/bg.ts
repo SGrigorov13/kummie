@@ -251,7 +251,6 @@ export const bg = {
   "acct.deleteButton": "Закрий профила",
   "acct.deleted": "Профилът е закрит. Изпратихме потвърждение на имейла ти.",
   "acct.wrongPassword": "Грешна парола.",
-  "acct.demoOrders": "Поръчки от демо касата (на това устройство)",
   "email.verify.subject": "Потвърди имейла си в KUMMIE",
   "email.verify.body":
     "Здравей, {name}!\n\nОтвори този линк, за да потвърдиш имейла си и да влезеш в профила:\n{link}\n\nЛинкът важи 24 часа. Ако не си правил(а) регистрация в KUMMIE, просто изтрий това писмо.",
@@ -265,6 +264,50 @@ export const bg = {
   "email.deleted.body":
     "Здравей, {name}!\n\nПрофилът ти е закрит по твое искане и личните ти данни се изтриват. Данните за поръчки, които законът ни задължава да пазим, остават без име и имейл.\n\nАко не си бил(а) ти, свържи се с нас веднага.",
   "email.signoff": "Поздрави,\nекипът на KUMMIE\n{site}",
+
+  // ---- Cart, checkout and orders (M1 Task 6) ----
+  "shop.toCheckout": "Към касата",
+  "shop.checkoutTitle": "Каса",
+  "shop.contact": "Имейл за поръчката",
+  "shop.contactNote": "Тук пристигат потвърждението и всяка промяна в статуса.",
+  "shop.signInForKummies": "Влез в профила си и тази поръчка ще ти донесе {kummies} Kummies.",
+  "shop.deliverTo": "Доставка до",
+  "shop.savedAddress": "Запазен адрес",
+  "shop.newAddress": "Нов адрес",
+  "shop.saveAddress": "Запази адреса в профила ми",
+  "shop.invoice": "Искам фактура",
+  "shop.noInvoice": "Не, благодаря",
+  "shop.invoicePerson": "Като физическо лице",
+  "shop.invoiceCompany": "На фирма в България",
+  "shop.invoiceName": "Име или фирма",
+  "shop.invoiceAddress": "Адрес за фактурата",
+  "shop.eik": "ЕИК",
+  "shop.vatNumber": "ДДС номер (ако има)",
+  "shop.withdrawalInfo":
+    "Имаш 14 дни от получаването, за да се откажеш без причина, с изключенията в закона (напр. отворени запечатани носители).",
+  "shop.pay": "Към плащането · {total}",
+  "shop.payNote": "Плащаш на защитената страница на банката. Данните на картата не минават през KUMMIE.",
+  "shop.testMode": "Тестов режим: плащането е на тестова страница и нищо не се таксува.",
+  "shop.unavailable": "Не може да се купи в момента",
+  "shop.cartChanged": "Някои продукти вече не могат да се купят. Махни ги и опитай пак.",
+  "shop.paymentUnavailable":
+    "Плащането не е достъпно в момента. Поръчката е запазена — опитай пак след малко.",
+  "shop.emptyCartCheckout": "Количката е празна.",
+  "order.title": "Поръчка {number}",
+  "order.payNow": "Плати сега",
+  "order.paidThanks": "Благодарим! Плащането е получено и поръчката е потвърдена.",
+  "order.paymentCancelled": "Плащането не беше завършено. Поръчката е запазена — можеш да платиш отново.",
+  "order.notFound":
+    "Не намираме тази поръчка. Отвори линка от имейла с потвърждението или влез в профила си.",
+  "order.deliverTo": "Доставка до",
+  "order.invoice": "Фактура",
+  "order.kummies": "Kummies от поръчката: {kummies}",
+  "order.myOrders": "Моите поръчки",
+  "order.placedOn": "Поръчана на {date}",
+  "order.timeline": "История",
+  "email.orderPaid.subject": "Поръчка {number} е платена",
+  "email.orderPaid.body":
+    "Здравей, {name}!\n\nПоръчка {number} е платена и потвърдена. Благодарим ти!\n\nОбщо: {total} (в т.ч. ДДС {vatRate}%: {vat})\nДоставка: {shipping}\nСрок за изпращане: {dispatch}\n\nСледи поръчката: {link}\n\nПраво на отказ: имаш 14 дни от получаването, за да се откажеш без причина, с изключенията в закона. Подробно: {withdrawal}",
 
   // ---- Groups and calendar ----
   follow: "Следвай",
