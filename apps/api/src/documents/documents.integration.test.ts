@@ -251,6 +251,17 @@ describe.skipIf(!safe)("Н-18 sales documents and reports on PostgreSQL", () => 
     ]);
   });
 
+  it("shows the public trader data and delivery fees, never the IBAN", async () => {
+    const res = await call("GET", "/site/trader");
+    expect(res.json()).toMatchObject({
+      legalName: "СГ Корпорейшън ЕООД",
+      eik: "123456789",
+      eShopNumber: "RF0001234",
+      delivery: { freeFromCents: 8000, fees: [{ country: "BG", feeCents: 490 }, { country: "RO" }, { country: "GR" }] },
+    });
+    expect(res.body).not.toMatch(/iban/i);
+  });
+
   it("builds the monthly НАП file and the accountant exports", async () => {
     const today = businessDay(new Date());
     const [year, month] = today.split("-").map(Number) as [number, number];

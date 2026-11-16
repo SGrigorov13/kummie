@@ -12,6 +12,7 @@ import { catalogueRoutes } from "./routes/catalogue";
 import type { ShopDeps } from "./shop/orders";
 import { shopPlugin } from "./shop/plugin";
 import { healthRoutes, type DbCheck } from "./routes/health";
+import { siteRoutes } from "./routes/site";
 
 export type AppDeps = {
   logger: FastifyServerOptions["logger"];
@@ -59,5 +60,6 @@ export function buildApp({ logger, checkDb, catalogue, admin, accounts, shop, tr
   if (admin) app.register(adminPlugin(admin));
   if (accounts) app.register(accountsPlugin(accounts));
   if (shop) app.register(shopPlugin(shop));
+  if (shop) app.register(siteRoutes(shop.db));
   return app;
 }
