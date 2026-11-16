@@ -37,6 +37,12 @@ const EnvSchema = z.object({
    * "false", "true", a hop count such as "1", or comma-separated IPs/CIDRs.
    */
   TRUST_PROXY: z.string().default("false"),
+  /** Payment provider. Only "fake" exists until the UniCredit vPOS adapter (A6); real sales stay off. */
+  PAYMENT_PROVIDER: z.enum(["fake"]).default("fake"),
+  /** Signs fake payment sessions and webhooks so they survive restarts. Random per process when empty. */
+  FAKE_PAYMENT_SECRET: z.string().optional(),
+  /** Public address of this API, used for the provider's return pages (e.g. https://api.kummie.eu). */
+  API_URL: z.string().url().default("http://localhost:3001"),
   /** Public base URL of uploaded media (product images). */
   MEDIA_BASE_URL: z.string().min(1).default("/media"),
   /** Folder with Drizzle SQL migrations, relative to the app root. */

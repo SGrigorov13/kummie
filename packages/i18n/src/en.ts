@@ -254,7 +254,6 @@ export const en: Messages = {
   "acct.deleteButton": "Close account",
   "acct.deleted": "Your account is closed. We have sent a confirmation to your e-mail.",
   "acct.wrongPassword": "Wrong password.",
-  "acct.demoOrders": "Orders from the demo checkout (on this device)",
   "email.verify.subject": "Confirm your e-mail for KUMMIE",
   "email.verify.body":
     "Hi {name},\n\nOpen this link to confirm your e-mail and sign in:\n{link}\n\nThe link is valid for 24 hours. If you did not sign up for KUMMIE, just delete this e-mail.",
@@ -268,6 +267,49 @@ export const en: Messages = {
   "email.deleted.body":
     "Hi {name},\n\nYour account has been closed at your request and your personal data is being erased. Order records we must keep by law stay, without your name or e-mail.\n\nIf this was not you, contact us straight away.",
   "email.signoff": "Best wishes,\nthe KUMMIE team\n{site}",
+
+  // ---- Cart, checkout and orders (M1 Task 6) ----
+  "shop.toCheckout": "Go to checkout",
+  "shop.checkoutTitle": "Checkout",
+  "shop.contact": "E-mail for the order",
+  "shop.contactNote": "The confirmation and every status update arrive here.",
+  "shop.signInForKummies": "Sign in and this order earns you {kummies} Kummies.",
+  "shop.deliverTo": "Deliver to",
+  "shop.savedAddress": "Saved address",
+  "shop.newAddress": "New address",
+  "shop.saveAddress": "Save this address in my account",
+  "shop.invoice": "I need an invoice",
+  "shop.noInvoice": "No, thanks",
+  "shop.invoicePerson": "As a private person",
+  "shop.invoiceCompany": "For a Bulgarian company",
+  "shop.invoiceName": "Name or company",
+  "shop.invoiceAddress": "Invoice address",
+  "shop.eik": "Company ID (ЕИК)",
+  "shop.vatNumber": "VAT number (if any)",
+  "shop.withdrawalInfo":
+    "You have 14 days from delivery to withdraw without giving a reason, with the exceptions set by law (e.g. opened sealed media).",
+  "shop.pay": "Continue to payment · {total}",
+  "shop.payNote": "You pay on the bank's secure page. Card details never pass through KUMMIE.",
+  "shop.testMode": "Test mode: payment happens on a test page and nothing is charged.",
+  "shop.unavailable": "Cannot be bought right now",
+  "shop.cartChanged": "Some products can no longer be bought. Remove them and try again.",
+  "shop.paymentUnavailable":
+    "Payment is not available right now. Your order is saved — please try again shortly.",
+  "shop.emptyCartCheckout": "Your cart is empty.",
+  "order.title": "Order {number}",
+  "order.payNow": "Pay now",
+  "order.paidThanks": "Thank you! Payment received and your order is confirmed.",
+  "order.paymentCancelled": "The payment was not completed. Your order is saved — you can pay again.",
+  "order.notFound": "We cannot find this order. Open the link in your confirmation e-mail or sign in.",
+  "order.deliverTo": "Delivery to",
+  "order.invoice": "Invoice",
+  "order.kummies": "Kummies from this order: {kummies}",
+  "order.myOrders": "My orders",
+  "order.placedOn": "Placed on {date}",
+  "order.timeline": "History",
+  "email.orderPaid.subject": "Order {number} is paid",
+  "email.orderPaid.body":
+    "Hi {name},\n\nOrder {number} is paid and confirmed. Thank you!\n\nTotal: {total} (incl. VAT {vatRate}%: {vat})\nDelivery: {shipping}\nDispatch: {dispatch}\n\nFollow your order: {link}\n\nRight of withdrawal: you have 14 days from delivery to withdraw without giving a reason, with the exceptions set by law. Details: {withdrawal}",
 
   // ---- Groups and calendar ----
   follow: "Follow",

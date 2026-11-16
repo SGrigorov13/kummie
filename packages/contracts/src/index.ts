@@ -5,3 +5,5 @@ export * from "./admin";
 export * from "./admin-client";
 export * from "./account";
 export * from "./account-client";
+export * from "./shop";
+export * from "./shop-client";

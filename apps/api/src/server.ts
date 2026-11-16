@@ -4,6 +4,7 @@ import { createSecretBox } from "./auth/crypto";
 import { createPgCatalogueRepository } from "./catalogue/pg-repository";
 import { loadConfig, originList, trustProxyOption } from "./config";
 import { createDatabase, type DatabaseHandle } from "./db/client";
+import { FakePaymentProvider } from "./adapters/fake-payment";
 import { createFileEmailAdapter } from "./email/file-adapter";
 import { processDueJobs } from "./jobs/outbox";
 import type { DbCheck } from "./routes/health";
@@ -60,6 +61,11 @@ async function main() {
         },
       }
     : undefined;
+  const fakePayments = new FakePaymentProvider(
+    `${config.API_URL.replace(/\/$/, "")}/fake-pay`,
+    config.FAKE_PAYMENT_SECRET,
+  );
+  const shop = accounts ? { ...accounts, payments: fakePayments, fakePayments } : undefined;
   const admin =
     database && config.STAFF_SECRET_KEY
       ? {
@@ -75,6 +81,7 @@ async function main() {
     catalogue,
     admin,
     accounts,
+    shop,
     trustProxy: trustProxyOption(config.TRUST_PROXY),
   });
   if (config.NODE_ENV === "production" && config.EMAIL_TRANSPORT === "file")

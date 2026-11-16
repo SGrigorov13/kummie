@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { useDemoStore } from "@/lib/demo-store";
+import { useCart } from "@/lib/shop";
 import { useLocale, useT } from "@/lib/locale";
 import { href, switchLocale } from "@/lib/paths";
 
@@ -43,7 +43,7 @@ export function HeaderTools() {
   const t = useT();
   const locale = useLocale();
   const pathname = usePathname();
-  const { cartCount } = useDemoStore();
+  const { count: cartCount } = useCart();
   const other = locale === "bg" ? "en" : "bg";
   return (
     <div className="header-tools">

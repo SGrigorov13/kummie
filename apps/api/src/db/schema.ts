@@ -10,6 +10,7 @@ import {
   boolean,
   check,
   date,
+  bigint,
   index,
   integer,
   jsonb,
@@ -388,5 +389,219 @@ export const jobs = pgTable(
   (t) => [
     uniqueIndex("jobs_idempotency_unique").on(t.idempotencyKey),
     index("jobs_due_idx").on(t.status, t.runAt),
+  ],
+);
+
+// ---------- Cart, orders, payments, Kummies (M1 Tasks 6–7) ----------
+
+/** One open cart per customer, or per guest browser (cookie token, only its SHA-256 stored). */
+export const carts = pgTable(
+  "carts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    customerId: uuid("customer_id").references(() => customers.id, { onDelete: "cascade" }),
+    guestTokenHash: text("guest_token_hash"),
+    country: shippingCountryEnum("country").notNull().default("BG"),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("carts_customer_unique").on(t.customerId),
+    uniqueIndex("carts_guest_unique").on(t.guestTokenHash),
+  ],
+);
+
+export const cartLines = pgTable(
+  "cart_lines",
+  {
+    cartId: uuid("cart_id")
+      .notNull()
+      .references(() => carts.id, { onDelete: "cascade" }),
+    variantId: uuid("variant_id")
+      .notNull()
+      .references(() => variants.id, { onDelete: "cascade" }),
+    qty: integer("qty").notNull(),
+    addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.cartId, t.variantId] }),
+    check("cart_lines_qty", sql`${t.qty} between 1 and 20`),
+  ],
+);
+
+export const orderStatusEnum = pgEnum("order_status", [
+  "pending_payment",
+  "paid",
+  "batched",
+  "ordered_from_supplier",
+  "supplier_shipped",
+  "received_at_hub",
+  "packed",
+  "handed_to_carrier",
+  "out_for_delivery",
+  "delivered",
+  "cancelled",
+  "refunded",
+  "partially_refunded",
+  "exception",
+]);
+
+type DeliveryAddressJson = {
+  name: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  postcode: string;
+  country: "BG" | "RO" | "GR";
+  phone: string;
+};
+type InvoiceJson =
+  | { kind: "person"; name: string; address: string }
+  | { kind: "company"; name: string; eik: string; vatNumber: string | null; address: string };
+
+/**
+ * An order. Prices, the VAT rate and VAT amount are copied in when it is created and never
+ * recalculated (frozen); `paid_at` is set only from the payment provider's webhook.
+ */
+export const orders = pgTable(
+  "orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** Running number for people: KUM-1001, KUM-1002 … */
+    seq: bigint("seq", { mode: "number" }).generatedAlwaysAsIdentity({ startWith: 1001 }),
+    customerId: uuid("customer_id").references(() => customers.id),
+    /**
+     * Guests open their order with this key (in the e-mail link). Stored as is: it only shows this one
+     * order, exactly like the e-mail that carries it, and the confirmation e-mail must include it.
+     */
+    accessKey: text("access_key"),
+    cartId: uuid("cart_id"),
+    email: text("email").notNull(),
+    locale: accountLocaleEnum("locale").notNull(),
+    status: orderStatusEnum("status").notNull().default("pending_payment"),
+    country: shippingCountryEnum("country").notNull(),
+    address: jsonb("address").$type<DeliveryAddressJson>().notNull(),
+    invoice: jsonb("invoice").$type<InvoiceJson | null>(),
+    goodsCents: integer("goods_cents").notNull(),
+    shippingCents: integer("shipping_cents").notNull(),
+    totalCents: integer("total_cents").notNull(),
+    /** Country whose VAT applies (BG before the OSS date, A12) and its rate in basis points. */
+    vatCountry: text("vat_country").notNull(),
+    vatRateBp: integer("vat_rate_bp").notNull(),
+    vatCents: integer("vat_cents").notNull(),
+    shippingVatCents: integer("shipping_vat_cents").notNull(),
+    kummies: integer("kummies").notNull(),
+    termsVersion: text("terms_version").notNull(),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    index("orders_customer_idx").on(t.customerId, t.createdAt),
+    index("orders_status_idx").on(t.status),
+    check(
+      "orders_total",
+      sql`${t.totalCents} = ${t.goodsCents} + ${t.shippingCents} and ${t.totalCents} > 0`,
+    ),
+  ],
+);
+
+export const orderLines = pgTable(
+  "order_lines",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    variantId: uuid("variant_id").references(() => variants.id),
+    productId: uuid("product_id").references(() => products.id),
+    title: text("title").notNull(),
+    version: text("version").notNull(),
+    sku: text("sku").notNull(),
+    sourcing: sourcingEnum("sourcing").notNull(),
+    unitPriceCents: integer("unit_price_cents").notNull(),
+    qty: integer("qty").notNull(),
+    lineTotalCents: integer("line_total_cents").notNull(),
+    /** This line's share of the order VAT (the shares add up exactly, D-016). */
+    vatCents: integer("vat_cents").notNull(),
+    dispatchEstimate: jsonb("dispatch_estimate").$type<Localized>().notNull(),
+    position: integer("position").notNull(),
+  },
+  (t) => [index("order_lines_order_idx").on(t.orderId)],
+);
+
+/** Append-only order history: every status change and payment outcome. */
+export const orderEvents = pgTable(
+  "order_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    fromStatus: orderStatusEnum("from_status"),
+    toStatus: orderStatusEnum("to_status"),
+    /** "customer", "provider", "system" or "staff:<id>". */
+    actor: text("actor").notNull(),
+    data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("order_events_order_idx").on(t.orderId, t.at)],
+);
+
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "pending",
+  "authorized",
+  "captured",
+  "failed",
+  "cancelled",
+  "refunded",
+  "partially_refunded",
+]);
+
+/** One row per payment attempt (provider session). */
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    provider: text("provider").notNull(),
+    sessionId: text("session_id").notNull(),
+    providerPaymentId: text("provider_payment_id"),
+    amountCents: integer("amount_cents").notNull(),
+    status: paymentStatusEnum("status").notNull().default("pending"),
+    failureReason: text("failure_reason"),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("payments_session_unique").on(t.provider, t.sessionId),
+    index("payments_order_idx").on(t.orderId),
+  ],
+);
+
+export const kummiesEntryEnum = pgEnum("kummies_entry", ["earn", "spend", "expire", "revoke", "adjust"]);
+
+/**
+ * Append-only Kummies ledger (D-027, D-031, D-032). Earn rows carry the validity window; the
+ * balance and lots are worked out by `@kummie/core`. One earn per order.
+ */
+export const kummiesLedger = pgTable(
+  "kummies_ledger",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    customerId: uuid("customer_id")
+      .notNull()
+      .references(() => customers.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").references(() => orders.id),
+    kind: kummiesEntryEnum("kind").notNull(),
+    /** Positive for earn/adjust up, negative for spend/expire/revoke. */
+    amount: integer("amount").notNull(),
+    earnedOn: date("earned_on", { mode: "string" }),
+    validUntil: date("valid_until", { mode: "string" }),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("kummies_ledger_customer_idx").on(t.customerId),
+    uniqueIndex("kummies_ledger_order_kind_unique").on(t.orderId, t.kind),
   ],
 );

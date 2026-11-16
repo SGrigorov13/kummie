@@ -89,10 +89,7 @@ describe("FakePaymentProvider", () => {
 
   async function authorised(provider: FakePaymentProvider) {
     const { sessionId } = await provider.createSession(session);
-    const event = await provider.handleWebhook({
-      headers: {},
-      rawBody: JSON.stringify({ type: "authorize", sessionId }),
-    });
+    const event = await provider.handleWebhook(provider.webhookFor("authorize", sessionId));
     if (event.type !== "payment.authorized") throw new Error("expected authorisation");
     return event.paymentId;
   }
@@ -119,8 +116,27 @@ describe("FakePaymentProvider", () => {
     expect(await provider.getStatus(paymentId)).toBe("refunded");
   });
 
-  it("ignores unknown webhooks", async () => {
+  it("rejects unsigned or forged webhooks and sessions", async () => {
     const provider = new FakePaymentProvider();
-    expect((await provider.handleWebhook({ headers: {}, rawBody: "not json" })).type).toBe("ignored");
+    const { sessionId } = await provider.createSession(session);
+    await expect(provider.handleWebhook({ headers: {}, rawBody: "not json" })).rejects.toThrow(/signature/);
+    const forged = provider.webhookFor("authorize", sessionId);
+    await expect(
+      provider.handleWebhook({
+        headers: forged.headers,
+        rawBody: forged.rawBody.replace("authorize", "fail"),
+      }),
+    ).rejects.toThrow(/signature/);
+    const other = new FakePaymentProvider("http://localhost:3001/fake-pay", "another-secret");
+    expect(other.describeSession(sessionId)).toBeNull();
+    expect(provider.describeSession(sessionId)).toMatchObject({ orderId: "KM-1", amountCents: 4890 });
+  });
+
+  it("survives a restart when the secret is configured", async () => {
+    const before = new FakePaymentProvider("http://localhost:3001/fake-pay", "same-secret");
+    const { sessionId } = await before.createSession(session);
+    const after = new FakePaymentProvider("http://localhost:3001/fake-pay", "same-secret");
+    const event = await after.handleWebhook(before.webhookFor("authorize", sessionId));
+    expect(event).toMatchObject({ type: "payment.authorized", amount: { amountCents: 4890 } });
   });
 });
