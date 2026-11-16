@@ -4,6 +4,9 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "allowJs": false,
+    // Next generates .next/**/types with unused imports; oxlint's no-unused-vars covers our code.
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": {
