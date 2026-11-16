@@ -14,6 +14,12 @@ import {
 } from "./orders";
 import { categoryOf, isSubcategoryId, TAXONOMY } from "./taxonomy";
 
+function byId(id: string) {
+  const product = products.find((item) => item.id === id);
+  if (!product) throw new Error(`missing demo product ${id}`);
+  return product;
+}
+
 function readRepoJson(path: string): unknown {
   return JSON.parse(readFileSync(new URL(`../../../${path}`, import.meta.url), "utf8"));
 }
@@ -103,7 +109,6 @@ describe("demo catalogue", () => {
   });
 
   it("maps onto the old 4-value demo category", () => {
-    const byId = (id: string) => products.find((product) => product.id === id)!;
     expect(demoCategoryOf(byId("demo-album-skz"))).toBe("album");
     expect(demoCategoryOf(byId("kum-binder"))).toBe("collect");
     expect(demoCategoryOf(byId("kum-tote"))).toBe("original");

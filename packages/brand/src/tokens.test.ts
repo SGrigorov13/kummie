@@ -25,6 +25,7 @@ const v = (name: string) => {
 };
 
 const camelToKebab = (key: string) => key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+const byName = (name: string) => Object.entries(colors).find(([key]) => camelToKebab(key) === name)?.[1];
 
 describe("tokens.css", () => {
   it("is a verbatim copy of docs/brand/tokens.css (single source)", () => {
@@ -94,7 +95,6 @@ describe("tokens.ts mirrors tokens.css", () => {
   it("light and dark surfaces", () => {
     const dark = packageCss.match(/prefers-color-scheme:\s*dark\)\s*\{\s*:root\s*\{([\s\S]*?)\}/)?.[1] ?? "";
     const light = packageCss.match(/prefers-color-scheme:\s*light\)\s*\{\s*:root\s*\{([\s\S]*?)\}/)?.[1] ?? "";
-    const byName = (name: string) => Object.entries(colors).find(([key]) => camelToKebab(key) === name)?.[1];
     const resolve = (block: string, prop: string) =>
       byName(block.match(new RegExp(`--kum-${prop}:\\s*var\\(--kum-([a-z-]+)\\)`))?.[1] ?? "");
     expect(resolve(dark, "surface")).toBe(surfaces.dark.surface);

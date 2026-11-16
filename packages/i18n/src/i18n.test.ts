@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { format, messages, t } from "./index";
 
+const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).toSorted();
+
 describe("i18n", () => {
   it("has the same keys in bg and en, all non-empty", () => {
-    const bgKeys = Object.keys(messages.bg).sort();
-    expect(Object.keys(messages.en).sort()).toEqual(bgKeys);
+    const bgKeys = Object.keys(messages.bg).toSorted();
+    expect(Object.keys(messages.en).toSorted()).toEqual(bgKeys);
     for (const locale of ["bg", "en"] as const) {
       for (const [key, value] of Object.entries(messages[locale])) {
         expect(value.trim(), `${locale}.${key}`).not.toBe("");
@@ -13,7 +15,6 @@ describe("i18n", () => {
   });
 
   it("uses the same placeholders in both languages", () => {
-    const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
     for (const key of Object.keys(messages.bg) as (keyof typeof messages.bg)[]) {
       expect(placeholders(messages.en[key]), key).toEqual(placeholders(messages.bg[key]));
     }
