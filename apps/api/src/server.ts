@@ -5,7 +5,7 @@ import { createPgCatalogueRepository } from "./catalogue/pg-repository";
 import { loadConfig, originList, trustProxyOption } from "./config";
 import { createDatabase, type DatabaseHandle } from "./db/client";
 import { FakePaymentProvider } from "./adapters/fake-payment";
-import { createFileEmailAdapter } from "./email/file-adapter";
+import { createEmailAdapter } from "./email/factory";
 import { processDueJobs } from "./jobs/outbox";
 import type { DbCheck } from "./routes/health";
 
@@ -40,7 +40,7 @@ async function main() {
   const cookieSecure = config.COOKIE_SECURE
     ? config.COOKIE_SECURE === "true"
     : config.NODE_ENV === "production";
-  const email = createFileEmailAdapter(config.MAIL_OUTBOX_DIR);
+  const email = createEmailAdapter(config);
   let draining = false;
   const accounts = database
     ? {
