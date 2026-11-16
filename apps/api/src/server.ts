@@ -1,8 +1,11 @@
+import { accountJobHandlers } from "./accounts/erasure";
 import { buildApp } from "./app";
 import { createSecretBox } from "./auth/crypto";
 import { createPgCatalogueRepository } from "./catalogue/pg-repository";
-import { loadConfig } from "./config";
+import { loadConfig, originList, trustProxyOption } from "./config";
 import { createDatabase, type DatabaseHandle } from "./db/client";
+import { createFileEmailAdapter } from "./email/file-adapter";
+import { processDueJobs } from "./jobs/outbox";
 import type { DbCheck } from "./routes/health";
 
 /**
@@ -33,20 +36,49 @@ async function main() {
   };
 
   const catalogue = database ? createPgCatalogueRepository(database.db, config.MEDIA_BASE_URL) : undefined;
+  const cookieSecure = config.COOKIE_SECURE
+    ? config.COOKIE_SECURE === "true"
+    : config.NODE_ENV === "production";
+  const email = createFileEmailAdapter(config.MAIL_OUTBOX_DIR);
+  let draining = false;
+  const accounts = database
+    ? {
+        db: database.db,
+        email,
+        webUrl: config.WEB_URL,
+        allowedOrigins: originList(config.WEB_ORIGINS),
+        cookieSecure,
+        // Sends queued e-mails right away; the tick cron is the safety net for anything left.
+        kick: () => {
+          if (draining) return;
+          draining = true;
+          processDueJobs(database.db, accountJobHandlers(email), { log: app.log })
+            .catch((error: unknown) => app.log.error({ err: error }, "outbox run failed"))
+            .finally(() => {
+              draining = false;
+            });
+        },
+      }
+    : undefined;
   const admin =
     database && config.STAFF_SECRET_KEY
       ? {
           db: database.db,
           secretBox: createSecretBox(config.STAFF_SECRET_KEY),
-          allowedOrigins: config.ADMIN_ORIGINS.split(",")
-            .map((o) => o.trim())
-            .filter(Boolean),
-          cookieSecure: config.COOKIE_SECURE
-            ? config.COOKIE_SECURE === "true"
-            : config.NODE_ENV === "production",
+          allowedOrigins: originList(config.ADMIN_ORIGINS),
+          cookieSecure,
         }
       : undefined;
-  const app = buildApp({ logger, checkDb, catalogue, admin });
+  const app = buildApp({
+    logger,
+    checkDb,
+    catalogue,
+    admin,
+    accounts,
+    trustProxy: trustProxyOption(config.TRUST_PROXY),
+  });
+  if (config.NODE_ENV === "production" && config.EMAIL_TRANSPORT === "file")
+    app.log.warn("EMAIL_TRANSPORT=file in production — e-mails are written to disk, not sent");
   if (database && !admin) app.log.warn("STAFF_SECRET_KEY is not set — the staff API (admin panel) is off");
   if (!database)
     app.log.warn(

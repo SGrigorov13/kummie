@@ -26,6 +26,9 @@ apps/mobile/android/
 .env.*
 !.env.example
 
+# Development e-mails written by the API (contain personal data)
+apps/api/mail-outbox/
+
 # Logs and OS files
 *.log
 .DS_Store

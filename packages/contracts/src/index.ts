@@ -3,3 +3,5 @@ export * from "./client";
 export * from "./health";
 export * from "./admin";
 export * from "./admin-client";
+export * from "./account";
+export * from "./account-client";

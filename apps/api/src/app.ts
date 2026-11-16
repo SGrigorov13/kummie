@@ -1,8 +1,12 @@
+import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
-import { adminPlugin } from "./admin/plugin";
+import type { AccountDeps } from "./accounts/context";
+import { accountsPlugin } from "./accounts/plugin";
 import type { AdminDeps } from "./admin/context";
+import { adminPlugin } from "./admin/plugin";
 import type { CatalogueRepository } from "./catalogue/repository";
 import { catalogueRoutes } from "./routes/catalogue";
 import { healthRoutes, type DbCheck } from "./routes/health";
@@ -14,20 +18,40 @@ export type AppDeps = {
   catalogue?: CatalogueRepository;
   /** Staff API; registered only with a database and STAFF_SECRET_KEY. */
   admin?: AdminDeps;
+  /** Customer accounts; registered only with a database. */
+  accounts?: AccountDeps;
+  /** Proxies in front of the API whose X-Forwarded-For is trusted (for rate limits by client IP). */
+  trustProxy?: FastifyServerOptions["trustProxy"];
 };
 
 /** Builds the Fastify app with Zod validation/serialisation. No listening here, so tests can inject. */
-export function buildApp({ logger, checkDb, catalogue, admin }: AppDeps) {
-  const app = Fastify({ logger }).withTypeProvider<ZodTypeProvider>();
+export function buildApp({ logger, checkDb, catalogue, admin, accounts, trustProxy = false }: AppDeps) {
+  const app = Fastify({ logger, trustProxy }).withTypeProvider<ZodTypeProvider>();
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
-  // Browsers may call the API with cookies only from the admin app's origins (public pages are
-  // rendered by the web server, which needs no CORS).
-  if (admin) {
-    app.register(cors, { origin: admin.allowedOrigins, credentials: true, methods: ["GET", "POST", "PUT"] });
+  app.register(cookie);
+  app.register(rateLimit, { global: false });
+
+  // Browsers may send cookies only from our own apps: the staff API answers the admin origins only,
+  // everything else the shop's origins (and the admin, which reads the public catalogue).
+  const adminOrigins = admin?.allowedOrigins ?? [];
+  const webOrigins = accounts?.allowedOrigins ?? [];
+  if (adminOrigins.length > 0 || webOrigins.length > 0) {
+    app.register(cors, {
+      delegator: (request, callback) => {
+        const staffRoute = request.url.startsWith("/admin-api/");
+        callback(null, {
+          origin: staffRoute ? adminOrigins : [...webOrigins, ...adminOrigins],
+          credentials: true,
+          methods: ["GET", "POST", "PUT", "DELETE"],
+        });
+      },
+    });
   }
+
   app.register(healthRoutes(checkDb));
   if (catalogue) app.register(catalogueRoutes(catalogue));
   if (admin) app.register(adminPlugin(admin));
+  if (accounts) app.register(accountsPlugin(accounts));
   return app;
 }
