@@ -90,7 +90,8 @@ Operations (the KUMMIE-specific core)
 - `Shipment` — carrier, label, tracking number, carrier status
 
 Loyalty and collector
-- `KummiesLedger` — append-only (earn, redeem, expire, adjust), balance = sum
+- `KummiesLedger` — append-only (earn, redeem, expire, adjust), balance = sum; each earn entry
+  carries its payment day and expiry date (D-031)
 - `StoreCredit` — euro credit from redemption, consumed at checkout
 - `Referral`, `WishlistItem`, `OwnedItem`, `Follow` (groups)
 - Later: `Tombola`, `TombolaEntry`, `ClubDrop`
@@ -162,9 +163,10 @@ Rules
   off by default (config flag).
 - Free delivery when the goods incl. VAT are worth **more than €79.99, i.e. from €80.00** (D-026).
   Flat delivery fee below it.
-- Kummies: **1 Kummie per whole euro** of goods incl. VAT, only on orders with goods **≥ €30.00**
-  (D-027). Redemption 500 Kummies = €5 store credit is under review; whether points are granted at
-  payment or after delivery + withdrawal period is still open (D-002).
+- Kummies: **1 Kummie per whole euro** of the final goods amount incl. VAT (after any Kummies
+  discount, without delivery), only when that amount is **≥ €30.00** (D-027); **100 Kummies = €5**
+  store credit (D-030). Points are recorded on the payment day and expire after a fixed validity
+  period; oldest points are spent first; reminders 14, 3 and 1 day before expiry (D-031).
 
 ## 7. Payments
 
@@ -187,7 +189,8 @@ Rules
 Channels behind adapters: email (SMTP provider), in-account inbox (our DB), push (Firebase Cloud
 Messaging for Android; APNs later for iOS). Viber/WhatsApp order updates are a later adapter.
 The notification job enforces opt-ins, quiet hours (22:00–08:00 local) and the two-per-week
-marketing cap.
+marketing cap. It also sends the Kummies expiry reminders (14, 3 and 1 day before expiry, e-mail +
+push if allowed; D-031).
 
 ## 10. Infrastructure
 
