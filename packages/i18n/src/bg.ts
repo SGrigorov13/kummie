@@ -82,6 +82,7 @@ export const bg = {
   owned: "Имам го",
   vat: "с ДДС",
   priceNote: "Една и съща цена за България, Румъния и Гърция.",
+  deliveryFrom: "Доставка от 4,90 €.",
   facts: "Информация за продукта",
   version: "Версия",
   sourcing: "Произход",
@@ -223,7 +224,7 @@ export const bg = {
   // ---- /dev/typography (owner review of Cyrillic fallbacks, D-003) ----
   "dev.title": "Типография",
   "dev.intro":
-    "Всеки текстов стил на български и английски. Кирилицата засега идва от временен системен шрифт (D-003).",
+    "Всеки текстов стил на български и английски. Латиницата е с фирмените шрифтове, кирилицата — с Montserrat Black, Onest и JetBrains Mono (D-003).",
   "dev.sampleDisplay": "Новият албум е тук",
   "dev.sampleH2": "Събери цялата версия",
   "dev.sampleH3": "Класьор за фотокарти A5",
@@ -254,4 +255,6 @@ export const bg = {
   "mobile.chingu": "Chingu",
   "mobile.placeholder": "Този екран идва в M5. Засега е само брандирана рамка.",
   "mobile.homeLead": "Твоят K-pop чингу. Камбеци, колекция и дропове на едно място.",
+  "mobile.allShop": "Към магазина",
+  "mobile.buyOnWeb": "Количката и плащането в приложението идват скоро. Дотогава поръчваш на kummie.eu.",
 } as const;

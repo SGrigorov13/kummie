@@ -81,6 +81,7 @@ export const en: Messages = {
   owned: "I own this",
   vat: "incl. VAT",
   priceNote: "One price for Bulgaria, Romania and Greece.",
+  deliveryFrom: "Delivery from €4.90.",
   facts: "Product information",
   version: "Version",
   sourcing: "Sourcing",
@@ -223,7 +224,7 @@ export const en: Messages = {
   // ---- /dev/typography (owner review of Cyrillic fallbacks, D-003) ----
   "dev.title": "Typography",
   "dev.intro":
-    "Every text style in Bulgarian and English. Cyrillic currently comes from a temporary system font (D-003).",
+    "Every text style in Bulgarian and English. Latin uses the brand fonts; Cyrillic uses Montserrat Black, Onest and JetBrains Mono (D-003).",
   "dev.sampleDisplay": "The new album is here",
   "dev.sampleH2": "Collect the whole version",
   "dev.sampleH3": "A5 photocard binder",
@@ -254,4 +255,6 @@ export const en: Messages = {
   "mobile.chingu": "Chingu",
   "mobile.placeholder": "This screen arrives in M5. For now it is only the branded frame.",
   "mobile.homeLead": "Your K-pop chingu. Comebacks, collection and drops in one place.",
+  "mobile.allShop": "Browse the shop",
+  "mobile.buyOnWeb": "Cart and payment in the app are coming soon. Until then, order on kummie.eu.",
 };

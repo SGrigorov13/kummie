@@ -4,10 +4,9 @@
  * the stack by a "KUMMIE Cyrillic …" companion that is limited to the Cyrillic unicode-range, so Latin
  * always renders in the brand font and Bulgarian falls back to a Cyrillic-capable font.
  *
- * The companions are TEMPORARY and point only at fonts already installed on the device (local()),
- * so nothing extra is downloaded. Final Cyrillic fonts are the owner's choice (see /dev/typography in
- * the web app); to switch, replace the `src` of the three companion families below with self-hosted
- * woff2 files — no component changes needed.
+ * The companions are self-hosted: Montserrat Black (display), Onest (text) and JetBrains Mono
+ * (labels), chosen on 2026-11-16 (D-003). To change one, replace the `src` of its companion family
+ * below — no component changes needed. Review them on /dev/typography in the web app.
  *
  * Load after tokens.css: it narrows the --kum-font-* stacks defined there.
  */
@@ -139,50 +138,56 @@
     U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* ---- Temporary Cyrillic companions (D-003). Cyrillic + Cyrillic Supplement + № only. ---- */
+/* ---- Cyrillic companions (D-003, chosen 2026-11-16): Montserrat Black for display, Onest for text,
+        JetBrains Mono for labels. Cyrillic unicode-range only, so Latin stays in the brand fonts.
+        All SIL OFL (fonts/<family>/OFL.txt). ---- */
 @font-face {
   font-family: "KUMMIE Cyrillic Display";
+  font-style: normal;
   font-weight: 400 900;
-  src:
-    local("Arial Black"), local("ArialMT-Black"), local("Segoe UI Black"), local("Roboto Black"),
-    local("Roboto-Black"), local("Noto Sans Black");
-  unicode-range: U+0400-052F, U+1C80-1C88, U+2116;
+  font-display: swap;
+  src: url("./fonts/montserrat/montserrat-cyrillic-900-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 @font-face {
   font-family: "KUMMIE Cyrillic Text";
+  font-style: normal;
   font-weight: 400;
-  src: local("Segoe UI"), local("Roboto"), local("Roboto-Regular"), local("Noto Sans"), local("Arial");
-  unicode-range: U+0400-052F, U+1C80-1C88, U+2116;
+  font-display: swap;
+  src: url("./fonts/onest/onest-cyrillic-400-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 @font-face {
   font-family: "KUMMIE Cyrillic Text";
+  font-style: normal;
   font-weight: 500;
-  src:
-    local("Segoe UI Semibold"), local("Roboto Medium"), local("Roboto-Medium"), local("Noto Sans Medium"),
-    local("Arial");
-  unicode-range: U+0400-052F, U+1C80-1C88, U+2116;
+  font-display: swap;
+  src: url("./fonts/onest/onest-cyrillic-500-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 @font-face {
   font-family: "KUMMIE Cyrillic Text";
+  font-style: normal;
   font-weight: 700;
-  src:
-    local("Segoe UI Bold"), local("Roboto Bold"), local("Roboto-Bold"), local("Noto Sans Bold"),
-    local("Arial Bold");
-  unicode-range: U+0400-052F, U+1C80-1C88, U+2116;
+  font-display: swap;
+  src: url("./fonts/onest/onest-cyrillic-700-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 @font-face {
   font-family: "KUMMIE Cyrillic Mono";
+  font-style: normal;
   font-weight: 400;
-  src: local("Consolas"), local("Roboto Mono"), local("DejaVu Sans Mono"), local("Courier New");
-  unicode-range: U+0400-052F, U+1C80-1C88, U+2116;
+  font-display: swap;
+  src: url("./fonts/jetbrains-mono/jetbrains-mono-cyrillic-400-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 @font-face {
   font-family: "KUMMIE Cyrillic Mono";
+  font-style: normal;
   font-weight: 700;
-  src:
-    local("Consolas Bold"), local("Roboto Mono Bold"), local("DejaVu Sans Mono Bold"),
-    local("Courier New Bold");
-  unicode-range: U+0400-052F, U+1C80-1C88, U+2116;
+  font-display: swap;
+  src: url("./fonts/jetbrains-mono/jetbrains-mono-cyrillic-700-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 
 :root {
