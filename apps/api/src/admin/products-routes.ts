@@ -78,7 +78,7 @@ export async function loadAdminProduct(db: Database, id: string): Promise<AdminP
  * deactivated, never deleted (orders will reference them). A published product must still pass the
  * GPSR gate after the change, otherwise nothing is saved.
  */
-async function saveProduct(db: Database, id: string | null, input: ProductInput): Promise<string> {
+export async function saveProduct(db: Database, id: string | null, input: ProductInput): Promise<string> {
   return db.transaction(async (tx) => {
     const now = new Date();
     const fields = {

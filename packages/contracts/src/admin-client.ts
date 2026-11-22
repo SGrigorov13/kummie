@@ -5,6 +5,7 @@ import {
   CompanySettings,
   LoginResponse,
   OkResponse,
+  ProductImportReport,
   Staff,
   type ProductInput,
 } from "./admin";
@@ -88,6 +89,10 @@ export function createAdminClient({
       `${base}/admin-api/reports/${report}?year=${year}&month=${month}`,
     ossReportUrl: (year: number, quarter: number) =>
       `${base}/admin-api/reports/oss?year=${year}&quarter=${quarter}`,
+    /** CSV template for the product import (direct link; the staff cookie goes along). */
+    importTemplateUrl: () => `${base}/admin-api/products/import-template`,
+    importProducts: (csv: string, dryRun: boolean) =>
+      call("POST", "/admin-api/products/import", ProductImportReport, { csv, dryRun }),
     categories: () => call("GET", "/catalogue/categories", CategoryList),
     groups: () => call("GET", "/catalogue/groups", GroupList),
   };

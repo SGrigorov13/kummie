@@ -257,7 +257,10 @@ describe.skipIf(!safe)("Н-18 sales documents and reports on PostgreSQL", () => 
       legalName: "СГ Корпорейшън ЕООД",
       eik: "123456789",
       eShopNumber: "RF0001234",
-      delivery: { freeFromCents: 8000, fees: [{ country: "BG", feeCents: 490 }, { country: "RO" }, { country: "GR" }] },
+      delivery: {
+        freeFromCents: 8000,
+        fees: [{ country: "BG", feeCents: 490 }, { country: "RO" }, { country: "GR" }],
+      },
     });
     expect(res.body).not.toMatch(/iban/i);
   });

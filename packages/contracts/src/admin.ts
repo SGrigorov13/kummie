@@ -181,3 +181,60 @@ export const PublishBlocked = z.object({
   message: z.string(),
   missing: z.array(ComplianceField),
 });
+
+// ---------- Product import from a file (CSV template) ----------
+
+export const ProductImportRequest = z.object({
+  /** The CSV text (UTF-8; the admin decodes windows-1251 files from Excel before sending). */
+  csv: z.string().min(1).max(5_000_000),
+  /** true: only check and report; false: import everything or nothing. */
+  dryRun: z.boolean(),
+});
+
+export const ImportIssueCode = z.enum([
+  "missing_column",
+  "unknown_column",
+  "required",
+  "invalid_value",
+  "bad_slug",
+  "bad_sku",
+  "bad_price",
+  "unknown_subcategory",
+  "unknown_group",
+  "unknown_region",
+  "duplicate_sku",
+  "sku_of_other_product",
+  "conflicting_value",
+  "missing_translation",
+  "too_many_rows",
+  "empty_file",
+]);
+export type ImportIssueCode = z.infer<typeof ImportIssueCode>;
+
+export const ImportIssue = z.object({
+  /** Line in the file (1 = header). */
+  line: z.number().int(),
+  column: z.string().nullable(),
+  code: ImportIssueCode,
+  value: z.string().nullable(),
+});
+export type ImportIssue = z.infer<typeof ImportIssue>;
+
+export const ProductImportReport = z.object({
+  applied: z.boolean(),
+  products: z.array(
+    z.object({
+      slug: z.string(),
+      title: z.string(),
+      action: z.enum(["create", "update"]),
+      variants: z.number().int(),
+      /** The file asked to publish it. */
+      publish: z.boolean(),
+      /** GPSR fields still missing: the product stays a draft until they are filled. */
+      missing: z.array(ComplianceField),
+      status: z.enum(["draft", "published", "archived"]).nullable(),
+    }),
+  ),
+  issues: z.array(ImportIssue),
+});
+export type ProductImportReport = z.infer<typeof ProductImportReport>;
