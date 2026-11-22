@@ -2,6 +2,7 @@ import type { AdminClient } from "@kummie/contracts";
 import { formatMoney } from "@kummie/core";
 import { useEffect, useState } from "react";
 import { api, useAdmin } from "./context";
+import { ImportPanel } from "./ImportPanel";
 
 type Item = Awaited<ReturnType<AdminClient["listProducts"]>>["items"][number];
 
@@ -10,6 +11,7 @@ export function Catalogue({ onOpen }: { onOpen: (id: string | "new") => void }) 
   const { t, locale } = useAdmin();
   const [items, setItems] = useState<Item[] | null>(null);
   const [q, setQ] = useState("");
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -32,7 +34,18 @@ export function Catalogue({ onOpen }: { onOpen: (id: string | "new") => void }) 
         <button type="button" className="btn" onClick={() => onOpen("new")}>
           {t("admin.newProduct")}
         </button>
+        <button
+          type="button"
+          className="btn btn--secondary"
+          aria-expanded={importing}
+          onClick={() => setImporting(!importing)}
+        >
+          {t("admin.import.open")}
+        </button>
       </div>
+      {importing ? (
+        <ImportPanel onDone={() => api.listProducts(q.trim() || undefined).then((r) => setItems(r.items))} />
+      ) : null}
       {items === null ? (
         <p>{t("admin.loading")}</p>
       ) : items.length === 0 ? (
