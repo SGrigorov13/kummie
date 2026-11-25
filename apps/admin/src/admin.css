@@ -406,3 +406,25 @@ input[type="checkbox"] {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Product photos (D-061) */
+.photos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.photos__item {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.photos__item img {
+  display: block;
+  width: 120px;
+  height: auto;
+  border-radius: 8px;
+  background: #f3f0fa;
+}

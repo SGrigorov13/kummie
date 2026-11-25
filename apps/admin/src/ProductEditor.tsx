@@ -15,6 +15,7 @@ import {
 } from "@kummie/core";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { api, centsToEuroInput, useAdmin } from "./context";
+import { ProductImages } from "./ProductImages";
 
 const SOURCING = ["OFFICIAL", "KUMMIE_ORIGINAL", "LICENSED", "SUPPLIER_DIRECT"] as const;
 const STATES = ["NEW_DROP", "IN_STOCK_EU", "PRE_ORDER"] as const;
@@ -346,6 +347,15 @@ export function ProductEditor({
             {t("admin.editor.limited")}
           </label>
         </section>
+
+        {product ? (
+          <ProductImages productId={product.id} />
+        ) : (
+          <section className="panel stack">
+            <h2>{t("admin.photos")}</h2>
+            <p className="note">{t("admin.photos.saveFirst")}</p>
+          </section>
+        )}
 
         <section
           className={`panel stack ${shown.includes("version") || shown.includes("price") ? "panel--missing" : ""}`}
