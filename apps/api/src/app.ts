@@ -60,6 +60,6 @@ export function buildApp({ logger, checkDb, catalogue, admin, accounts, shop, tr
   if (admin) app.register(adminPlugin(admin));
   if (accounts) app.register(accountsPlugin(accounts));
   if (shop) app.register(shopPlugin(shop));
-  if (shop) app.register(siteRoutes(shop.db));
+  if (shop) app.register(siteRoutes(shop));
   return app;
 }
