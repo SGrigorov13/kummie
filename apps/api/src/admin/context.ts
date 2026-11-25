@@ -1,6 +1,7 @@
 import type { Staff, StaffRole } from "@kummie/contracts";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { and, eq, gt } from "drizzle-orm";
+import type { StorageAdapter } from "../adapters/storage";
 import type { SecretBox } from "../auth/crypto";
 import { sha256 } from "../auth/crypto";
 import type { Database } from "../db/client";
@@ -19,6 +20,8 @@ export type AdminDeps = {
   cookieSecure: boolean;
   /** Orders, refunds and e-mails; the order screens are on only when the shop is configured. */
   shop?: ShopDeps;
+  /** Product photo files (disk on the hosting); the photo screens are on only when set. */
+  storage?: StorageAdapter;
 };
 
 declare module "fastify" {

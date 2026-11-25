@@ -4,6 +4,7 @@ import rateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 import type { AccountDeps } from "./accounts/context";
+import type { StorageAdapter } from "./adapters/storage";
 import { accountsPlugin } from "./accounts/plugin";
 import type { AdminDeps } from "./admin/context";
 import { adminPlugin } from "./admin/plugin";
@@ -12,6 +13,7 @@ import { catalogueRoutes } from "./routes/catalogue";
 import type { ShopDeps } from "./shop/orders";
 import { shopPlugin } from "./shop/plugin";
 import { healthRoutes, type DbCheck } from "./routes/health";
+import { mediaRoutes } from "./routes/media";
 import { siteRoutes } from "./routes/site";
 
 export type AppDeps = {
@@ -25,12 +27,23 @@ export type AppDeps = {
   accounts?: AccountDeps;
   /** Cart, checkout, orders and payment webhooks; registered only with a database. */
   shop?: ShopDeps;
+  /** Product photo files, served under /media. */
+  media?: StorageAdapter;
   /** Proxies in front of the API whose X-Forwarded-For is trusted (for rate limits by client IP). */
   trustProxy?: FastifyServerOptions["trustProxy"];
 };
 
 /** Builds the Fastify app with Zod validation/serialisation. No listening here, so tests can inject. */
-export function buildApp({ logger, checkDb, catalogue, admin, accounts, shop, trustProxy = false }: AppDeps) {
+export function buildApp({
+  logger,
+  checkDb,
+  catalogue,
+  admin,
+  accounts,
+  shop,
+  media,
+  trustProxy = false,
+}: AppDeps) {
   // Signed payment session ids travel in the path (fake provider page), so allow longer segments.
   const app = Fastify({ logger, trustProxy, maxParamLength: 2048 }).withTypeProvider<ZodTypeProvider>();
   app.setValidatorCompiler(validatorCompiler);
@@ -56,6 +69,7 @@ export function buildApp({ logger, checkDb, catalogue, admin, accounts, shop, tr
   }
 
   app.register(healthRoutes(checkDb));
+  if (media) app.register(mediaRoutes(media));
   if (catalogue) app.register(catalogueRoutes(catalogue));
   if (admin) app.register(adminPlugin(admin));
   if (accounts) app.register(accountsPlugin(accounts));

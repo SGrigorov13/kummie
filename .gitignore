@@ -28,6 +28,7 @@ apps/mobile/android/
 
 # Development e-mails written by the API (contain personal data)
 apps/api/mail-outbox/
+apps/api/media/
 
 # Logs and OS files
 *.log

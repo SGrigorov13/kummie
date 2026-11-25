@@ -10,7 +10,8 @@ import {
   subcategories,
   variants,
 } from "../db/schema";
-import { mediaUrl, type CatalogueRepository } from "./repository";
+import { productImageView } from "../media/urls";
+import type { CatalogueRepository } from "./repository";
 
 type Country = "BG" | "RO" | "GR" | "PL";
 const COUNTRIES: readonly string[] = ["BG", "RO", "GR", "PL"];
@@ -67,12 +68,8 @@ export function createPgCatalogueRepository(db: Database, mediaBaseUrl: string):
     return map;
   }
 
-  const image = (row: typeof productImages.$inferSelect) => ({
-    url: mediaUrl(mediaBaseUrl, row.path),
-    width: row.width,
-    height: row.height,
-    alt: { bg: row.altBg, en: row.altEn },
-  });
+  const image = (row: typeof productImages.$inferSelect, title: string) =>
+    productImageView(mediaBaseUrl, row, title);
 
   const cardColumns = {
     id: products.id,
@@ -117,7 +114,7 @@ export function createPgCatalogueRepository(db: Database, mediaBaseUrl: string):
       isLimited: row.isLimited,
       priceCents: Number(row.priceCents),
       currency: "EUR",
-      image: img ? image(img) : null,
+      image: img ? image(img, row.title) : null,
       isDemo: row.isDemo,
     };
   }
@@ -226,7 +223,7 @@ export function createPgCatalogueRepository(db: Database, mediaBaseUrl: string):
           warnings: c.warnings,
           returnExceptions: c.returnExceptions,
         },
-        images: imageRows.map(image),
+        images: imageRows.map((img) => image(img, row.title)),
       };
       return detail;
     },
