@@ -43,6 +43,16 @@ export type TrackingStatus =
 
 export type TrackingEvent = { status: TrackingStatus; at: Date; location?: string; description?: string };
 
+/** A carrier office or parcel locker the customer can choose at checkout. */
+export type PickupPoint = {
+  id: string;
+  name: string;
+  kind: "office" | "locker";
+  address: string;
+  city: string;
+  country: string;
+};
+
 export interface CarrierAdapter {
   readonly name: string;
   /** Destination countries this carrier serves. */
@@ -50,4 +60,6 @@ export interface CarrierAdapter {
   createShipment(input: ParcelInput): Promise<Label>;
   cancelShipment(trackingNumber: string): Promise<void>;
   track(trackingNumber: string): Promise<TrackingEvent[]>;
+  /** Offices and lockers in a country (for checkout), when the carrier offers them. */
+  pickupPoints?(country: string): Promise<PickupPoint[]>;
 }
