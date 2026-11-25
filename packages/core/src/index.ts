@@ -11,6 +11,7 @@ export * from "./compliance";
 export * from "./age";
 export * from "./documents";
 export * from "./golive";
+export * from "./batches";
 
 // Demo data stays importable from the root to keep the prototype's public API; prefer
 // `@kummie/core/demo` in new code so demo usage is easy to find and remove in M1.
