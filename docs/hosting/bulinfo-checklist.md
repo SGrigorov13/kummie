@@ -6,7 +6,7 @@ ourselves where marked.
 | # | Question | Why we need it | Answer |
 |---|---|---|---|
 | 1 | Which plan supports running **two Node.js applications** at the same time (API + Next.js web), each on its own subdomain? | Web and API are separate Node apps | ✅ **Yes** — two projects can run at the same time on PRO. |
-| 2 | Which **Node.js versions** are available in "Setup Node.js App"? We need the current LTS (22 or 24). | Framework requirements | ⚠️ Not answered ("depends on the application"). **Owner checks the version list in cPanel → Setup Node.js App.** We build for Node 24; Node 22 is the fallback (see below). |
+| 2 | Which **Node.js versions** are available in "Setup Node.js App"? We need the current LTS (22 or 24). | Framework requirements | ✅ Checked by the owner in cPanel (2026-11-25): 14.21.3, 16.20.2 (marked "recommended" — **do not use**), 18.20.8, 19.9.0, 20.20.2, 22.23.5, **24.22.3**. We use **24.22.3** for both apps (matches `engines` ≥ 24.11). |
 | 3 | Are Node apps managed by **Passenger**? Are idle apps stopped, and after how long? Can we keep the API always running? | Cold starts and background work | ✅ Idle projects are **not stopped**. The web server is **LiteSpeed** (seen on 2026-11-17: `lsws` error pages), which runs Node apps through its own Node.js support. |
 | 4 | Is **cron** available, and what is the minimum interval (we want every 5 minutes)? | Batch closing, notifications | ✅ Cron available, **no execution-time limit**; resources count against the account. Every 5 minutes is fine (each `tick` run is short). |
 | 5 | **PostgreSQL version**, maximum connections per account, and is remote access possible for running migrations from CI? | Database setup and deploys | ✅ **PostgreSQL 16.15**, up to **100 connections**. Migrations run on the server over SSH as a deploy step (no remote DB access needed). CI now tests on PostgreSQL 16 (D-059). |
@@ -23,11 +23,8 @@ there too; DNS on ns5/ns6.bulinfo.org, MX on the hosting.
 
 ## Owner actions before the first upload
 
-1. **cPanel → Setup Node.js App → Create Application:** open the "Node.js version" list, note the
-   versions offered (do not create anything yet) and send them over. If 24 is there, we use it;
-   if the newest is 22, the build targets 22.
-2. **cPanel → Two-Factor Authentication:** turn it on (authenticator app), then ask Bulinfo support
-   to activate SSH for the account.
+1. ✅ Node versions read (2026-11-25): 24.22.3 available — we use it.
+2. ✅ cPanel 2FA on (2026-11-25). **Next: ask Bulinfo support to activate SSH** for the account.
 3. Later, together: create the PostgreSQL database and user in cPanel, add the GitHub deploy key,
    set the cron lines and the Node apps' environment variables.
 
