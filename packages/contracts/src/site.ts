@@ -14,6 +14,8 @@ export const TraderInfo = z.object({
   phone: z.string().nullable(),
   /** Number НАП gave the e-shop (Приложение № 33). */
   eShopNumber: z.string().nullable(),
+  /** What checkout does: test payments before go-live, real ones after, or nothing. */
+  salesMode: z.enum(["test", "live", "closed"]),
   delivery: z.object({
     fees: z.array(z.object({ country: ShippingCountry, feeCents: z.number().int() })),
     /** Free delivery from this goods value (D-026). */

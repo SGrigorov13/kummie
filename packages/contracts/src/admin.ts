@@ -238,3 +238,49 @@ export const ProductImportReport = z.object({
   issues: z.array(ImportIssue),
 });
 export type ProductImportReport = z.infer<typeof ProductImportReport>;
+
+// ---------- Go-live gate (M1 Task 13) ----------
+
+export const LegalPageId = z.enum(["terms", "withdrawal", "returns", "guarantee", "privacy", "complaints"]);
+export const GoLiveConditionId = z.enum(["company", "oss", "nap", "payment", "email", "legal", "delivery"]);
+export const NapUpdateKind = z.enum([
+  "payment_provider",
+  "vpos_terminal",
+  "domain",
+  "hosting",
+  "closing",
+  "other",
+]);
+
+export const NapUpdate = z.object({
+  id: z.string(),
+  kind: NapUpdateKind,
+  changedOn: z.iso.date(),
+  dueOn: z.iso.date(),
+  /** Days left until the 7-day deadline; negative when late. */
+  daysLeft: z.number().int(),
+  note: z.string().nullable(),
+  submittedOn: z.iso.date().nullable(),
+});
+export type NapUpdate = z.infer<typeof NapUpdate>;
+
+export const SalesReadiness = z.object({
+  /** The sales switch (off by default). */
+  enabled: z.boolean(),
+  /** What checkout does right now: test payments, real payments or nothing. */
+  mode: z.enum(["test", "live", "closed"]),
+  canEnable: z.boolean(),
+  conditions: z.array(z.object({ id: GoLiveConditionId, ok: z.boolean(), missing: z.array(z.string()) })),
+  legalApproved: z.record(LegalPageId, z.iso.date().nullable()),
+  napUpdates: z.array(NapUpdate),
+  changedAt: z.string().nullable(),
+});
+export type SalesReadiness = z.infer<typeof SalesReadiness>;
+
+export const SalesSwitch = z.object({ enabled: z.boolean() });
+export const LegalApproval = z.object({ page: LegalPageId, approved: z.boolean() });
+export const NapUpdateInput = z.object({
+  kind: NapUpdateKind,
+  changedOn: z.iso.date(),
+  note: z.string().trim().max(300).nullable(),
+});

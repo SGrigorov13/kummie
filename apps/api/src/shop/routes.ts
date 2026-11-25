@@ -30,6 +30,7 @@ import {
 import { customerCanCancel } from "@kummie/core";
 import { cartView, priceCart, pricedLines, resolveCart } from "./cart-store";
 import { documentFileName, renderDocumentPdf } from "../documents/pdf";
+import { loadSalesReadiness, runtimeOf } from "../admin/golive";
 import { changeOrderStatus, StatusChangeError } from "./lifecycle";
 import { orderDetail, orderNumber, startPayment, vatShares, type OrderRow, type ShopDeps } from "./orders";
 
@@ -38,6 +39,8 @@ const CartChanged = ApiError.extend({
   problems: z.array(z.object({ variantId: z.string(), reason: z.string() })),
 });
 const MAX_LINES = 50;
+/** Real sales are switched off (go-live gate, Task 13) — nothing can be paid right now. */
+const SALES_CLOSED = { error: "sales_closed", message: "The shop is not taking orders yet" } as const;
 const MAX_ADDRESSES = 10;
 
 export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
@@ -138,11 +141,20 @@ export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
         config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
         schema: {
           body: CheckoutRequest,
-          response: { 200: CheckoutResponse, 400: ApiError, 409: CartChanged.or(ApiError), 502: ApiError },
+          response: {
+            200: CheckoutResponse,
+            400: ApiError,
+            409: CartChanged.or(ApiError),
+            502: ApiError,
+            503: ApiError,
+          },
         },
       },
       async (request, reply) => {
         const input = request.body;
+        if ((await loadSalesReadiness(db, runtimeOf(deps))).mode === "closed") {
+          return reply.code(503).send(SALES_CLOSED);
+        }
         const customer = await customerFromRequest(db, request);
         const { cart } = await resolveCart(db, request, reply, { create: false, cookieSecure });
         const country = input.address.country;
@@ -263,12 +275,15 @@ export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
         config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
         schema: {
           params: IdParams,
-          response: { 200: PayResponse, 404: ApiError, 409: ApiError, 502: ApiError },
+          response: { 200: PayResponse, 404: ApiError, 409: ApiError, 502: ApiError, 503: ApiError },
         },
       },
       async (request, reply) => {
         const order = await accessibleOrder(request, request.params.id);
         if (!order) return reply.code(404).send(notFound);
+        if ((await loadSalesReadiness(db, runtimeOf(deps))).mode === "closed") {
+          return reply.code(503).send(SALES_CLOSED);
+        }
         if (order.status !== "pending_payment") {
           return reply
             .code(409)

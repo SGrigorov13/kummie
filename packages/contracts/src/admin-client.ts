@@ -6,6 +6,7 @@ import {
   LoginResponse,
   OkResponse,
   ProductImportReport,
+  SalesReadiness,
   Staff,
   type ProductInput,
 } from "./admin";
@@ -93,6 +94,14 @@ export function createAdminClient({
     importTemplateUrl: () => `${base}/admin-api/products/import-template`,
     importProducts: (csv: string, dryRun: boolean) =>
       call("POST", "/admin-api/products/import", ProductImportReport, { csv, dryRun }),
+    salesReadiness: () => call("GET", "/admin-api/sales", SalesReadiness),
+    setSales: (enabled: boolean) => call("PUT", "/admin-api/sales", SalesReadiness, { enabled }),
+    approveLegalPage: (page: string, approved: boolean) =>
+      call("PUT", "/admin-api/sales/legal", SalesReadiness, { page, approved }),
+    addNapUpdate: (input: { kind: string; changedOn: string; note: string | null }) =>
+      call("POST", "/admin-api/sales/nap-updates", SalesReadiness, input),
+    markNapUpdateSubmitted: (id: string) =>
+      call("POST", `/admin-api/sales/nap-updates/${id}/submitted`, SalesReadiness, {}),
     categories: () => call("GET", "/catalogue/categories", CategoryList),
     groups: () => call("GET", "/catalogue/groups", GroupList),
   };

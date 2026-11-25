@@ -8,7 +8,7 @@ import { Field } from "@/components/Field";
 import { accountApi, codeOf, commonErrorKey, statusOf } from "@/lib/account";
 import { useLocale, useT } from "@/lib/locale";
 import { href } from "@/lib/paths";
-import { shopApi, useCart } from "@/lib/shop";
+import { catalogueApi, shopApi, useCart } from "@/lib/shop";
 import { CartTotals } from "../cart/CartView";
 
 const EMPTY: DeliveryAddress = {
@@ -32,6 +32,8 @@ export function CheckoutView() {
   const locale = useLocale();
   const { cart, setCart, refresh } = useCart();
   const [account, setAccount] = useState<Account | null | undefined>(undefined);
+  // Go-live gate: test payments before launch, real ones after, nothing while closed.
+  const [salesMode, setSalesMode] = useState<"test" | "live" | "closed">("test");
   const [saved, setSaved] = useState<Address[]>([]);
   const [choice, setChoice] = useState<string>("new");
   const [email, setEmail] = useState("");
@@ -42,6 +44,13 @@ export function CheckoutView() {
   const [accept, setAccept] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    catalogueApi.traderInfo().then(
+      (info) => setSalesMode(info.salesMode),
+      () => undefined,
+    );
+  }, []);
 
   useEffect(() => {
     accountApi.me().then(
@@ -128,7 +137,8 @@ export function CheckoutView() {
       if (code === "cart_changed" || code === "empty_cart") {
         setError(t("shop.cartChanged"));
         await refresh();
-      } else if (statusOf(e) === 502) setError(t("shop.paymentUnavailable"));
+      } else if (statusOf(e) === 503) setError(t("shop.salesClosed"));
+      else if (statusOf(e) === 502) setError(t("shop.paymentUnavailable"));
       else if (statusOf(e) === 400) setError(t("required"));
       else setError(t(commonErrorKey(e)));
       setBusy(false);
@@ -334,11 +344,12 @@ export function CheckoutView() {
             {error}
           </p>
         ) : null}
-        <button className="btn btn--block" type="submit" disabled={busy}>
+        {salesMode === "closed" ? <p className="notice">{t("shop.salesClosed")}</p> : null}
+        <button className="btn btn--block" type="submit" disabled={busy || salesMode === "closed"}>
           {t("shop.pay", { total: formatMoney(cart.quote.totalCents, locale) })}
         </button>
         <p className="muted">{t("shop.payNote")}</p>
-        <p className="muted">{t("shop.testMode")}</p>
+        {salesMode === "test" ? <p className="muted">{t("shop.testMode")}</p> : null}
       </div>
     </form>
   );
