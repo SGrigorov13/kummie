@@ -27,6 +27,10 @@ there too; DNS on ns5/ns6.bulinfo.org, MX on the hosting.
 2. ✅ cPanel 2FA on (2026-11-25). **Next: ask Bulinfo support to activate SSH** for the account.
 3. Later, together: create the PostgreSQL database and user in cPanel, add the GitHub deploy key,
    set the cron lines and the Node apps' environment variables.
+4. Later, together: create the photo folder **outside** the deployed app (e.g.
+   `/home/<account>/kummie-media`) and set `MEDIA_DIR` to it, so a new release never deletes
+   product photos (D-061). Check once on the server that photo upload works (`sharp` ships a
+   ready-made Linux build; no compiler needed).
 
 ## Notes
 

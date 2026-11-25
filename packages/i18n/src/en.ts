@@ -529,6 +529,7 @@ export const en: Messages = {
   "admin.gate.banner":
     "NRA: {count} change(s) to Appendix 33 waiting to be submitted (at the latest in {days} days). See “Go-live readiness”.",
   "shop.salesClosed": "The shop is not taking orders yet. Opening soon!",
+
   // ---- Product photos (D-061) ----
   "admin.photos": "Photos",
   "admin.photos.lead":

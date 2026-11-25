@@ -525,6 +525,7 @@ export const bg = {
   "admin.gate.banner":
     "НАП: {count} промяна(и) по Приложение № 33 чакат подаване (най-късно след {days} дни). Виж „Готовност за продажби“.",
   "shop.salesClosed": "Магазинът още не приема поръчки. Скоро отваряме!",
+
   // ---- Product photos (D-061) ----
   "admin.photos": "Снимки",
   "admin.photos.lead":
