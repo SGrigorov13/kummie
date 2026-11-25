@@ -149,7 +149,7 @@ pnpm --filter api test
 Remove-Item Env:TEST_DATABASE_URL
 ```
 
-CI runs them in a separate job with a PostgreSQL 17 container.
+CI runs them in a separate job with a PostgreSQL 16 container — the version on the Bulinfo hosting (local development on 17 is fine).
 
 ## 5. Other commands
 
@@ -176,7 +176,7 @@ Add native packages with `npx expo install <package>` inside `apps/mobile` (see
 
 ## 7. Optional: Docker
 
-Machines with Docker Desktop can run PostgreSQL 17 and Mailpit instead of a native install:
+Machines with Docker Desktop can run PostgreSQL 16 (as in production) and Mailpit instead of a native install:
 
 ```powershell
 docker compose up -d

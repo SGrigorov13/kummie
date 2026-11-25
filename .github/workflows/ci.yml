@@ -52,12 +52,12 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
 
   api-database:
-    name: API integration tests (PostgreSQL 17)
+    name: API integration tests (PostgreSQL 16, as on Bulinfo)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
       postgres:
-        image: postgres:17
+        image: postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
