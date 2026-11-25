@@ -43,7 +43,7 @@ describe.skipIf(!safe)("staff API on PostgreSQL", () => {
       admin: {
         db: handle.db,
         secretBox: createSecretBox(randomBytes(32).toString("base64")),
-        allowedOrigins: ["http://localhost:5173"],
+        allowedOrigins: ["http://localhost:5180"],
         cookieSecure: false,
       },
     });

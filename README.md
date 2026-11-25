@@ -17,7 +17,7 @@ European K-pop commerce, media and collector platform, launching from Bulgaria.
 corepack enable
 pnpm install
 Copy-Item apps/api/.env.example apps/api/.env   # then put the postgres password in it
-pnpm dev                                         # web :3000 · admin :5173 · api :3001
+pnpm dev                                         # web :3000 · admin :5180 · api :3001
 ```
 
 | Path | What |

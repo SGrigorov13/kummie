@@ -53,7 +53,7 @@ Copy-Item apps/admin/.env.example apps/admin/.env.local
 ```powershell
 pnpm install
 pnpm --filter api db:migrate   # M0 has no tables yet; this only creates Drizzle's bookkeeping table
-pnpm dev                       # web :3000, admin :5173, api :3001
+pnpm dev                       # web :3000, admin :5180, api :3001
 ```
 
 Check the API and the database:
@@ -70,8 +70,11 @@ database name) — the API log shows the reason.
 |---|---|
 | Storefront (Next.js) | http://localhost:3000 → redirects to `/bg` |
 | Typography review (D-003) | http://localhost:3000/dev/typography |
-| Admin | http://localhost:5173 |
+| Admin | http://localhost:5180 |
 | API health | http://localhost:3001/health |
+
+The admin uses port **5180**, not Vite's usual 5173: other local projects often take 5173, and
+then `localhost:5173` opens the wrong app.
 
 ### Staff accounts (admin sign-in)
 
@@ -89,9 +92,9 @@ your own account (the password is asked for in the terminal and is not shown):
 pnpm --filter api staff:create --email you@example.com --name "Your Name" --role admin
 ```
 
-Open http://localhost:5173, sign in, and scan the QR code with an authenticator app (Google
+Open http://localhost:5180, sign in, and scan the QR code with an authenticator app (Google
 Authenticator, Microsoft Authenticator, 1Password …) on the first sign-in. `ADMIN_ORIGINS` lists
-the addresses the admin may call the API from (default: `http://localhost:5173`).
+the addresses the admin may call the API from (default: `http://localhost:5180`).
 
 ### Customer accounts and e-mails (local)
 

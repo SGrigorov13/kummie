@@ -5,9 +5,9 @@
   "type": "module",
   "description": "KUMMIE internal admin and Bulgaria hub screens. Builds to static files served by Apache.",
   "scripts": {
-    "dev": "vite --port 5173 --strictPort",
+    "dev": "vite --port 5180 --strictPort",
     "build": "vite build",
-    "preview": "vite preview --port 5173",
+    "preview": "vite preview --port 5180",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
