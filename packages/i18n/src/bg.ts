@@ -526,6 +526,30 @@ export const bg = {
     "НАП: {count} промяна(и) по Приложение № 33 чакат подаване (най-късно след {days} дни). Виж „Готовност за продажби“.",
   "shop.salesClosed": "Магазинът още не приема поръчки. Скоро отваряме!",
 
+  // ---- Product photos (D-061) ----
+  "admin.photos": "Снимки",
+  "admin.photos.lead":
+    "Първата снимка е тази в каталога. Само снимки на самия продукт, направени от нас или от доставчика с право за ползване — без снимки на артисти, лога или обложки извън продукта. Системата прави по-малки копия и маха скритите данни (EXIF, GPS).",
+  "admin.photos.none": "Още няма снимки — в магазина се показва шарен фон със звездата.",
+  "admin.photos.saveFirst": "Запиши продукта, за да добавиш снимки.",
+  "admin.photos.main": "Главна",
+  "admin.photos.altBg": "Описание за незрящи (BG)",
+  "admin.photos.altEn": "Описание за незрящи (EN)",
+  "admin.photos.saveAlt": "Запиши описанието",
+  "admin.photos.up": "по-напред",
+  "admin.photos.down": "по-назад",
+  "admin.photos.delete": "Изтрий",
+  "admin.photos.confirmDelete": "Да изтрия ли снимката? Това не може да се върне.",
+  "admin.photos.add": "Добави снимки",
+  "admin.photos.rules":
+    "JPEG, PNG, WebP или AVIF, поне 480 px широки, до 20 MB; до 12 снимки. Най-добре 3:4 (портрет), поне 1600 px.",
+  "admin.photos.uploading": "Качвам {n} от {total}…",
+  "admin.photos.uploaded": "Качени: {count}",
+  "admin.photos.err.image_too_small": "снимката е по-тясна от 480 px",
+  "admin.photos.err.image_unsupported": "файлът не е JPEG, PNG, WebP или AVIF снимка",
+  "admin.photos.err.image_too_large": "файлът е над 20 MB",
+  "admin.photos.err.too_many_images": "максимум 12 снимки на продукт",
+
   // ---- Groups and calendar ----
   follow: "Следвай",
   following: "Следваш",

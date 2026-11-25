@@ -5,10 +5,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/Badge";
 import { Price } from "@/components/Price";
-import { ProductShot } from "@/components/ProductShot";
+import { ProductPhoto, ProductShot } from "@/components/ProductShot";
 import { catalogue, subcategoryIndex, tryCatalogue } from "@/lib/catalogue-server";
 import { href, localeParam } from "@/lib/paths";
 import { ProductActions } from "./ProductActions";
+
+/** The photo column is 5/12 of the page from 768 px (max ~1200 px wide), the full width below. */
+const PRODUCT_SIZES = "(min-width: 768px) min(42vw, 500px), 100vw";
+const THUMB_SIZES = "(min-width: 768px) 140px, 33vw";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -54,7 +58,14 @@ export default async function ProductPage({ params }: Props) {
   return (
     <div className="wrap section product">
       <div className="product__media">
-        <ProductShot product={product} locale={locale} />
+        <ProductShot product={product} locale={locale} sizes={PRODUCT_SIZES} eager />
+        {product.images.length > 1 ? (
+          <div className="product__more">
+            {product.images.slice(1).map((image) => (
+              <ProductPhoto key={image.url} image={image} locale={locale} sizes={THUMB_SIZES} />
+            ))}
+          </div>
+        ) : null}
       </div>
       <div className="product__info">
         <p className="label">

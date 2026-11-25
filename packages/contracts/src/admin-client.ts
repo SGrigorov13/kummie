@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import {
+  AdminImageList,
   AdminProduct,
   AdminProductList,
   CompanySettings,
@@ -28,19 +29,25 @@ export function createAdminClient({
   const base = baseUrl.replace(/\/$/, "");
 
   async function call<T extends z.ZodType>(
-    method: "GET" | "POST" | "PUT",
+    method: "GET" | "POST" | "PUT" | "DELETE",
     path: string,
     schema: T,
     body?: unknown,
   ): Promise<z.output<T>> {
+    // A photo goes as its own bytes with its image type (still not sendable by a form: preflight).
+    const file = body instanceof Blob ? body : null;
     const response = await fetchImpl(`${base}${path}`, {
       method,
       credentials: "include",
       headers: {
         accept: "application/json",
-        ...(body === undefined ? {} : { "content-type": "application/json" }),
+        ...(file
+          ? { "content-type": file.type || "application/octet-stream" }
+          : body === undefined
+            ? {}
+            : { "content-type": "application/json" }),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: file ?? (body === undefined ? undefined : JSON.stringify(body)),
     });
     const text = await response.text();
     const json: unknown = text ? JSON.parse(text) : null;
@@ -102,6 +109,16 @@ export function createAdminClient({
       call("POST", "/admin-api/sales/nap-updates", SalesReadiness, input),
     markNapUpdateSubmitted: (id: string) =>
       call("POST", `/admin-api/sales/nap-updates/${id}/submitted`, SalesReadiness, {}),
+    listImages: (productId: string) => call("GET", `/admin-api/products/${productId}/images`, AdminImageList),
+    /** Uploads one photo (JPEG, PNG, WebP or AVIF); the server makes the sizes and strips EXIF. */
+    uploadImage: (productId: string, file: Blob) =>
+      call("POST", `/admin-api/products/${productId}/images`, AdminImageList, file),
+    saveImageAlt: (productId: string, imageId: string, alt: { bg: string; en: string }) =>
+      call("PUT", `/admin-api/products/${productId}/images/${imageId}`, AdminImageList, { alt }),
+    orderImages: (productId: string, ids: string[]) =>
+      call("PUT", `/admin-api/products/${productId}/images-order`, AdminImageList, { ids }),
+    deleteImage: (productId: string, imageId: string) =>
+      call("DELETE", `/admin-api/products/${productId}/images/${imageId}`, AdminImageList),
     categories: () => call("GET", "/catalogue/categories", CategoryList),
     groups: () => call("GET", "/catalogue/groups", GroupList),
   };

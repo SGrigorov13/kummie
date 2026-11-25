@@ -54,8 +54,16 @@ const EnvSchema = z.object({
   FAKE_PAYMENT_SECRET: z.string().optional(),
   /** Public address of this API, used for the provider's return pages (e.g. https://api.kummie.eu). */
   API_URL: z.string().url().default("http://localhost:3001"),
-  /** Public base URL of uploaded media (product images). */
+  /**
+   * Public base URL of product photos. A path such as "/media" means "served by this API"
+   * (API_URL + path); a full URL points at another host serving MEDIA_DIR.
+   */
   MEDIA_BASE_URL: z.string().min(1).default("/media"),
+  /**
+   * Folder for product photos, relative to the app root or absolute. Production: outside the
+   * deployed app (e.g. /home/<account>/kummie-media) so a release never deletes photos.
+   */
+  MEDIA_DIR: z.string().min(1).default("media"),
   /** Folder with Drizzle SQL migrations, relative to the app root. */
   MIGRATIONS_DIR: z.string().min(1).default("drizzle"),
 });
@@ -104,4 +112,10 @@ export function originList(value: string): string[] {
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
+}
+
+/** MEDIA_BASE_URL as an absolute URL ("/media" → API_URL + "/media"). */
+export function mediaBaseUrl(config: Pick<Config, "MEDIA_BASE_URL" | "API_URL">): string {
+  const base = config.MEDIA_BASE_URL.replace(/\/$/, "");
+  return base.startsWith("/") ? `${config.API_URL.replace(/\/$/, "")}${base}` : base;
 }

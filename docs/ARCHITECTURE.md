@@ -207,7 +207,7 @@ push if allowed; D-031).
   | `apps/admin` | Static files (Vite build) on `admin.kummie.eu`, served by Apache, protected by API auth |
   | PostgreSQL | cPanel PostgreSQL database; small connection pool (≤ 10) |
   | Background work | cPanel cron runs `tick` every 5 minutes; every job is idempotent and time-boxed |
-  | Images | Uploaded to disk under the account, served by Apache with long cache headers; move to object storage only if disk or IO limits bite |
+  | Images | Uploaded through the admin, resized with `sharp` into AVIF/WebP (D-061) and stored on disk under the account (`MEDIA_DIR`, outside the deployed app); served under `/media` with a one-year cache (by the API, or directly by LiteSpeed); move to object storage only if disk or IO limits bite |
   | Email | Through an email adapter; the hosting mailbox allows ~300 outgoing emails/hour, so transactional email moves to a dedicated SMTP service if volume grows |
 
 - **Builds never run on the server** (not enough RAM). GitHub Actions builds each app; a deploy

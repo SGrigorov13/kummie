@@ -30,12 +30,24 @@ export const Group = z.object({
 export type Group = z.infer<typeof Group>;
 export const GroupList = z.object({ items: z.array(Group) });
 
+export const ImageSource = z.object({
+  type: z.enum(["image/avif", "image/webp"]),
+  /** "<url> 480w, <url> 960w, …" */
+  srcset: z.string(),
+});
+export type ImageSource = z.infer<typeof ImageSource>;
+
 export const ProductImage = z.object({
+  /** Fallback for browsers without <picture> sources (WebP, at most 960 px). */
   url: z.string(),
+  /** Size of the largest stored variant (for the aspect ratio). */
   width: z.number().int().positive(),
   height: z.number().int().positive(),
   alt: Localized,
+  /** Responsive variants, AVIF first (D-061). */
+  sources: z.array(ImageSource),
 });
+export type ProductImage = z.infer<typeof ProductImage>;
 
 /** What a product card needs: 3:4 image, title, one sourcing badge, price, at most one state badge. */
 export const ProductCard = z.object({

@@ -1,8 +1,10 @@
+import { resolve } from "node:path";
 import { accountJobHandlers } from "./accounts/erasure";
+import { DiskStorage } from "./adapters/disk-storage";
 import { buildApp } from "./app";
 import { createSecretBox } from "./auth/crypto";
 import { createPgCatalogueRepository } from "./catalogue/pg-repository";
-import { loadConfig, originList, trustProxyOption } from "./config";
+import { loadConfig, mediaBaseUrl, originList, trustProxyOption } from "./config";
 import { createDatabase, type DatabaseHandle } from "./db/client";
 import { FakePaymentProvider } from "./adapters/fake-payment";
 import { createEmailAdapter } from "./email/factory";
@@ -36,7 +38,9 @@ async function main() {
     }
   };
 
-  const catalogue = database ? createPgCatalogueRepository(database.db, config.MEDIA_BASE_URL) : undefined;
+  const mediaUrlBase = mediaBaseUrl(config);
+  const media = new DiskStorage(resolve(process.cwd(), config.MEDIA_DIR), mediaUrlBase);
+  const catalogue = database ? createPgCatalogueRepository(database.db, mediaUrlBase) : undefined;
   const cookieSecure = config.COOKIE_SECURE
     ? config.COOKIE_SECURE === "true"
     : config.NODE_ENV === "production";
@@ -73,6 +77,7 @@ async function main() {
           secretBox: createSecretBox(config.STAFF_SECRET_KEY),
           allowedOrigins: originList(config.ADMIN_ORIGINS),
           cookieSecure,
+          storage: media,
           ...(shop ? { shop } : {}),
         }
       : undefined;
@@ -83,6 +88,7 @@ async function main() {
     admin,
     accounts,
     shop,
+    media,
     trustProxy: trustProxyOption(config.TRUST_PROXY),
   });
   if (config.NODE_ENV === "production" && config.EMAIL_TRANSPORT === "file")

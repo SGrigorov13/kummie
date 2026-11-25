@@ -284,3 +284,22 @@ export const NapUpdateInput = z.object({
   changedOn: z.iso.date(),
   note: z.string().trim().max(300).nullable(),
 });
+/** Product photos in the editor (D-061). */
+export const AdminImage = z.object({
+  id: z.string(),
+  url: z.string(),
+  thumbUrl: z.string(),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  alt: z.object({ bg: z.string(), en: z.string() }),
+  position: z.number().int(),
+});
+export type AdminImage = z.infer<typeof AdminImage>;
+export const AdminImageList = z.object({ items: z.array(AdminImage) });
+export type AdminImageList = z.infer<typeof AdminImageList>;
+export const ImageAltInput = z.object({
+  alt: z.object({ bg: z.string().trim().max(200), en: z.string().trim().max(200) }),
+});
+export type ImageAltInput = z.infer<typeof ImageAltInput>;
+export const ImageOrderInput = z.object({ ids: z.array(z.string().uuid()).min(1).max(30) });
+export type ImageOrderInput = z.infer<typeof ImageOrderInput>;

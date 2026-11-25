@@ -530,6 +530,30 @@ export const en: Messages = {
     "NRA: {count} change(s) to Appendix 33 waiting to be submitted (at the latest in {days} days). See “Go-live readiness”.",
   "shop.salesClosed": "The shop is not taking orders yet. Opening soon!",
 
+  // ---- Product photos (D-061) ----
+  "admin.photos": "Photos",
+  "admin.photos.lead":
+    "The first photo is the one in the catalogue. Only photos of the product itself, taken by us or by the supplier with the right to use them — no artist photos, logos or cover art apart from the product. The system makes smaller copies and removes hidden data (EXIF, GPS).",
+  "admin.photos.none": "No photos yet — the shop shows a striped tile with the star.",
+  "admin.photos.saveFirst": "Save the product to add photos.",
+  "admin.photos.main": "Main",
+  "admin.photos.altBg": "Description for blind users (BG)",
+  "admin.photos.altEn": "Description for blind users (EN)",
+  "admin.photos.saveAlt": "Save description",
+  "admin.photos.up": "earlier",
+  "admin.photos.down": "later",
+  "admin.photos.delete": "Delete",
+  "admin.photos.confirmDelete": "Delete this photo? This cannot be undone.",
+  "admin.photos.add": "Add photos",
+  "admin.photos.rules":
+    "JPEG, PNG, WebP or AVIF, at least 480 px wide, up to 20 MB; up to 12 photos. Best 3:4 (portrait), at least 1600 px.",
+  "admin.photos.uploading": "Uploading {n} of {total}…",
+  "admin.photos.uploaded": "Uploaded: {count}",
+  "admin.photos.err.image_too_small": "the photo is narrower than 480 px",
+  "admin.photos.err.image_unsupported": "the file is not a JPEG, PNG, WebP or AVIF photo",
+  "admin.photos.err.image_too_large": "the file is over 20 MB",
+  "admin.photos.err.too_many_images": "at most 12 photos per product",
+
   // ---- Groups and calendar ----
   follow: "Follow",
   following: "Following",
