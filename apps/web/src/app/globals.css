@@ -657,6 +657,15 @@ code {
 .product__media .shot {
   border-radius: var(--kum-radius-lg);
 }
+.product__more {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--kum-space) * 2);
+  margin-top: calc(var(--kum-space) * 2);
+}
+.product__more .shot {
+  border-radius: var(--kum-radius-md);
+}
 
 /* ---------- Price ---------- */
 .price {
