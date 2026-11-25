@@ -8,9 +8,10 @@ import { AdminProvider, api, useAdmin } from "./context";
 import { OrderDetailView, Orders } from "./Orders";
 import { ProductEditor } from "./ProductEditor";
 import { Reports } from "./Reports";
+import { NapReminderBanner, SalesReadiness } from "./SalesReadiness";
 import { SignIn } from "./SignIn";
 
-type Section = "dashboard" | "catalog" | "company" | "orders" | "reports" | "batches" | "hub";
+type Section = "dashboard" | "catalog" | "company" | "orders" | "reports" | "sales" | "batches" | "hub";
 
 const NAV: { id: Section; label: MessageKey; roles?: Staff["role"][] }[] = [
   { id: "dashboard", label: "admin.dashboard" },
@@ -20,6 +21,7 @@ const NAV: { id: Section; label: MessageKey; roles?: Staff["role"][] }[] = [
   { id: "batches", label: "admin.batches" },
   { id: "hub", label: "admin.hub" },
   { id: "company", label: "admin.company", roles: ["admin"] },
+  { id: "sales", label: "admin.gate", roles: ["admin"] },
 ];
 
 /**
@@ -115,6 +117,7 @@ function Shell({ langButton, onSignOut }: { langButton: React.ReactNode; onSignO
             </button>
           </div>
         </header>
+        {section === "dashboard" ? <NapReminderBanner /> : null}
         {section === "dashboard" ? <Dashboard /> : null}
         {section === "catalog" && !editing ? <Catalogue onOpen={setEditing} /> : null}
         {section === "catalog" && editing ? (
@@ -122,6 +125,7 @@ function Shell({ langButton, onSignOut }: { langButton: React.ReactNode; onSignO
         ) : null}
         {section === "company" ? <CompanySettings /> : null}
         {section === "reports" ? <Reports /> : null}
+        {section === "sales" ? <SalesReadiness /> : null}
         {section === "orders" && !openOrder ? <Orders onOpen={setOpenOrder} /> : null}
         {section === "orders" && openOrder ? (
           <OrderDetailView id={openOrder} onClose={() => setOpenOrder(null)} />
