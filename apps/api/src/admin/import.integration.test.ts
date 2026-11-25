@@ -16,7 +16,7 @@ import { createStaff } from "./staff-cli";
 /** Same safety rule as the other database tests: only databases named *_test, which are wiped. */
 const url = process.env.TEST_DATABASE_URL;
 const safe = !!url && /\/[^/?]+_test(\?|$)/.test(url);
-const ADMIN = "http://localhost:5173";
+const ADMIN = "http://localhost:5180";
 const PASSWORD = "staff-test-Passw0rd!";
 
 const header = IMPORT_COLUMNS.map((c) => c.key).join(";");

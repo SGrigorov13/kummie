@@ -21,7 +21,7 @@ const url = process.env.TEST_DATABASE_URL;
 const safe = !!url && /\/[^/?]+_test(\?|$)/.test(url);
 
 const WEB = "http://localhost:3000";
-const ADMIN = "http://localhost:5173";
+const ADMIN = "http://localhost:5180";
 const PASSWORD = "a long test-only password";
 const STAFF_PASSWORD = "staff-test-Passw0rd!";
 const ADDRESS = {

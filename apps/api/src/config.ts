@@ -21,7 +21,7 @@ const EnvSchema = z.object({
   /** 32 random bytes, base64 — encrypts staff 2FA secrets. Without it the staff API is off. */
   STAFF_SECRET_KEY: z.string().optional(),
   /** Comma-separated origins of the admin app allowed to call the staff API with cookies. */
-  ADMIN_ORIGINS: z.string().default("http://localhost:5173,http://127.0.0.1:5173"),
+  ADMIN_ORIGINS: z.string().default("http://localhost:5180,http://127.0.0.1:5180"),
   /** Secure (HTTPS-only) cookies; defaults to on in production. */
   COOKIE_SECURE: z.enum(["true", "false"]).optional(),
   /** Public address of the shop, used in e-mail links (e.g. https://kummie.eu). */
