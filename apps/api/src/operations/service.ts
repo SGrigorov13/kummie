@@ -1,4 +1,11 @@
-import type { BatchDetail, BatchSummary, HubAddress, PackInput, PackOrder } from "@kummie/contracts";
+import type {
+  BatchDetail,
+  BatchSummary,
+  HubAddress,
+  PackingSlip,
+  PackInput,
+  PackOrder,
+} from "@kummie/contracts";
 import {
   BATCH_ORDER_STATUSES,
   consolidateLines,
@@ -23,6 +30,7 @@ import {
   orderLines,
   orders,
   parcels,
+  productCompliance,
   settings,
   supplierOffers,
   suppliers,
@@ -625,6 +633,53 @@ export async function parcelLabel(db: Database, parcelId: string) {
     .from(parcels)
     .where(eq(parcels.id, parcelId));
   return row ?? null;
+}
+
+/** Days the customer has to withdraw (ЗЗП, distance contracts). */
+const WITHDRAWAL_DAYS = 14;
+
+/**
+ * The A4 packing list for one order being packed (D-065): the lines, safety information and
+ * warnings in the customer's language, the return address (the hub, D-063) and how to withdraw.
+ * Only for orders at the hub, so the hub role sees nothing beyond the parcels it packs.
+ */
+export async function packingSlip(deps: OperationsDeps, orderId: string): Promise<PackingSlip> {
+  const { db } = deps;
+  const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+  if (!order) throw new OperationsError("not_found", "No such order");
+  if (order.status !== "received_at_hub" && order.status !== "packed")
+    throw new OperationsError("not_allowed", "Only orders at the hub have a packing list");
+  const lines = await db
+    .select()
+    .from(orderLines)
+    .where(eq(orderLines.orderId, orderId))
+    .orderBy(asc(orderLines.position));
+  const productIds = [...new Set(lines.map((l) => l.productId).filter((id): id is string => !!id))];
+  const compliance = productIds.length
+    ? await db.select().from(productCompliance).where(inArray(productCompliance.productId, productIds))
+    : [];
+  const locale = order.locale;
+  const pick = (text: { bg: string; en: string } | null | undefined) => text?.[locale]?.trim() || null;
+  const safety = productIds.flatMap((productId) => {
+    const c = compliance.find((row) => row.productId === productId);
+    const info = pick(c?.safetyInfo);
+    const warnings = (c?.warnings ?? []).map(pick).filter((w): w is string => !!w);
+    if (!info && warnings.length === 0) return [];
+    return [{ title: lines.find((l) => l.productId === productId)?.title ?? "", info, warnings }];
+  });
+  const site = `${deps.webUrl.replace(/\/$/, "")}/${locale}`;
+  return {
+    orderNumber: orderNumber(order.seq),
+    orderedAt: (order.paidAt ?? order.createdAt).toISOString(),
+    locale,
+    recipient: { name: order.address.name, city: order.address.city, country: order.country },
+    lines: lines.map((l) => ({ sku: l.sku, title: l.title, version: l.version, qty: l.qty })),
+    safety,
+    returnAddress: await readHubAddress(db),
+    orderUrl: `${site}/orders/${order.id}`,
+    withdrawalUrl: `${site}/legal/withdrawal`,
+    withdrawalDays: WITHDRAWAL_DAYS,
+  };
 }
 
 // ---------------------------------------------------------------------------------------------

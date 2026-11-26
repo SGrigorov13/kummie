@@ -18,6 +18,7 @@ import {
   BatchList,
   HandOverResult,
   OfferImportResult,
+  PackingSlip,
   OperationsRun,
   OperationsSettings,
   PackQueue,
@@ -166,6 +167,7 @@ export function createAdminClient({
     packQueue: () => call("GET", "/admin-api/hub/packing", PackQueue),
     packOrder: (id: string, input: PackInput) =>
       call("POST", `/admin-api/hub/orders/${id}/pack`, PackQueue, input),
+    packingSlip: (id: string) => call("GET", `/admin-api/hub/orders/${id}/packing-slip`, PackingSlip),
     cancelParcel: (id: string) => call("POST", `/admin-api/hub/parcels/${id}/cancel`, PackQueue, {}),
     /** Label PDF (direct link; the staff cookie goes along). */
     labelUrl: (parcelId: string) => `${base}/admin-api/hub/parcels/${parcelId}/label`,

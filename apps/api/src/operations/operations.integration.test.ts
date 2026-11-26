@@ -2,7 +2,13 @@ import { randomBytes } from "node:crypto";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import type { BatchDetail, LoginResponse, PackQueue, SupplierOfferList } from "@kummie/contracts";
+import type {
+  BatchDetail,
+  LoginResponse,
+  PackingSlip,
+  PackQueue,
+  SupplierOfferList,
+} from "@kummie/contracts";
 import { eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -16,7 +22,7 @@ import { buildApp } from "../app";
 import { createSecretBox } from "../auth/crypto";
 import { timeStep, totpCode } from "../auth/totp";
 import { createDatabase, type DatabaseHandle } from "../db/client";
-import { batches, orders, products, variants } from "../db/schema";
+import { batches, orders, productCompliance, products, variants } from "../db/schema";
 import { seed } from "../db/seed";
 import { processDueJobs } from "../jobs/outbox";
 import { runOperations, type OperationsDeps } from "./service";
@@ -260,6 +266,37 @@ describe.skipIf(!safe)("M2 operations with the test partners on PostgreSQL", () 
     await call("POST", `/admin-api/hub/batches/${batch?.id}/done`, {}, true);
     expect(await status(id)).toBe("received_at_hub");
 
+    // D-065: the A4 packing list — the customer's language, warnings, return address, no contact data.
+    const [product] = await handle.db
+      .select({ id: variants.productId })
+      .from(variants)
+      .where(eq(variants.sku, sku));
+    await handle.db
+      .update(productCompliance)
+      .set({
+        safetyInfo: { bg: "Само за декорация.", en: "Decoration only." },
+        warnings: [{ bg: "Съдържа малки части.", en: "Contains small parts." }],
+        safetyNone: false,
+      })
+      .where(eq(productCompliance.productId, product?.id ?? ""));
+    const slipResponse = await call("GET", `/admin-api/hub/orders/${id}/packing-slip`, undefined, true);
+    expect(slipResponse.statusCode).toBe(200);
+    const slip = slipResponse.json() as PackingSlip;
+    expect(slip).toMatchObject({
+      locale: "bg",
+      recipient: { name: "Мария Петрова", city: "София", country: "BG" },
+      lines: [{ sku, qty: 2 }],
+      safety: [{ info: "Само за декорация.", warnings: ["Съдържа малки части."] }],
+      returnAddress: { name: "KUMMIE пункт", line1: "ул. Пункт 1" },
+      withdrawalDays: 14,
+      withdrawalUrl: `${WEB}/bg/legal/withdrawal`,
+      orderUrl: `${WEB}/bg/orders/${id}`,
+    });
+    expect(slip.orderNumber).toMatch(/^KUM-/);
+    expect(slipResponse.body).not.toContain("maria@kummie.test");
+    expect(slipResponse.body).not.toContain("888 123 456");
+    expect(slipResponse.body).not.toContain("Шипка");
+
     // Packing: a wrong count is refused; the right one makes the label.
     const wrong = await call(
       "POST",
@@ -291,6 +328,10 @@ describe.skipIf(!safe)("M2 operations with the test partners on PostgreSQL", () 
     );
     expect(handed.statusCode).toBe(200);
     expect(await status(id)).toBe("handed_to_carrier");
+    // Once with the courier, the parcel's packing list is no longer available at the hub.
+    expect((await call("GET", `/admin-api/hub/orders/${id}/packing-slip`, undefined, true)).statusCode).toBe(
+      409,
+    );
     clock = new Date("2026-11-26T13:00:00Z"); // label + 26 h
     await runOperations(operations, clock);
     expect(await status(id)).toBe("delivered");
