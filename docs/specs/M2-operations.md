@@ -11,8 +11,9 @@ adapters replace them without changing the flow.
 
 1. Платена поръчка влиза в **сборната поръчка** на доставчика (за всеки продукт е записано от
    кой доставчик го взимаме и на каква цена).
-2. В определени дни (предложение: понеделник, сряда и петък в 12:00) сборната поръчка се
-   **затваря сама** и заминава към доставчика като файл (CSV) — една поръчка вместо десетки.
+2. В понеделник и четвъртък в 08:30 сборната поръчка се **затваря сама** и системата подготвя
+   файла (CSV) за доставчика — една поръчка вместо десетки. Ти я сваляш, изпращаш я по имейл и
+   отбелязваш „Изпратих я“ (решение D-063).
 3. Когато доставчикът изпрати, отбелязваш „Изпратена“ (с номер за проследяване, ако има).
 4. В **пункта в България**: сканираш или броиш получените бройки. Системата показва липси.
 5. **Опаковане:** за всяка клиентска поръчка виждаш какво да сложиш в кашона; сканираш всеки
@@ -23,10 +24,10 @@ adapters replace them without changing the flow.
 **На всяка стъпка клиентът получава имейл** (concept v3 §1a). Ти виждаш всичко в Админ →
 Сборни поръчки и Пункт България.
 
-**Пример:** Мария поръчва албум във вторник. В сряда в 12:00 сборната поръчка към K-Moon се
-затваря с 14 албума от 9 поръчки и заминава. В петък пратката пристига в пункта: Иван сканира 14
-албума, после опакова поръчката на Мария, принтира етикета и я предава на куриера. В събота
-Мария получава „Доставена“.
+**Пример:** Мария поръчва албум във вторник. В четвъртък в 08:30 сборната поръчка към K-Moon се
+затваря с 14 албума от 9 поръчки; ти я пращаш на доставчика. Следващата седмица пратката пристига
+в пункта: разпределителят сканира 14 албума, опакова поръчката на Мария, принтира етикета и я
+предава на куриера. На следващия ден Мария получава „Доставена“.
 
 **Какво още НЕ е в M2:** истинските Speedy/Econt и доставчикът (след договорите), избор на
 офис/автомат в касата (идва с истинските куриери — тестовият вече има списък), частично връщане
@@ -34,19 +35,19 @@ adapters replace them without changing the flow.
 
 ---
 
-## A. Decisions (proposals — the owner confirms or changes them)
+## A. Decisions (owner answers 2026-11-26: D-063, D-064)
 
-| # | Topic | Proposal | Status |
+| # | Topic | Decision | Status |
 |---|---|---|---|
-| B1 | **When batches close** | Per supplier schedule; default **Mon, Wed, Fri at 12:00 Sofia time** (every 2–3 days, concept §1). Changeable per supplier in the admin. | Proposed |
-| B2 | **Minimum order value** | Per supplier, default **0**. If set and not reached, the batch waits for the next closing time — at most once, then it goes anyway so customers never wait more than ~5 days. | Proposed |
-| B3 | **Which supplier for a product** | Each variant has one or more **offers** (supplier, supplier SKU, cost). The cheapest active offer wins; staff can deactivate an offer. A paid order with a product without an offer stays "paid" and is shown as a problem. | Proposed |
-| B4 | **Hub address** | Entered in Admin → Сборни поръчки → Пункт (name, address); used as "deliver to" on purchase orders. | Owner fills in |
-| B5 | **Short deliveries** | When the hub receives fewer units than ordered, the affected orders stay at "Изпратена от доставчика" and appear under "Липси" for staff to decide (wait, cancel the line and refund — refund of a part comes with returns). | Proposed |
-| B6 | **Carrier per country** | One carrier per destination country, chosen in config; until contracts every country uses the test courier. | Proposed |
-| B7 | **Parcel weight** | Products have no weight yet; the packer types the weight (default 0.5 kg per item). A weight field on variants comes with the real couriers. | Proposed |
-| B8 | **Labels** | A6 PDF (105 × 148 mm), the usual thermal label size; the browser prints it. | Proposed |
-| B9 | **Scanners** | Any USB barcode scanner that types the code and Enter; the screens also accept typing. Product codes: our SKU or the supplier SKU. | Decided |
+| B1 | **When batches close** | Per supplier schedule; default **Mon and Thu at 08:30 Sofia time** while orders are few; no holiday calendar (the owner posts a notice on delays and can close or postpone by hand). Launch with European distributors only. | Decided, built |
+| B2 | **Minimum order value** | Per supplier, default 0. Below it the batch waits for the next closing, **at most 7 days past its first closing time**, then goes anyway. | Decided, built |
+| B3 | **Which supplier for a product** | Offers per variant (supplier, supplier SKU, cost). **EU supplier first**, then the cheapest. Offers by hand or **price-list import (CSV)**; roles admin and content; costs never shown to customers. **No offer → cannot publish**; all offers inactive → **"Няма наличност"**, cart refuses it. | Decided, built |
+| B4 | **Hub** | The address of „СГ Корпорейшън“ ЕООД, entered in Admin → Сборни поръчки → Пункт; the owner or a distributor (role hub) receives, splits and ships. **Also the return address.** | Decided; owner enters the address |
+| B5 | **Short, damaged, extra units** | Short or damaged: ask the supplier (photo and claim if damaged); without the units within 3 working days the customer gets the rest plus a partial refund and credit note (staff confirm the refund, Q25). Extra units: recorded, owner decides. | Decided; refund flow in part 2 |
+| B6 | **Couriers** | **Speedy, Econt, BoxNow**; address, office and locker from day one; prices per country, courier and method — set with the courier offers. Test courier until then. | Decided; contracts pending |
+| B7 | **Parcel weight** | The packer types the weight for now; box sizes not known yet. | Decided |
+| B8 | **Labels, printer, scanner** | A6 PDF label from the courier; printer and scanner discussed separately with the owner (low volume at start). Parcel contents: **printed packing list + thank-you card or sticker** (Q24). | Open (equipment) |
+| B9 | **Scanners** | Any USB barcode scanner that types the code and Enter; the screens also accept typing. Product codes: our SKU or the supplier SKU. | Decided (scanner optional, see B8) |
 | B10 | **Order status from batches** | An order moves only when **all** its lines have moved: batched → ordered from supplier → supplier shipped → received at hub. One order can be in batches of several suppliers. | Decided |
 
 ## B. Tasks
@@ -72,9 +73,36 @@ adapters replace them without changing the flow.
    links come with the real couriers)*
 8. Tests: core unit tests; database tests for the whole path paid → delivered with the test
    partners. *(done)*
-9. **Next part of M2:** missing units at the hub (cancel the line and refund part of the order,
-   credit note), returns after withdrawal, office/locker choice at checkout, real carrier and
-   supplier adapters once the contracts exist.
+9. **Owner decisions B1–B8 (D-063)** *(done, migration 0007)*: schedule with minutes (Mon and Thu
+   08:30); the 7-day minimum wait (`first_closes_at`); EU suppliers first (`in_eu`); purchase
+   orders sent by staff (`auto_send` off: download `PO-….csv`, then "I sent it" → ordered); offers
+   for the content role and price-list import; the supplier-offer publishing gate and
+   "out of stock" when every offer is inactive.
+
+## B2. Next part of M2 (owner answers D-064)
+
+10. **Missing and damaged units:** "Липси" list after receiving; claim to the supplier with photo;
+    after 3 working days staff **confirm** the partial refund (card refund through the payment
+    adapter, credit note, Kummies re-counted per D-032) and the customer gets an e-mail; the rest
+    of the order ships.
+11. **Withdrawal and returns:** "Откажи се" in the customer's order up to 14 days after delivery,
+    choice of products; return form with the customer's courier choice and the minimum fee
+    (amounts with the courier prices); refund when staff accept the parcel at the hub; per-product
+    decision what happens to the goods (back to the supplier / kept).
+12. **Complaints register (ЗЗП):** number, received date, one-month deadline, reminders, outcome.
+13. **Split shipments:** an order whose parts reach the hub more than 3 days apart ships in parts.
+14. **Calculated delivery estimate:** next closing + supplier transit days + courier days per
+    country; staff enter the transit days; shown on the product page and in the cart.
+15. **Office/locker on a map** at checkout (courier map widget loaded only when opened, consent
+    rules for third-party scripts; searchable list as fallback) — with the real courier adapters.
+16. **Delivery prices per country, courier and method** (D-063 B6) — when the offers arrive.
+17. **Packing list** printed with each parcel (products, return address, withdrawal steps).
+18. **Landed cost and margin report:** transport and duties per supplier shipment at receiving,
+    margin per product and order, export for the ERP.
+19. **Order ratings:** the customer rates a delivered order; staff see low ratings at once to make
+    it right. Compensation never depends on the rating; no bought or filtered ratings; public
+    display only with a note on how they are checked; never on Teen routes.
+20. **Real adapters** for Speedy, Econt, BoxNow and the supplier once the contracts exist.
 
 ## C. Definition of done
 
