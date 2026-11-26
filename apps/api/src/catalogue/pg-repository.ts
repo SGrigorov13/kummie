@@ -11,6 +11,7 @@ import {
   variants,
 } from "../db/schema";
 import { productImageView } from "../media/urls";
+import { supplierAvailable } from "./availability";
 import type { CatalogueRepository } from "./repository";
 
 type Country = "BG" | "RO" | "GR" | "PL";
@@ -188,7 +189,13 @@ export function createPgCatalogueRepository(db: Database, mediaBaseUrl: string):
 
       const [variantRows, complianceRows, imageRows] = await Promise.all([
         db
-          .select()
+          .select({
+            id: variants.id,
+            sku: variants.sku,
+            version: variants.version,
+            priceCents: variants.priceCents,
+            available: supplierAvailable(),
+          })
           .from(variants)
           .where(and(eq(variants.productId, row.id), eq(variants.active, true)))
           .orderBy(asc(variants.position)),
@@ -213,6 +220,7 @@ export function createPgCatalogueRepository(db: Database, mediaBaseUrl: string):
           sku: v.sku,
           version: v.version,
           priceCents: v.priceCents,
+          available: v.available,
         })),
         compliance: {
           dispatchEstimate: { bg: c.dispatchEstimateBg, en: c.dispatchEstimateEn },

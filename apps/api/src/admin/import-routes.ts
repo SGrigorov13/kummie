@@ -94,6 +94,7 @@ export function importRoutes({ db }: AdminDeps): FastifyPluginAsyncZod {
         const report = (
           applied: boolean,
           statuses = new Map<string, "draft" | "published" | "archived">(),
+          blocked = new Map<string, ReturnType<typeof missingComplianceFields>>(),
         ) => ({
           applied,
           issues: issues.toSorted((a, b) => a.line - b.line),
@@ -103,15 +104,19 @@ export function importRoutes({ db }: AdminDeps): FastifyPluginAsyncZod {
             action: bySlug.has(p.slug) ? ("update" as const) : ("create" as const),
             variants: p.input.variants.length,
             publish: p.publish,
-            missing: missingComplianceFields({
-              title: p.input.title,
-              sourcing: p.input.sourcing,
-              state: p.input.state,
-              isLimited: p.input.isLimited,
-              versions: p.input.variants.map((v) => v.version),
-              pricesCents: p.input.variants.map((v) => v.priceCents),
-              ...p.input.compliance,
-            }),
+            // What blocked publishing in the database (e.g. no supplier offer yet, D-063) or, before
+            // saving, what the file itself is missing.
+            missing:
+              blocked.get(p.slug) ??
+              missingComplianceFields({
+                title: p.input.title,
+                sourcing: p.input.sourcing,
+                state: p.input.state,
+                isLimited: p.input.isLimited,
+                versions: p.input.variants.map((v) => v.version),
+                pricesCents: p.input.variants.map((v) => v.priceCents),
+                ...p.input.compliance,
+              }),
             status: statuses.get(p.slug) ?? bySlug.get(p.slug)?.status ?? null,
           })),
         });
@@ -119,6 +124,7 @@ export function importRoutes({ db }: AdminDeps): FastifyPluginAsyncZod {
         if (dryRun || issues.length > 0) return report(false);
 
         const statuses = new Map<string, "draft" | "published" | "archived">();
+        const blocked = new Map<string, ReturnType<typeof missingComplianceFields>>();
         await db.transaction(async (tx) => {
           const t = tx as unknown as Database;
           for (const p of parsed.products) {
@@ -126,10 +132,11 @@ export function importRoutes({ db }: AdminDeps): FastifyPluginAsyncZod {
             let status = bySlug.get(p.slug)?.status ?? "draft";
             if (p.publish && status !== "published") {
               const draft = await loadComplianceDraft(t, id);
-              if (draft && missingComplianceFields(draft).length === 0) {
+              const missing = draft ? missingComplianceFields(draft) : [];
+              if (draft && missing.length === 0) {
                 await publishProduct(t, id);
                 status = "published";
-              }
+              } else if (missing.length > 0) blocked.set(p.slug, missing);
             }
             statuses.set(p.slug, status);
           }
@@ -138,7 +145,7 @@ export function importRoutes({ db }: AdminDeps): FastifyPluginAsyncZod {
           created: parsed.products.filter((p) => !bySlug.has(p.slug)).length,
           updated: parsed.products.filter((p) => bySlug.has(p.slug)).length,
         });
-        return report(true, statuses);
+        return report(true, statuses, blocked);
       },
     );
   };

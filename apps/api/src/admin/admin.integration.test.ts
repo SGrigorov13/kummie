@@ -8,7 +8,7 @@ import { buildApp } from "../app";
 import { createSecretBox } from "../auth/crypto";
 import { timeStep, totpCode } from "../auth/totp";
 import { createDatabase, type DatabaseHandle } from "../db/client";
-import { auditLog, staffUsers } from "../db/schema";
+import { auditLog, staffUsers, supplierOffers, suppliers } from "../db/schema";
 import { seed } from "../db/seed";
 import { createStaff } from "./staff-cli";
 
@@ -188,6 +188,7 @@ describe.skipIf(!safe)("staff API on PostgreSQL", () => {
       "euResponsiblePerson",
       "safety",
       "returnExceptions",
+      "supplierOffer",
     ]);
 
     const blocked = await post(`/admin-api/products/${product.id}/publish`, {});
@@ -219,7 +220,15 @@ describe.skipIf(!safe)("staff API on PostgreSQL", () => {
       headers: { cookie },
       payload: complete,
     });
-    expect((updated.json() as AdminProduct).missing).toEqual([]);
+    // D-063: a product we cannot buy from a supplier is not published.
+    expect((updated.json() as AdminProduct).missing).toEqual(["supplierOffer"]);
+    await handle.db.insert(suppliers).values({ id: "kmoon", name: "K-Moon" });
+    await handle.db.insert(supplierOffers).values({
+      variantId: product.variants[0]?.id ?? "",
+      supplierId: "kmoon",
+      supplierSku: "KM-POUCH",
+      unitCostCents: 500,
+    });
 
     const published = await post(`/admin-api/products/${product.id}/publish`, {});
     expect((published.json() as AdminProduct).status).toBe("published");

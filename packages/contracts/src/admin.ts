@@ -106,6 +106,7 @@ export const ComplianceField = z.enum([
   "euResponsiblePerson",
   "safety",
   "returnExceptions",
+  "supplierOffer",
 ]);
 
 export const AdminVariant = z.object({

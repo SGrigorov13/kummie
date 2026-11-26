@@ -7,6 +7,7 @@ import { randomToken, sha256 } from "../auth/crypto";
 import type { Database } from "../db/client";
 import { cartLines, carts, productCompliance, products, variants } from "../db/schema";
 import { loadCompanySettings } from "../admin/settings-routes";
+import { supplierAvailable } from "../catalogue/availability";
 
 export const CART_COOKIE = "kummie_cart";
 const CART_DAYS = 60;
@@ -112,6 +113,7 @@ export async function pricedLines(db: Database, cartId: string, country: Country
       version: variants.version,
       priceCents: variants.priceCents,
       variantActive: variants.active,
+      supplierAvailable: supplierAvailable(),
       productId: products.id,
       slug: products.slug,
       title: products.title,
@@ -140,7 +142,10 @@ export async function pricedLines(db: Database, cartId: string, country: Country
     lineTotalCents: r.priceCents * r.qty,
     dispatchEstimate: { bg: r.dispatchBg ?? "", en: r.dispatchEn ?? "" },
     available:
-      r.status === "published" && r.variantActive && ((r.regions ?? []) as string[]).includes(country),
+      r.status === "published" &&
+      r.variantActive &&
+      r.supplierAvailable &&
+      ((r.regions ?? []) as string[]).includes(country),
   }));
 }
 

@@ -12,8 +12,13 @@ export const Supplier = z.object({
   orderEmail: z.string().email().nullable(),
   closeWeekdays: z.array(z.number().int().min(1).max(7)).min(1).max(7),
   closeHour: z.number().int().min(0).max(23),
+  closeMinute: z.number().int().min(0).max(59),
   minOrderCents: z.number().int().min(0),
   ddp: z.boolean(),
+  /** Ships from inside the EU; EU suppliers win over non-EU ones (D-063). */
+  inEu: z.boolean(),
+  /** Purchase orders go out by themselves; off = staff send the file and mark it ordered (D-063). */
+  autoSend: z.boolean(),
   active: z.boolean(),
 });
 export type Supplier = z.infer<typeof Supplier>;
@@ -46,6 +51,18 @@ export const SupplierOfferInput = z.object({
   active: z.boolean(),
 });
 export type SupplierOfferInput = z.infer<typeof SupplierOfferInput>;
+
+/** A supplier price list as CSV text (read in the browser): sku, supplier_sku, unit_cost_eur, active. */
+export const OfferImportInput = z.object({ csv: z.string().min(1).max(2_000_000) });
+export const OfferImportResult = z.object({
+  saved: z.number().int(),
+  issues: z.array(z.object({ row: z.number().int(), message: z.string() })),
+  offers: SupplierOfferList,
+});
+export type OfferImportResult = z.infer<typeof OfferImportResult>;
+
+/** Staff sent the purchase order themselves (D-063): the batch becomes "ordered". */
+export const BatchOrdered = z.object({ supplierReference: z.string().trim().max(80).nullable() });
 
 export const HubAddress = z.object({
   name: z.string().trim().min(1).max(120),

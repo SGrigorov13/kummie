@@ -29,6 +29,7 @@ import {
 } from "../db/schema";
 import { customerCanCancel } from "@kummie/core";
 import { cartView, priceCart, pricedLines, resolveCart } from "./cart-store";
+import { supplierAvailable } from "../catalogue/availability";
 import { documentFileName, renderDocumentPdf } from "../documents/pdf";
 import { loadSalesReadiness, runtimeOf } from "../admin/golive";
 import { changeOrderStatus, StatusChangeError } from "./lifecycle";
@@ -80,11 +81,19 @@ export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
       async (request, reply) => {
         const { variantId, qty, add } = request.body;
         const [variant] = await db
-          .select({ id: variants.id, active: variants.active, status: products.status })
+          .select({
+            id: variants.id,
+            active: variants.active,
+            status: products.status,
+            available: supplierAvailable(),
+          })
           .from(variants)
           .innerJoin(products, eq(products.id, variants.productId))
           .where(eq(variants.id, variantId));
-        if (!variant || (qty > 0 && (!variant.active || variant.status !== "published"))) {
+        if (
+          !variant ||
+          (qty > 0 && (!variant.active || !variant.available || variant.status !== "published"))
+        ) {
           return reply.code(404).send({ error: "unavailable", message: "This product cannot be bought now" });
         }
         const { cart, customerId } = await resolveCart(db, request, reply, { create: true, cookieSecure });

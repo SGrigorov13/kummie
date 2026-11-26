@@ -173,7 +173,9 @@ export async function saveProduct(db: Database, id: string | null, input: Produc
       .from(products)
       .where(eq(products.id, productId));
     if (status?.status === "published") {
-      const draft = await loadComplianceDraft(tx as unknown as Database, productId);
+      // The supplier offer is checked when publishing, not on every edit: a new version needs a
+      // SKU before an offer can point at it (D-063).
+      const draft = await loadComplianceDraft(tx as unknown as Database, productId, false);
       const missing = draft ? missingComplianceFields(draft) : [];
       if (missing.length > 0) throw new PublishBlockedError(missing);
     }

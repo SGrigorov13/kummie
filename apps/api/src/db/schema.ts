@@ -753,16 +753,24 @@ export const suppliers = pgTable("suppliers", {
   name: text("name").notNull(),
   /** Where purchase orders are e-mailed (the test supplier writes files instead). */
   orderEmail: text("order_email"),
-  /** ISO weekdays (1 = Monday) on which the batch closes, Sofia time. */
+  /** ISO weekdays (1 = Monday) on which the batch closes, Sofia time (D-063: Mon and Thu 08:30). */
   closeWeekdays: integer("close_weekdays")
     .array()
     .notNull()
-    .default(sql`'{1,3,5}'`),
-  closeHour: integer("close_hour").notNull().default(12),
+    .default(sql`'{1,4}'`),
+  closeHour: integer("close_hour").notNull().default(8),
+  closeMinute: integer("close_minute").notNull().default(30),
   /** Minimum purchase order value in cents (0 = none, B2). */
   minOrderCents: integer("min_order_cents").notNull().default(0),
   /** Delivered Duty Paid (non-EU suppliers that offer it). */
   ddp: boolean("ddp").notNull().default(false),
+  /** Ships from inside the EU (no customs). EU suppliers win over non-EU ones (D-063, B3). */
+  inEu: boolean("in_eu").notNull().default(true),
+  /**
+   * Purchase orders go out by themselves (adapter). Off (D-063, Q39): the closed batch waits until
+   * staff download the file, send it and mark the batch as ordered.
+   */
+  autoSend: boolean("auto_send").notNull().default(false),
   active: boolean("active").notNull().default(true),
   ...timestamps,
 });
@@ -803,8 +811,10 @@ export const batches = pgTable(
       .references(() => suppliers.id),
     status: batchStatusEnum("status").notNull().default("open"),
     closesAt: timestamp("closes_at", { withTimezone: true }).notNull(),
-    /** How often the closing was postponed for the minimum order value (at most once, B2). */
+    /** How often the closing was postponed for the minimum order value (B2). */
     postponed: integer("postponed").notNull().default(0),
+    /** The batch's first closing time: the minimum order wait counts from here (D-063, B2). */
+    firstClosesAt: timestamp("first_closes_at", { withTimezone: true }),
     /** "PO-2026-0001", set when the batch closes. */
     poReference: text("po_reference"),
     supplierReference: text("supplier_reference"),

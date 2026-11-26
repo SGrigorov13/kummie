@@ -16,7 +16,7 @@ import { buildApp } from "../app";
 import { createSecretBox } from "../auth/crypto";
 import { timeStep, totpCode } from "../auth/totp";
 import { createDatabase, type DatabaseHandle } from "../db/client";
-import { orders, products, variants } from "../db/schema";
+import { batches, orders, products, variants } from "../db/schema";
 import { seed } from "../db/seed";
 import { processDueJobs } from "../jobs/outbox";
 import { runOperations, type OperationsDeps } from "./service";
@@ -188,8 +188,11 @@ describe.skipIf(!safe)("M2 operations with the test partners on PostgreSQL", () 
         orderEmail: null,
         closeWeekdays: [1, 3, 5],
         closeHour: 12,
+        closeMinute: 0,
         minOrderCents: 0,
         ddp: false,
+        inEu: true,
+        autoSend: false,
         active: true,
       },
       true,
@@ -218,14 +221,25 @@ describe.skipIf(!safe)("M2 operations with the test partners on PostgreSQL", () 
     expect(batch?.closesAt).toBe("2026-11-25T10:00:00.000Z");
     expect(batch?.units).toBe(2);
 
-    // Wednesday 12:05: the batch closes and the purchase order goes out (CSV, no customer data).
+    // Wednesday 12:05: the batch closes. D-063: staff download the purchase order (CSV, no
+    // customer data), send it themselves and mark it ordered — only then the customer hears of it.
     clock = new Date("2026-11-25T10:05:00Z");
     expect((await runOperations(operations, clock)).closed).toBe(1);
+    expect(await status(id)).toBe("batched");
+    expect((await runOperations(operations, clock)).closed).toBe(0);
+    const po = await call("GET", `/admin-api/batches/${batch?.id}/purchase-order.csv`, undefined, true);
+    expect(po.headers["content-type"]).toContain("text/csv");
+    expect(po.headers["content-disposition"]).toContain("PO-2026-0001.csv");
+    expect(po.body).toContain(",KM-001,");
+    expect(po.body).not.toContain("Мария");
+    const ordered = await call(
+      "POST",
+      `/admin-api/batches/${batch?.id}/ordered`,
+      { supplierReference: "KM-555" },
+      true,
+    );
+    expect(ordered.statusCode).toBe(200);
     expect(await status(id)).toBe("ordered_from_supplier");
-    const [file] = (await readdir(poDir)).filter((f) => f.endsWith(".csv"));
-    const csv = await readFile(join(poDir, file ?? ""), "utf8");
-    expect(csv).toContain(",KM-001,");
-    expect(csv).not.toContain("Мария");
 
     // Supplier ships; the hub scans two units (one by our SKU, one by the supplier SKU).
     await call("POST", `/admin-api/batches/${batch?.id}/shipped`, { tracking: "IT123" }, true);
@@ -286,6 +300,82 @@ describe.skipIf(!safe)("M2 operations with the test partners on PostgreSQL", () 
     expect(subjects.length).toBeGreaterThanOrEqual(6);
     const page = await app.inject({ method: "GET", url: `/orders/${id}`, headers: { origin: WEB } });
     expect([401, 403, 404]).toContain(page.statusCode); // guests need their key; covered by the shop tests
+  });
+
+  it("prefers the EU supplier, waits up to 7 days for the minimum, sends by itself", async () => {
+    clock = new Date("2026-11-30T05:00:00Z"); // Monday 07:00 in Sofia
+    const schedule = { closeWeekdays: [1, 4], closeHour: 8, closeMinute: 30, ddp: false, active: true };
+    // A cheaper supplier outside the EU, and K-Moon (EU) with a €1000 minimum and automatic sending.
+    await call(
+      "PUT",
+      "/admin-api/suppliers/seoul",
+      {
+        id: "seoul",
+        name: "Seoul",
+        orderEmail: null,
+        ...schedule,
+        minOrderCents: 0,
+        inEu: false,
+        autoSend: true,
+      },
+      true,
+    );
+    // Its price list arrives as an Excel CSV (semicolons, decimal comma); unknown SKUs are reported.
+    const imported = await call(
+      "POST",
+      "/admin-api/suppliers/seoul/offers/import",
+      { csv: `sku;supplier_sku;unit_cost_eur;active\n${sku};se-001;5,00;да\nNOPE-1;SE-X;1;да\n` },
+      true,
+    );
+    expect(imported.json()).toMatchObject({ saved: 1, issues: [{ row: 3 }] });
+    await call(
+      "PUT",
+      "/admin-api/suppliers/kmoon",
+      {
+        id: "kmoon",
+        name: "K-Moon",
+        orderEmail: null,
+        ...schedule,
+        minOrderCents: 100_000,
+        inEu: true,
+        autoSend: true,
+      },
+      true,
+    );
+
+    const id = await paidOrder();
+    expect((await runOperations(operations, clock)).assigned).toBe(1);
+    const open = async () => (await handle.db.select().from(batches).where(eq(batches.status, "open")))[0];
+    expect((await open())?.supplierId).toBe("kmoon");
+    expect((await open())?.closesAt.toISOString()).toBe("2026-11-30T06:30:00.000Z");
+
+    // Below the minimum: Monday and Thursday it waits, the Monday after (7 days) it goes anyway.
+    clock = new Date("2026-11-30T06:35:00Z");
+    expect((await runOperations(operations, clock)).closed).toBe(0);
+    expect((await open())?.closesAt.toISOString()).toBe("2026-12-03T06:30:00.000Z");
+    clock = new Date("2026-12-03T06:35:00Z");
+    expect((await runOperations(operations, clock)).closed).toBe(0);
+    expect((await open())?.closesAt.toISOString()).toBe("2026-12-07T06:30:00.000Z");
+    clock = new Date("2026-12-07T06:35:00Z");
+    expect((await runOperations(operations, clock)).closed).toBe(1);
+    expect(await status(id)).toBe("ordered_from_supplier");
+    const [file] = (await readdir(poDir)).filter((f) => f.endsWith(".csv"));
+    expect(await readFile(join(poDir, file ?? ""), "utf8")).toContain(",KM-001,");
+
+    // Every supplier says "none": the shop says "out of stock" and the cart refuses it.
+    for (const [supplier, supplierSku, unitCostCents] of [
+      ["kmoon", "KM-001", 1100],
+      ["seoul", "SE-001", 500],
+    ] as const)
+      await call(
+        "PUT",
+        `/admin-api/suppliers/${supplier}/offers`,
+        { sku, supplierSku, unitCostCents, active: false },
+        true,
+      );
+    const [variant] = await handle.db.select({ id: variants.id }).from(variants).where(eq(variants.sku, sku));
+    const refused = await call("PUT", "/cart/lines", { variantId: variant?.id, qty: 1, add: true });
+    expect(refused.statusCode).toBe(404);
   });
 
   it("hands over a label only once and only for known parcels", async () => {

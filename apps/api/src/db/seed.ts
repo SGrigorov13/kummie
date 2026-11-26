@@ -94,7 +94,8 @@ export async function seed(db: Database): Promise<SeedResult> {
       });
       return row.id;
     });
-    await publishProduct(db, productId);
+    // Demo products have no supplier offers (D-063 gate applies to real products only).
+    await publishProduct(db, productId, new Date(), { requireOffer: false });
     created += 1;
   }
 

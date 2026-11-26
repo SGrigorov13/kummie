@@ -9,7 +9,7 @@ import { createSecretBox } from "../auth/crypto";
 import { timeStep, totpCode } from "../auth/totp";
 import { IMPORT_COLUMNS } from "../catalogue/import";
 import { createDatabase, type DatabaseHandle } from "../db/client";
-import { products, variants } from "../db/schema";
+import { products, supplierOffers, suppliers, variants } from "../db/schema";
 import { seed } from "../db/seed";
 import { createStaff } from "./staff-cli";
 
@@ -128,9 +128,31 @@ describe.skipIf(!safe)("product import on PostgreSQL", () => {
     ]);
     expect(await handle.db.select().from(products).where(eq(products.slug, "imp-pouch"))).toHaveLength(0);
 
+    // D-063: no supplier offer yet, so the complete product stays a draft and says why.
     const done = await importCsv(csv, false);
     expect(done.applied).toBe(true);
-    expect(done.products.map((p) => [p.slug, p.status])).toEqual([
+    expect(done.products.map((p) => [p.slug, p.status, p.missing.includes("supplierOffer")])).toEqual([
+      ["imp-pouch", "draft", true],
+      ["imp-draft", "draft", true],
+    ]);
+    expect(done.products[0]?.missing).toEqual(["supplierOffer"]);
+
+    // Offers for both versions (the price-list import itself is covered by the operations test).
+    await handle.db.insert(suppliers).values({ id: "kmoon", name: "K-Moon" });
+    const pouch = await handle.db
+      .select()
+      .from(variants)
+      .where(sql`${variants.sku} like 'IMP-POUCH-%'`);
+    await handle.db.insert(supplierOffers).values(
+      pouch.map((v) => ({
+        variantId: v.id,
+        supplierId: "kmoon",
+        supplierSku: `KM-${v.sku}`,
+        unitCostCents: 600,
+      })),
+    );
+    const again = await importCsv(csv, false);
+    expect(again.products.map((p) => [p.slug, p.status])).toEqual([
       ["imp-pouch", "published"],
       ["imp-draft", "draft"],
     ]);

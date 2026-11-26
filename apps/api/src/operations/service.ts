@@ -6,9 +6,12 @@ import {
   nextBatchCloseAt,
   ORDER_STATUSES,
   orderProgressFromBatches,
+  pickOffer,
+  purchaseOrderCsv,
   purchaseOrderReference,
   purchaseOrderTotalCents,
   type OrderStatus,
+  waitForMinimum,
 } from "@kummie/core";
 import { and, asc, desc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import type { CarrierAdapter, TrackingStatus } from "../adapters/carrier";
@@ -107,8 +110,9 @@ async function syncOrders(deps: OperationsDeps, tx: Tx, orderIds: readonly strin
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Puts every paid order into the open batch of the supplier with the cheapest active offer for
- * each line (B3). An order with a product without an offer waits (returned for the admin).
+ * Puts every paid order into the open batch of the supplier chosen for each line (B3, D-063: an EU
+ * supplier first, then the cheapest). An order with a product without an offer waits (returned
+ * for the admin).
  */
 export async function assignPaidOrders(
   deps: OperationsDeps,
@@ -133,8 +137,10 @@ export async function assignPaidOrders(
           supplierId: supplierOffers.supplierId,
           supplierSku: supplierOffers.supplierSku,
           unitCostCents: supplierOffers.unitCostCents,
+          inEu: suppliers.inEu,
           weekdays: suppliers.closeWeekdays,
           hour: suppliers.closeHour,
+          minute: suppliers.closeMinute,
         })
         .from(supplierOffers)
         .innerJoin(suppliers, eq(suppliers.id, supplierOffers.supplierId))
@@ -147,16 +153,15 @@ export async function assignPaidOrders(
             eq(supplierOffers.active, true),
             eq(suppliers.active, true),
           ),
-        )
-        .orderBy(asc(supplierOffers.unitCostCents));
+        );
       const chosen = lines.map((line) => ({
         line,
-        offer: offers.find((o) => o.variantId === line.variantId),
+        offer: pickOffer(offers.filter((o) => o.variantId === line.variantId)),
       }));
       if (chosen.some((c) => !c.offer)) return false;
       for (const { line, offer } of chosen) {
         if (!offer) continue;
-        const batchId = await openBatch(tx, offer.supplierId, offer.weekdays, offer.hour, now);
+        const batchId = await openBatch(tx, offer.supplierId, offer, now);
         await tx
           .insert(batchLines)
           .values({
@@ -179,7 +184,12 @@ export async function assignPaidOrders(
   return { assigned, waiting };
 }
 
-async function openBatch(tx: Tx, supplierId: string, weekdays: number[], hour: number, now: Date) {
+async function openBatch(
+  tx: Tx,
+  supplierId: string,
+  schedule: { weekdays: number[]; hour: number; minute: number },
+  now: Date,
+) {
   const find = () =>
     tx
       .select({ id: batches.id })
@@ -187,10 +197,8 @@ async function openBatch(tx: Tx, supplierId: string, weekdays: number[], hour: n
       .where(and(eq(batches.supplierId, supplierId), eq(batches.status, "open")));
   const [existing] = await find();
   if (existing) return existing.id;
-  await tx
-    .insert(batches)
-    .values({ supplierId, closesAt: nextBatchCloseAt(now, { weekdays, hour }) })
-    .onConflictDoNothing();
+  const closesAt = nextBatchCloseAt(now, schedule);
+  await tx.insert(batches).values({ supplierId, closesAt, firstClosesAt: closesAt }).onConflictDoNothing();
   const [created] = await find();
   if (!created) throw new Error(`Could not open a batch for ${supplierId}`);
   return created.id;
@@ -200,7 +208,12 @@ async function openBatch(tx: Tx, supplierId: string, weekdays: number[], hour: n
 // 2. Closing batches → purchase orders
 // ---------------------------------------------------------------------------------------------
 
-/** Closes every due batch (or the one given) and sends its purchase order (B1, B2). */
+/**
+ * Closes every due batch (or the one given). Below the supplier's minimum a batch waits for the
+ * next closing, at most 7 days past its first one (B2, D-063). The purchase order goes out by
+ * itself only for suppliers with automatic sending; otherwise the closed batch waits for staff to
+ * send the file and mark it ordered (D-063, Q39).
+ */
 export async function closeDueBatches(
   deps: OperationsDeps,
   now = new Date(),
@@ -208,28 +221,38 @@ export async function closeDueBatches(
 ): Promise<number> {
   const { db } = deps;
   const due = await db
-    .select()
+    .select({ batch: batches, supplier: suppliers })
     .from(batches)
+    .innerJoin(suppliers, eq(suppliers.id, batches.supplierId))
     .where(
       onlyBatchId
         ? and(eq(batches.id, onlyBatchId), inArray(batches.status, ["open", "closed"]))
-        : or(and(eq(batches.status, "open"), lte(batches.closesAt, now)), eq(batches.status, "closed")),
+        : or(
+            and(eq(batches.status, "open"), lte(batches.closesAt, now)),
+            and(eq(batches.status, "closed"), eq(suppliers.autoSend, true)),
+          ),
     );
   let closed = 0;
-  for (const batch of due) {
+  for (const { batch, supplier } of due) {
     if (batch.status === "open") {
       const lines = await db.select().from(batchLines).where(eq(batchLines.batchId, batch.id));
-      const [supplier] = await db.select().from(suppliers).where(eq(suppliers.id, batch.supplierId));
-      if (!supplier) continue;
-      const total = purchaseOrderTotalCents(lines.map((l) => ({ ...l, quantity: l.qty })));
-      if (!onlyBatchId && total < supplier.minOrderCents && batch.postponed === 0) {
+      const nextCloseAt = nextBatchCloseAt(now, {
+        weekdays: supplier.closeWeekdays,
+        hour: supplier.closeHour,
+        minute: supplier.closeMinute,
+      });
+      const wait =
+        !onlyBatchId &&
+        waitForMinimum({
+          totalCents: purchaseOrderTotalCents(lines.map((l) => ({ ...l, quantity: l.qty }))),
+          minOrderCents: supplier.minOrderCents,
+          firstClosesAt: batch.firstClosesAt ?? batch.closesAt,
+          nextCloseAt,
+        });
+      if (wait) {
         await db
           .update(batches)
-          .set({
-            closesAt: nextBatchCloseAt(now, { weekdays: supplier.closeWeekdays, hour: supplier.closeHour }),
-            postponed: 1,
-            updatedAt: now,
-          })
+          .set({ closesAt: nextCloseAt, postponed: batch.postponed + 1, updatedAt: now })
           .where(eq(batches.id, batch.id));
         continue;
       }
@@ -244,10 +267,26 @@ export async function closeDueBatches(
         })
         .where(and(eq(batches.id, batch.id), eq(batches.status, "open")));
     }
-    await dispatch(deps, batch.id, now);
+    if (supplier.autoSend) await dispatch(deps, batch.id, now);
     closed += 1;
   }
   return closed;
+}
+
+/** Consolidated purchase order lines of a batch (one line per supplier SKU). */
+async function purchaseOrderLines(db: Database | Tx, batchId: string) {
+  const lines = await db.select().from(batchLines).where(eq(batchLines.batchId, batchId));
+  return {
+    orderIds: [...new Set(lines.map((l) => l.orderId))],
+    lines: consolidateLines(
+      lines.map((l) => ({
+        supplierSku: l.supplierSku,
+        description: l.description,
+        quantity: l.qty,
+        unitCostCents: l.unitCostCents,
+      })),
+    ),
+  };
 }
 
 async function dispatch(deps: OperationsDeps, batchId: string, now: Date) {
@@ -257,21 +296,14 @@ async function dispatch(deps: OperationsDeps, batchId: string, now: Date) {
   const hub = await readHubAddress(db);
   if (!hub) throw new OperationsError("no_hub", "Enter the hub address before sending purchase orders");
   const [supplier] = await db.select().from(suppliers).where(eq(suppliers.id, batch.supplierId));
-  const lines = await db.select().from(batchLines).where(eq(batchLines.batchId, batchId));
+  const { lines, orderIds } = await purchaseOrderLines(db, batchId);
   const result = await deps.supplier.dispatchPurchaseOrder({
     purchaseOrderId: batch.poReference,
     batchId,
     supplierId: batch.supplierId,
     ddp: supplier?.ddp ?? false,
     deliverTo: { ...hub, country: "BG" },
-    lines: consolidateLines(
-      lines.map((l) => ({
-        supplierSku: l.supplierSku,
-        description: l.description,
-        quantity: l.qty,
-        unitCostCents: l.unitCostCents,
-      })),
-    ),
+    lines,
   });
   await db.transaction(async (tx) => {
     await tx
@@ -283,7 +315,38 @@ async function dispatch(deps: OperationsDeps, batchId: string, now: Date) {
         updatedAt: now,
       })
       .where(and(eq(batches.id, batchId), eq(batches.status, "closed")));
-    await syncOrders(deps, tx, [...new Set(lines.map((l) => l.orderId))]);
+    await syncOrders(deps, tx, orderIds);
+  });
+  deps.kick?.();
+}
+
+/** The purchase order file of a closed batch, for staff to send themselves (D-063, Q39). */
+export async function purchaseOrderFile(db: Database, batchId: string) {
+  const [batch] = await db.select().from(batches).where(eq(batches.id, batchId));
+  if (!batch) throw new OperationsError("not_found", "No such batch");
+  if (batch.status === "open" || !batch.poReference)
+    throw new OperationsError("not_allowed", "Close the batch first");
+  const { lines } = await purchaseOrderLines(db, batchId);
+  return { reference: batch.poReference, csv: purchaseOrderCsv(batch.poReference, lines) };
+}
+
+/** Staff sent the purchase order themselves: the batch and its orders become "ordered". */
+export async function markBatchOrdered(
+  deps: OperationsDeps,
+  batchId: string,
+  supplierReference: string | null,
+  now = new Date(),
+) {
+  await deps.db.transaction(async (tx) => {
+    const [batch] = await tx.select().from(batches).where(eq(batches.id, batchId)).for("update");
+    if (!batch) throw new OperationsError("not_found", "No such batch");
+    if (batch.status !== "closed")
+      throw new OperationsError("not_allowed", "Only a closed batch can be marked as ordered");
+    await tx
+      .update(batches)
+      .set({ status: "ordered", orderedAt: now, supplierReference, updatedAt: now })
+      .where(eq(batches.id, batchId));
+    await syncOrders(deps, tx, await batchOrderIds(tx, batchId));
   });
   deps.kick?.();
 }
