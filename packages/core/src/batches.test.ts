@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   allocateLandedCost,
+  orderProgressFromBatches,
+  purchaseOrderReference,
   consolidateLines,
   nextBatchCloseAt,
   purchaseOrderCsv,
@@ -68,5 +70,25 @@ describe("purchase orders", () => {
     const merged = consolidateLines(lines);
     // Goods 12.50 + 37.50 + 9.00 = 59.00; shipping 11.80 → +20 % on each line.
     expect(allocateLandedCost(merged, 1180)).toEqual([1500, 4500, 1080]);
+  });
+});
+
+describe("orderProgressFromBatches", () => {
+  it("moves with the slowest line and waits for missing units", () => {
+    expect(orderProgressFromBatches([])).toBeNull();
+    expect(orderProgressFromBatches([{ batchStatus: "open", qty: 1, receivedQty: 0 }])).toBe("batched");
+    expect(
+      orderProgressFromBatches([
+        { batchStatus: "shipped", qty: 1, receivedQty: 0 },
+        { batchStatus: "ordered", qty: 2, receivedQty: 0 },
+      ]),
+    ).toBe("ordered_from_supplier");
+    expect(orderProgressFromBatches([{ batchStatus: "received", qty: 2, receivedQty: 2 }])).toBe(
+      "received_at_hub",
+    );
+    expect(orderProgressFromBatches([{ batchStatus: "received", qty: 2, receivedQty: 1 }])).toBe(
+      "supplier_shipped",
+    );
+    expect(purchaseOrderReference(2026, 7)).toBe("PO-2026-0007");
   });
 });

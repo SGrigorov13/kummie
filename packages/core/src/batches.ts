@@ -124,3 +124,38 @@ export function allocateLandedCost(lines: readonly BatchLine[], extraCents: numb
   const values = lines.map((l) => l.quantity * l.unitCostCents);
   return splitCents(extraCents, values).map((extra, i) => (values[i] ?? 0) + extra);
 }
+
+export type BatchStatus = "open" | "closed" | "ordered" | "shipped" | "received";
+
+/** Order statuses that batches move (B10), in order. */
+export const BATCH_ORDER_STATUSES = [
+  "batched",
+  "ordered_from_supplier",
+  "supplier_shipped",
+  "received_at_hub",
+] as const;
+export type BatchOrderStatus = (typeof BATCH_ORDER_STATUSES)[number];
+
+const LEVEL: Record<BatchStatus, number> = { open: 0, closed: 0, ordered: 1, shipped: 2, received: 3 };
+
+/**
+ * How far an order has come through its batches: the slowest line decides (B10). A line of a
+ * received batch counts as received only when all its units were counted at the hub (B5).
+ */
+export function orderProgressFromBatches(
+  lines: readonly { batchStatus: BatchStatus; qty: number; receivedQty: number }[],
+): BatchOrderStatus | null {
+  if (lines.length === 0) return null;
+  const level = Math.min(
+    ...lines.map((l) => {
+      const base = LEVEL[l.batchStatus];
+      return base === 3 && l.receivedQty < l.qty ? 2 : base;
+    }),
+  );
+  return BATCH_ORDER_STATUSES[level] ?? null;
+}
+
+/** Purchase order reference for people and suppliers: PO-2026-0007. */
+export function purchaseOrderReference(year: number, seq: number): string {
+  return `PO-${year}-${String(seq).padStart(4, "0")}`;
+}
