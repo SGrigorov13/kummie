@@ -26,8 +26,8 @@ function statusLine(locale: "bg" | "en", status: OrderStatus): string {
 }
 
 /** Status e-mail (transactional, never with marketing): one per step the customer can see. */
-async function queueStatusEmail(
-  deps: ShopDeps,
+export async function queueStatusEmail(
+  deps: Pick<ShopDeps, "webUrl">,
   tx: Tx,
   order: OrderRow,
   to: OrderStatus,

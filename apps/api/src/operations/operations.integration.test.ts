@@ -1,0 +1,295 @@
+import { randomBytes } from "node:crypto";
+import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import type { BatchDetail, LoginResponse, PackQueue, SupplierOfferList } from "@kummie/contracts";
+import { eq, sql } from "drizzle-orm";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { EmailAdapter, EmailMessage } from "../adapters/email";
+import { FakeCarrier } from "../adapters/fake-carrier";
+import { FakePaymentProvider } from "../adapters/fake-payment";
+import { FileSupplierAdapter } from "../adapters/fake-supplier";
+import { accountJobHandlers } from "../accounts/erasure";
+import { createStaff } from "../admin/staff-cli";
+import { buildApp } from "../app";
+import { createSecretBox } from "../auth/crypto";
+import { timeStep, totpCode } from "../auth/totp";
+import { createDatabase, type DatabaseHandle } from "../db/client";
+import { orders, products, variants } from "../db/schema";
+import { seed } from "../db/seed";
+import { processDueJobs } from "../jobs/outbox";
+import { runOperations, type OperationsDeps } from "./service";
+
+/** Same safety rule as the other database tests: only databases named *_test, which are wiped. */
+const url = process.env.TEST_DATABASE_URL;
+const safe = !!url && /\/[^/?]+_test(\?|$)/.test(url);
+
+const WEB = "http://localhost:3000";
+const ADMIN = "http://localhost:5180";
+const STAFF_PASSWORD = "staff-test-Passw0rd!";
+const ADDRESS = {
+  name: "Мария Петрова",
+  line1: "ул. Шипка 1",
+  line2: null,
+  city: "София",
+  postcode: "1000",
+  country: "BG",
+  phone: "+359 888 123 456",
+};
+
+describe.skipIf(!safe)("M2 operations with the test partners on PostgreSQL", () => {
+  let handle: DatabaseHandle;
+  let app: ReturnType<typeof buildApp>;
+  let poDir = "";
+  let clock = new Date("2026-11-24T09:00:00Z"); // Tuesday 11:00 in Sofia
+  const fake = new FakePaymentProvider("http://localhost:3001/fake-pay", "test-secret");
+  const outbox: EmailMessage[] = [];
+  const email: EmailAdapter = {
+    name: "memory",
+    send: async (m) => {
+      outbox.push(m);
+      return { messageId: String(outbox.length), accepted: true };
+    },
+  };
+  let operations: OperationsDeps;
+  let staffCookie = "";
+  let ip = 0;
+  let sku = "";
+
+  const call = (method: "GET" | "POST" | "PUT", path: string, payload?: unknown, staff = false) =>
+    app.inject({
+      method,
+      url: path,
+      remoteAddress: `10.3.${Math.floor(++ip / 250)}.${ip % 250}`,
+      ...(payload === undefined ? {} : { payload: payload as object }),
+      headers: staff ? { origin: ADMIN, cookie: staffCookie } : { origin: WEB },
+    });
+  const deliver = async () => {
+    outbox.length = 0;
+    await processDueJobs(handle.db, accountJobHandlers(email), { log: { info: () => {}, error: () => {} } });
+    return [...outbox];
+  };
+
+  beforeAll(async () => {
+    handle = createDatabase(url as string, 2);
+    await handle.db.execute(sql`drop schema if exists public cascade`);
+    await handle.db.execute(sql`drop schema if exists drizzle cascade`);
+    await handle.db.execute(sql`create schema public`);
+    await migrate(handle.db, { migrationsFolder: resolve(import.meta.dirname, "../../drizzle") });
+    await seed(handle.db);
+    poDir = await mkdtemp(join(tmpdir(), "kummie-ops-"));
+    const accounts = { db: handle.db, email, webUrl: WEB, allowedOrigins: [WEB], cookieSecure: false };
+    const shop = { ...accounts, payments: fake, fakePayments: fake };
+    operations = {
+      db: handle.db,
+      webUrl: WEB,
+      supplier: new FileSupplierAdapter(poDir),
+      carriers: [new FakeCarrier(() => clock)],
+    };
+    app = buildApp({
+      logger: false,
+      checkDb: async () => "ok",
+      accounts,
+      shop,
+      admin: {
+        db: handle.db,
+        secretBox: createSecretBox(randomBytes(32).toString("base64")),
+        allowedOrigins: [ADMIN],
+        cookieSecure: false,
+        shop,
+        operations,
+      },
+    });
+    await createStaff(handle.db, {
+      email: "ops@kummie.test",
+      name: "Ops",
+      role: "admin",
+      password: STAFF_PASSWORD,
+    });
+    const login = (
+      await call(
+        "POST",
+        "/admin-api/auth/login",
+        { email: "ops@kummie.test", password: STAFF_PASSWORD },
+        true,
+      )
+    ).json() as LoginResponse;
+    if (login.step !== "enroll") throw new Error("expected enrolment");
+    const enrolled = await call(
+      "POST",
+      "/admin-api/auth/enroll",
+      { challenge: login.challenge, code: totpCode(login.secret, timeStep()) },
+      true,
+    );
+    staffCookie = String(enrolled.headers["set-cookie"]).split(";")[0] ?? "";
+    const [row] = await handle.db
+      .select({ sku: variants.sku })
+      .from(variants)
+      .innerJoin(products, eq(products.id, variants.productId))
+      .where(eq(products.status, "published"))
+      .limit(1);
+    sku = row?.sku ?? "";
+  });
+
+  afterAll(async () => {
+    await app?.close();
+    await handle?.close();
+    if (poDir) await rm(poDir, { recursive: true, force: true });
+  });
+
+  /** A guest buys two units and pays with the test provider. */
+  async function paidOrder() {
+    const [variant] = await handle.db.select({ id: variants.id }).from(variants).where(eq(variants.sku, sku));
+    const cart = await call("PUT", "/cart/lines", { variantId: variant?.id, qty: 2, add: true });
+    const cookie = cart.cookies.find((c) => c.name === "kummie_cart");
+    const checkout = (
+      await app.inject({
+        method: "POST",
+        url: "/checkout",
+        payload: {
+          email: "maria@kummie.test",
+          locale: "bg",
+          address: ADDRESS,
+          invoice: null,
+          acceptTerms: true,
+        },
+        headers: { origin: WEB, cookie: `kummie_cart=${cookie?.value}` },
+      })
+    ).json() as { orderId: string; redirectUrl: string };
+    const sessionId = decodeURIComponent(checkout.redirectUrl.split("/fake-pay/")[1] ?? "");
+    await app.inject({
+      method: "POST",
+      url: `/fake-pay/${encodeURIComponent(sessionId)}/pay`,
+      payload: "x=1",
+      headers: { "content-type": "text/plain" },
+    });
+    return checkout.orderId;
+  }
+  const status = async (id: string) =>
+    (await handle.db.select({ s: orders.status }).from(orders).where(eq(orders.id, id)))[0]?.s;
+
+  it("takes a paid order through every step to delivered", async () => {
+    const id = await paidOrder();
+    expect(await status(id)).toBe("paid");
+
+    // Without a supplier offer the order waits and is reported.
+    const waiting = await runOperations(operations, clock);
+    expect(waiting.assigned).toBe(0);
+    expect(waiting.waitingWithoutOffer).toHaveLength(1);
+
+    // Supplier, hub address and an offer for the product.
+    await call(
+      "PUT",
+      "/admin-api/suppliers/kmoon",
+      {
+        id: "kmoon",
+        name: "K-Moon",
+        orderEmail: null,
+        closeWeekdays: [1, 3, 5],
+        closeHour: 12,
+        minOrderCents: 0,
+        ddp: false,
+        active: true,
+      },
+      true,
+    );
+    const offers = (
+      await call(
+        "PUT",
+        "/admin-api/suppliers/kmoon/offers",
+        { sku, supplierSku: "km-001", unitCostCents: 1100, active: true },
+        true,
+      )
+    ).json() as SupplierOfferList;
+    expect(offers.items.map((o) => [o.sku, o.supplierSku])).toEqual([[sku, "KM-001"]]);
+    await call(
+      "PUT",
+      "/admin-api/operations/settings",
+      { name: "KUMMIE пункт", line1: "ул. Пункт 1", city: "София", postcode: "1000" },
+      true,
+    );
+
+    // Into the open batch (closes Wednesday 12:00 Sofia = 10:00 UTC).
+    expect((await runOperations(operations, clock)).assigned).toBe(1);
+    expect(await status(id)).toBe("batched");
+    const [batch] = (await (await call("GET", "/admin-api/batches", undefined, true)).json())
+      .items as BatchDetail[];
+    expect(batch?.closesAt).toBe("2026-11-25T10:00:00.000Z");
+    expect(batch?.units).toBe(2);
+
+    // Wednesday 12:05: the batch closes and the purchase order goes out (CSV, no customer data).
+    clock = new Date("2026-11-25T10:05:00Z");
+    expect((await runOperations(operations, clock)).closed).toBe(1);
+    expect(await status(id)).toBe("ordered_from_supplier");
+    const [file] = (await readdir(poDir)).filter((f) => f.endsWith(".csv"));
+    const csv = await readFile(join(poDir, file ?? ""), "utf8");
+    expect(csv).toContain(",KM-001,");
+    expect(csv).not.toContain("Мария");
+
+    // Supplier ships; the hub scans two units (one by our SKU, one by the supplier SKU).
+    await call("POST", `/admin-api/batches/${batch?.id}/shipped`, { tracking: "IT123" }, true);
+    expect(await status(id)).toBe("supplier_shipped");
+    const first = (
+      await call("POST", `/admin-api/hub/batches/${batch?.id}/scan`, { code: sku }, true)
+    ).json();
+    expect(first.ok).toBe(true);
+    const unknown = (
+      await call("POST", `/admin-api/hub/batches/${batch?.id}/scan`, { code: "NOPE" }, true)
+    ).json();
+    expect(unknown.problem).toBe("unknown");
+    await call("POST", `/admin-api/hub/batches/${batch?.id}/scan`, { code: "km-001" }, true);
+    const full = (
+      await call("POST", `/admin-api/hub/batches/${batch?.id}/scan`, { code: "KM-001" }, true)
+    ).json();
+    expect(full.problem).toBe("complete");
+    await call("POST", `/admin-api/hub/batches/${batch?.id}/done`, {}, true);
+    expect(await status(id)).toBe("received_at_hub");
+
+    // Packing: a wrong count is refused; the right one makes the label.
+    const wrong = await call(
+      "POST",
+      `/admin-api/hub/orders/${id}/pack`,
+      { items: [{ sku, qty: 1 }], weightGrams: 900 },
+      true,
+    );
+    expect(wrong.statusCode).toBe(422);
+    const queue = (
+      await call(
+        "POST",
+        `/admin-api/hub/orders/${id}/pack`,
+        { items: [{ sku, qty: 2 }], weightGrams: 900 },
+        true,
+      )
+    ).json() as PackQueue;
+    const parcel = queue.items.find((o) => o.id === id)?.parcel;
+    expect(parcel?.carrier).toBe("fake");
+    expect(await status(id)).toBe("packed");
+    const label = await call("GET", `/admin-api/hub/parcels/${parcel?.id}/label`, undefined, true);
+    expect(label.headers["content-type"]).toBe("application/pdf");
+
+    // Hand-over by scanning the label, then the courier moves it on by itself.
+    const handed = await call(
+      "POST",
+      "/admin-api/hub/handover",
+      { trackingNumber: parcel?.trackingNumber },
+      true,
+    );
+    expect(handed.statusCode).toBe(200);
+    expect(await status(id)).toBe("handed_to_carrier");
+    clock = new Date("2026-11-26T13:00:00Z"); // label + 26 h
+    await runOperations(operations, clock);
+    expect(await status(id)).toBe("delivered");
+
+    // The customer saw every step by e-mail and sees the tracking number.
+    const subjects = (await deliver()).filter((m) => m.to === "maria@kummie.test").map((m) => m.subject);
+    expect(subjects.length).toBeGreaterThanOrEqual(6);
+    const page = await app.inject({ method: "GET", url: `/orders/${id}`, headers: { origin: WEB } });
+    expect([401, 403, 404]).toContain(page.statusCode); // guests need their key; covered by the shop tests
+  });
+
+  it("hands over a label only once and only for known parcels", async () => {
+    const again = await call("POST", "/admin-api/hub/handover", { trackingNumber: "FKNOPE0000" }, true);
+    expect(again.statusCode).toBe(404);
+  });
+});

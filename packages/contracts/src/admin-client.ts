@@ -13,6 +13,21 @@ import {
 } from "./admin";
 import { CategoryList, GroupList } from "./catalogue";
 import { ApiRequestError, type FetchLike } from "./client";
+import {
+  BatchDetail,
+  BatchList,
+  HandOverResult,
+  OperationsRun,
+  OperationsSettings,
+  PackQueue,
+  ScanResult,
+  Supplier,
+  SupplierList,
+  SupplierOfferList,
+  type HubAddress,
+  type PackInput,
+  type SupplierOfferInput,
+} from "./operations";
 import { AdminOrder, AdminOrderList, type OrderStatusChange } from "./shop";
 
 /**
@@ -119,6 +134,35 @@ export function createAdminClient({
       call("PUT", `/admin-api/products/${productId}/images-order`, AdminImageList, { ids }),
     deleteImage: (productId: string, imageId: string) =>
       call("DELETE", `/admin-api/products/${productId}/images/${imageId}`, AdminImageList),
+    // ---- M2: suppliers, batches, hub ----
+    suppliers: () => call("GET", "/admin-api/suppliers", SupplierList),
+    saveSupplier: (supplier: Supplier) =>
+      call("PUT", `/admin-api/suppliers/${supplier.id}`, Supplier, supplier),
+    supplierOffers: (id: string) => call("GET", `/admin-api/suppliers/${id}/offers`, SupplierOfferList),
+    saveOffer: (id: string, offer: SupplierOfferInput) =>
+      call("PUT", `/admin-api/suppliers/${id}/offers`, SupplierOfferList, offer),
+    operationsSettings: () => call("GET", "/admin-api/operations/settings", OperationsSettings),
+    saveHubAddress: (hub: HubAddress) =>
+      call("PUT", "/admin-api/operations/settings", OperationsSettings, hub),
+    runOperations: () => call("POST", "/admin-api/operations/run", OperationsRun, {}),
+    batches: () => call("GET", "/admin-api/batches", BatchList),
+    batch: (id: string) => call("GET", `/admin-api/batches/${id}`, BatchDetail),
+    closeBatch: (id: string) => call("POST", `/admin-api/batches/${id}/close`, BatchDetail, {}),
+    batchShipped: (id: string, tracking: string | null) =>
+      call("POST", `/admin-api/batches/${id}/shipped`, BatchDetail, { tracking }),
+    scanReceived: (id: string, code: string) =>
+      call("POST", `/admin-api/hub/batches/${id}/scan`, ScanResult, { code }),
+    setReceived: (id: string, supplierSku: string, receivedQty: number) =>
+      call("PUT", `/admin-api/hub/batches/${id}/received`, BatchDetail, { supplierSku, receivedQty }),
+    finishReceiving: (id: string) => call("POST", `/admin-api/hub/batches/${id}/done`, BatchDetail, {}),
+    packQueue: () => call("GET", "/admin-api/hub/packing", PackQueue),
+    packOrder: (id: string, input: PackInput) =>
+      call("POST", `/admin-api/hub/orders/${id}/pack`, PackQueue, input),
+    cancelParcel: (id: string) => call("POST", `/admin-api/hub/parcels/${id}/cancel`, PackQueue, {}),
+    /** Label PDF (direct link; the staff cookie goes along). */
+    labelUrl: (parcelId: string) => `${base}/admin-api/hub/parcels/${parcelId}/label`,
+    handOver: (trackingNumber: string) =>
+      call("POST", "/admin-api/hub/handover", HandOverResult, { trackingNumber }),
     categories: () => call("GET", "/catalogue/categories", CategoryList),
     groups: () => call("GET", "/catalogue/groups", GroupList),
   };

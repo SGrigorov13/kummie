@@ -215,6 +215,17 @@ export function OrderView({ id }: { id: string }) {
       </dl>
       {order.kummies > 0 ? <p>{t("order.kummies", { kummies: order.kummies })}</p> : null}
 
+      {order.parcels.length > 0 ? (
+        <>
+          <h2 className="h3">{t("order.tracking")}</h2>
+          <ul className="plain">
+            {order.parcels.map((p) => (
+              <li key={p.trackingNumber}>{t("order.trackingNumber", { number: p.trackingNumber })}</li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+
       {order.documents.length > 0 ? (
         <>
           <h2 className="h3">{t("order.documents")}</h2>

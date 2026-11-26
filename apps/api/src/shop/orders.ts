@@ -13,7 +13,15 @@ import type { PaymentEvent, PaymentProvider } from "../adapters/payment";
 import type { FakePaymentProvider } from "../adapters/fake-payment";
 import type { AccountDeps } from "../accounts/context";
 import type { Database } from "../db/client";
-import { kummiesLedger, orderEvents, orderLines, orders, payments, salesDocuments } from "../db/schema";
+import {
+  kummiesLedger,
+  orderEvents,
+  orderLines,
+  orders,
+  parcels,
+  payments,
+  salesDocuments,
+} from "../db/schema";
 import { enqueue } from "../jobs/outbox";
 import { loadCompanySettings } from "../admin/settings-routes";
 import { issueSaleDocuments } from "../documents/issue";
@@ -233,7 +241,7 @@ export async function processPaymentEvent(
 
 /** The order as the customer sees it. */
 export async function orderDetail(db: Database, order: OrderRow): Promise<OrderDetail> {
-  const [lines, events, documents] = await Promise.all([
+  const [lines, events, documents, parcelRows] = await Promise.all([
     db.select().from(orderLines).where(eq(orderLines.orderId, order.id)).orderBy(asc(orderLines.position)),
     db.select().from(orderEvents).where(eq(orderEvents.orderId, order.id)).orderBy(asc(orderEvents.at)),
     db
@@ -241,6 +249,11 @@ export async function orderDetail(db: Database, order: OrderRow): Promise<OrderD
       .from(salesDocuments)
       .where(eq(salesDocuments.orderId, order.id))
       .orderBy(asc(salesDocuments.issuedAt), asc(salesDocuments.number)),
+    db
+      .select({ carrier: parcels.carrier, trackingNumber: parcels.trackingNumber, status: parcels.status })
+      .from(parcels)
+      .where(eq(parcels.orderId, order.id))
+      .orderBy(asc(parcels.createdAt)),
   ]);
   return {
     id: order.id,
@@ -278,5 +291,6 @@ export async function orderDetail(db: Database, order: OrderRow): Promise<OrderD
       number: formatDocNumber(d.number),
       issuedAt: d.issuedAt.toISOString(),
     })),
+    parcels: parcelRows.filter((p) => p.status !== "cancelled"),
   };
 }

@@ -9,6 +9,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  customType,
   date,
   bigint,
   index,
@@ -732,5 +733,157 @@ export const salesDocuments = pgTable(
       .where(sql`${t.kind} in ('receipt', 'invoice')`),
     index("sales_documents_order_idx").on(t.orderId),
     index("sales_documents_issued_idx").on(t.issuedAt),
+  ],
+);
+
+// ---------------------------------------------------------------------------------------------
+// M2 operations: supplier batches, the Bulgaria hub and parcels (docs/specs/M2-operations.md)
+// ---------------------------------------------------------------------------------------------
+
+const bytea = customType<{ data: Uint8Array; driverData: Buffer }>({
+  dataType: () => "bytea",
+  toDriver: (value) => Buffer.from(value),
+  fromDriver: (value) => new Uint8Array(value),
+});
+
+/** Who we buy from. Purchase orders go out on the supplier's schedule (B1, B2). */
+export const suppliers = pgTable("suppliers", {
+  /** Short code, e.g. "kmoon". */
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  /** Where purchase orders are e-mailed (the test supplier writes files instead). */
+  orderEmail: text("order_email"),
+  /** ISO weekdays (1 = Monday) on which the batch closes, Sofia time. */
+  closeWeekdays: integer("close_weekdays")
+    .array()
+    .notNull()
+    .default(sql`'{1,3,5}'`),
+  closeHour: integer("close_hour").notNull().default(12),
+  /** Minimum purchase order value in cents (0 = none, B2). */
+  minOrderCents: integer("min_order_cents").notNull().default(0),
+  /** Delivered Duty Paid (non-EU suppliers that offer it). */
+  ddp: boolean("ddp").notNull().default(false),
+  active: boolean("active").notNull().default(true),
+  ...timestamps,
+});
+
+/** A supplier's offer for one of our variants: their SKU and our cost (B3). */
+export const supplierOffers = pgTable(
+  "supplier_offers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    variantId: uuid("variant_id")
+      .notNull()
+      .references(() => variants.id, { onDelete: "cascade" }),
+    supplierId: text("supplier_id")
+      .notNull()
+      .references(() => suppliers.id),
+    supplierSku: text("supplier_sku").notNull(),
+    unitCostCents: integer("unit_cost_cents").notNull(),
+    active: boolean("active").notNull().default(true),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("supplier_offers_variant_supplier_unique").on(t.variantId, t.supplierId),
+    index("supplier_offers_variant_idx").on(t.variantId),
+    check("supplier_offers_cost_positive", sql`${t.unitCostCents} > 0`),
+  ],
+);
+
+export const batchStatusEnum = pgEnum("batch_status", ["open", "closed", "ordered", "shipped", "received"]);
+
+/** One consolidated purchase order to a supplier. At most one open batch per supplier. */
+export const batches = pgTable(
+  "batches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    seq: bigint("seq", { mode: "number" }).generatedAlwaysAsIdentity({ startWith: 1 }),
+    supplierId: text("supplier_id")
+      .notNull()
+      .references(() => suppliers.id),
+    status: batchStatusEnum("status").notNull().default("open"),
+    closesAt: timestamp("closes_at", { withTimezone: true }).notNull(),
+    /** How often the closing was postponed for the minimum order value (at most once, B2). */
+    postponed: integer("postponed").notNull().default(0),
+    /** "PO-2026-0001", set when the batch closes. */
+    poReference: text("po_reference"),
+    supplierReference: text("supplier_reference"),
+    supplierTracking: text("supplier_tracking"),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    orderedAt: timestamp("ordered_at", { withTimezone: true }),
+    shippedAt: timestamp("shipped_at", { withTimezone: true }),
+    receivedAt: timestamp("received_at", { withTimezone: true }),
+    /** Shipping, duty and handling of the whole batch (landed cost, cents). */
+    extraCostCents: integer("extra_cost_cents").notNull().default(0),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("batches_one_open_per_supplier")
+      .on(t.supplierId)
+      .where(sql`${t.status} = 'open'`),
+    uniqueIndex("batches_po_reference_unique").on(t.poReference),
+    index("batches_status_idx").on(t.status),
+  ],
+);
+
+/** One customer order line inside a batch. */
+export const batchLines = pgTable(
+  "batch_lines",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    batchId: uuid("batch_id")
+      .notNull()
+      .references(() => batches.id),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id),
+    orderLineId: uuid("order_line_id")
+      .notNull()
+      .references(() => orderLines.id),
+    supplierSku: text("supplier_sku").notNull(),
+    description: text("description").notNull(),
+    qty: integer("qty").notNull(),
+    unitCostCents: integer("unit_cost_cents").notNull(),
+    /** Units counted at the hub. */
+    receivedQty: integer("received_qty").notNull().default(0),
+  },
+  (t) => [
+    uniqueIndex("batch_lines_order_line_unique").on(t.orderLineId),
+    index("batch_lines_batch_idx").on(t.batchId),
+    index("batch_lines_order_idx").on(t.orderId),
+  ],
+);
+
+export const parcelStatusEnum = pgEnum("parcel_status", [
+  "labelled",
+  "handed_over",
+  "out_for_delivery",
+  "delivered",
+  "exception",
+  "cancelled",
+]);
+
+/** A parcel to the customer, created at the hub when the order is packed. */
+export const parcels = pgTable(
+  "parcels",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id),
+    carrier: text("carrier").notNull(),
+    trackingNumber: text("tracking_number").notNull(),
+    labelPdf: bytea("label_pdf").notNull(),
+    weightGrams: integer("weight_grams").notNull(),
+    status: parcelStatusEnum("status").notNull().default("labelled"),
+    handedOverAt: timestamp("handed_over_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    lastTrackedAt: timestamp("last_tracked_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("parcels_tracking_unique").on(t.carrier, t.trackingNumber),
+    index("parcels_order_idx").on(t.orderId),
+    index("parcels_status_idx").on(t.status),
   ],
 );

@@ -43,6 +43,13 @@
       "when": 1794865240169,
       "tag": "0005_sales_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795685257433,
+      "tag": "0006_operations",
+      "breakpoints": true
     }
   ]
 }

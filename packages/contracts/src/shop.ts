@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ParcelTracking } from "./operations";
 import { AddressInput, ShippingCountry } from "./account";
 import { Localized } from "./catalogue";
 
@@ -171,6 +172,8 @@ export const OrderDetail = z.object({
       issuedAt: z.string(),
     }),
   ),
+  /** Parcels with the courier (tracking number), once the order is packed at the hub. */
+  parcels: z.array(ParcelTracking),
 });
 export type OrderDetail = z.infer<typeof OrderDetail>;
 
