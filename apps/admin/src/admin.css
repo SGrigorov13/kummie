@@ -441,3 +441,64 @@ input[type="checkbox"] {
 .row--missing td {
   background: #fdecec;
 }
+
+/* D-065: the A4 packing list, printed on an ordinary printer; the rest of the admin is hidden. */
+.print-slip {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  body > *:not(.print-slip) {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .print-slip {
+    display: block;
+    color: #000;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+  .print-slip__head {
+    border-bottom: 2px solid #000;
+    margin-bottom: 8mm;
+    padding-bottom: 4mm;
+  }
+  .print-slip__brand {
+    font-size: 16pt;
+    letter-spacing: 0.08em;
+  }
+  .print-slip h1 {
+    font-size: 18pt;
+    margin: 2mm 0;
+  }
+  .print-slip h2 {
+    font-size: 12pt;
+    margin: 6mm 0 2mm;
+  }
+  .print-slip h3 {
+    font-size: 11pt;
+    margin: 3mm 0 1mm;
+  }
+  .print-slip p {
+    margin: 1mm 0;
+  }
+  .print-slip table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 5mm;
+  }
+  .print-slip th,
+  .print-slip td {
+    border: 1px solid #000;
+    padding: 2mm;
+    text-align: left;
+  }
+  .print-slip section {
+    break-inside: avoid;
+  }
+}

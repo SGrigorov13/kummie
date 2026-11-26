@@ -46,7 +46,7 @@ adapters replace them without changing the flow.
 | B5 | **Short, damaged, extra units** | Short or damaged: ask the supplier (photo and claim if damaged); without the units within 3 working days the customer gets the rest plus a partial refund and credit note (staff confirm the refund, Q25). Extra units: recorded, owner decides. | Decided; refund flow in part 2 |
 | B6 | **Couriers** | **Speedy, Econt, BoxNow**; address, office and locker from day one; prices per country, courier and method — set with the courier offers. Test courier until then. | Decided; contracts pending |
 | B7 | **Parcel weight** | The packer types the weight for now; box sizes not known yet. | Decided |
-| B8 | **Labels, printer, scanner** | A6 PDF label from the courier; printer and scanner discussed separately with the owner (low volume at start). Parcel contents: **printed packing list + thank-you card or sticker** (Q24). | Open (equipment) |
+| B8 | **Labels, printer, scanner** | **Ordinary A4 printer, no scanner** at the start (D-065): items confirmed with "+1" on the packing screen, hand-over by click; the courier's label PDF prints on A4. Parcel contents: **A4 packing list** (customer's language, warnings, return address, withdrawal) + thank-you card or sticker (design separate). Thermal printer and USB scanner above ~5 parcels a day. | Decided, built |
 | B9 | **Scanners** | Any USB barcode scanner that types the code and Enter; the screens also accept typing. Product codes: our SKU or the supplier SKU. | Decided (scanner optional, see B8) |
 | B10 | **Order status from batches** | An order moves only when **all** its lines have moved: batched → ordered from supplier → supplier shipped → received at hub. One order can be in batches of several suppliers. | Decided |
 
@@ -96,7 +96,7 @@ adapters replace them without changing the flow.
 15. **Office/locker on a map** at checkout (courier map widget loaded only when opened, consent
     rules for third-party scripts; searchable list as fallback) — with the real courier adapters.
 16. **Delivery prices per country, courier and method** (D-063 B6) — when the offers arrive.
-17. **Packing list** printed with each parcel (products, return address, withdrawal steps).
+17. **Packing list** printed with each parcel (products, safety information and warnings in the customer's language, return address, withdrawal steps). *(done, D-065: `GET /admin-api/hub/orders/:id/packing-slip`, printed from Пункт България → Опаковане)*
 18. **Landed cost and margin report:** transport and duties per supplier shipment at receiving,
     margin per product and order, export for the ERP.
 19. **Order ratings:** the customer rates a delivered order — with an account or as a guest through the link to the order (D-066); staff see low ratings at once to make

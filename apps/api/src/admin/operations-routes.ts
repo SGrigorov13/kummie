@@ -12,6 +12,7 @@ import {
   OperationsSettings,
   HubAddress,
   PackInput,
+  PackingSlip,
   PackQueue,
   ReceivedQtyInput,
   ScanInput,
@@ -35,6 +36,7 @@ import {
   markBatchOrdered,
   markBatchShipped,
   OperationsError,
+  packingSlip,
   packOrder,
   packQueue,
   parcelLabel,
@@ -436,6 +438,16 @@ export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps 
         });
         return { items: await packQueue(db) };
       },
+    );
+
+    /** The A4 packing list that goes into the parcel (D-065). */
+    app.get(
+      "/admin-api/hub/orders/:id/packing-slip",
+      {
+        preHandler: hubStaff,
+        schema: { params: IdParams, response: { 200: PackingSlip, 404: ApiError, 409: ApiError } },
+      },
+      async (request) => packingSlip(operations, request.params.id),
     );
 
     app.post(
