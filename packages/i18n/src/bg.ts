@@ -654,7 +654,7 @@ export const bg = {
   "admin.hub.inBox": "В кашона",
   "admin.hub.weight": "Тегло (кг)",
   "admin.hub.makeLabel": "Създай етикет",
-  "admin.hub.scanAll": "Сканирай всички продукти от поръчката, за да създадеш етикет.",
+  "admin.hub.scanAll": "Сканирай или потвърди с „+1“ всеки продукт от поръчката, за да създадеш етикет.",
   "admin.hub.toPack": "За опаковане",
   "admin.hub.nothingToPack": "Няма поръчки за опаковане.",
   "admin.hub.waitingCourier": "Опаковани, чакат куриера",
@@ -662,7 +662,7 @@ export const bg = {
   "admin.hub.confirmCancelLabel": "Да откажа ли етикета? Поръчката се връща за опаковане.",
   "admin.hub.cancelLabel": "Откажи етикета",
   "admin.hub.handoverLead":
-    "Когато куриерът взима пратките, сканирай етикета на всяка. Клиентът получава имейл „Предадена на куриер“.",
+    "Когато куриерът взима пратките, сканирай или въведи номера от етикета на всяка (или натисни „Предадена на куриера“ в Опаковане). Клиентът получава имейл „Предадена на куриер“.",
   "admin.hub.unknownLabel": "няма пратка с този етикет",
   "admin.hub.alreadyHanded": "вече е предадена на куриера",
   "admin.hub.scanLabel": "Сканирай етикет",
@@ -670,6 +670,32 @@ export const bg = {
   "order.tracking": "Проследяване на пратката",
   "order.trackingNumber": "Номер на товарителница: {number}",
 
+  "admin.hub.confirmOne": "+1",
+  "admin.hub.confirmOneLabel": "Сложих 1 бр. от {title}",
+  "admin.hub.removeOne": "−1",
+  "admin.hub.removeOneLabel": "Махни 1 бр. от {title}",
+  "admin.hub.printSlip": "Опаковъчен лист",
+  "admin.hub.slipLoading": "Подготвям опаковъчния лист…",
+  "admin.hub.noReturnAddress":
+    "Няма адрес на пункта, затова листът е без адрес за връщане. Въведи го в Сборни поръчки → Адрес на пункта.",
+  "admin.hub.markHanded": "Предадена на куриера",
+  "admin.hub.confirmHanded": "Куриерът взе ли пратката {tracking}?",
+  // ---- Packing list in the parcel (D-065): customer's language, printed on A4 ----
+  "packingSlip.title": "Опаковъчен лист",
+  "packingSlip.order": "Поръчка {number} от {date}",
+  "packingSlip.for": "За: {name}, {city}",
+  "packingSlip.sku": "Код",
+  "packingSlip.product": "Продукт",
+  "packingSlip.version": "Версия",
+  "packingSlip.qty": "Брой",
+  "packingSlip.thanks":
+    "Благодарим ти, че пазаруваш при KUMMIE! Документът за продажбата и фактурата (ако си поискал такава) са в имейла ти.",
+  "packingSlip.safetyTitle": "Информация за безопасност и предупреждения",
+  "packingSlip.withdrawalTitle": "Отказ от покупката в {days} дни",
+  "packingSlip.withdrawalText":
+    "Можеш да се откажеш от покупката в срок от {days} дни от получаването, без да посочваш причина. Условията, стъпките и стандартният формуляр за отказ са на {url}.",
+  "packingSlip.orderPage": "Поръчката ти: {url}",
+  "packingSlip.returnTitle": "Адрес за връщане",
   // ---- Groups and calendar ----
   follow: "Следвай",
   following: "Следваш",

@@ -1,7 +1,14 @@
-import { ApiRequestError, type BatchDetail, type BatchSummary, type PackOrder } from "@kummie/contracts";
+import {
+  ApiRequestError,
+  type BatchDetail,
+  type BatchSummary,
+  type PackingSlip,
+  type PackOrder,
+} from "@kummie/contracts";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { batchStatusKey } from "./Batches";
 import { api, useAdmin } from "./context";
+import { PackingSlipPrint } from "./PackingSlipPrint";
 
 type Message = { kind: "ok" | "error"; text: string } | null;
 
@@ -228,10 +235,40 @@ function Pack() {
   const [weight, setWeight] = useState("0.5");
   const [message, setMessage] = useState<Message>(null);
   const [busy, setBusy] = useState(false);
+  const [slip, setSlip] = useState<PackingSlip | null>(null);
 
   useEffect(() => {
     api.packQueue().then((r) => setQueue(r.items));
   }, []);
+
+  // Print once the packing list is on the page (D-065: an ordinary A4 printer).
+  useEffect(() => {
+    if (!slip) return;
+    const done = () => setSlip(null);
+    window.addEventListener("afterprint", done, { once: true });
+    const timer = window.setTimeout(() => window.print(), 50);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("afterprint", done);
+    };
+  }, [slip]);
+
+  async function printSlip(orderId: string) {
+    setMessage({ kind: "ok", text: t("admin.hub.slipLoading") });
+    try {
+      const next = await api.packingSlip(orderId);
+      setMessage(next.returnAddress ? null : { kind: "error", text: t("admin.hub.noReturnAddress") });
+      setSlip(next);
+    } catch (e) {
+      setMessage({ kind: "error", text: errorText(e) });
+    }
+  }
+
+  const slipButton = (orderId: string) => (
+    <button type="button" className="link-button" onClick={() => void printSlip(orderId)}>
+      {t("admin.hub.printSlip")}
+    </button>
+  );
 
   function start(order: PackOrder) {
     setCurrent(order);
@@ -258,6 +295,10 @@ function Pack() {
     beep(true);
     setScanned({ ...scanned, [line.sku]: count + 1 });
     setMessage({ kind: "ok", text: `${line.title} — ${line.version}` });
+  }
+
+  function removeOne(sku: string) {
+    setScanned({ ...scanned, [sku]: Math.max(0, (scanned[sku] ?? 0) - 1) });
   }
 
   const complete = !!current && current.lines.every((l) => (scanned[l.sku] ?? 0) === l.qty);
@@ -287,15 +328,19 @@ function Pack() {
     }
   }
 
+  const printable = slip ? <PackingSlipPrint slip={slip} /> : null;
+
   if (current)
     return (
       <section className="panel stack">
+        {printable}
         <button type="button" className="link-button" onClick={() => setCurrent(null)}>
           ← {t("admin.hub.tab.pack")}
         </button>
         <h2>
           {current.number} · {current.name} · {current.city}, {current.country}
         </h2>
+        <p>{slipButton(current.id)}</p>
         <ScanField label={t("admin.hub.scanProduct")} onScan={scan} disabled={busy} />
         {message ? (
           <p className={message.kind === "ok" ? "ok" : "error"} role="status">
@@ -308,6 +353,7 @@ function Pack() {
               <th>{t("admin.editor.sku")}</th>
               <th>{t("admin.ops.product")}</th>
               <th>{t("admin.hub.inBox")}</th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -319,6 +365,28 @@ function Pack() {
                 </td>
                 <td>
                   {scanned[l.sku] ?? 0} / {l.qty}
+                </td>
+                <td>
+                  <div className="row">
+                    <button
+                      type="button"
+                      className="btn btn--secondary"
+                      aria-label={t("admin.hub.confirmOneLabel", { title: l.title })}
+                      disabled={busy || (scanned[l.sku] ?? 0) >= l.qty}
+                      onClick={() => scan(l.sku)}
+                    >
+                      {t("admin.hub.confirmOne")}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--secondary"
+                      aria-label={t("admin.hub.removeOneLabel", { title: l.title })}
+                      disabled={busy || (scanned[l.sku] ?? 0) === 0}
+                      onClick={() => removeOne(l.sku)}
+                    >
+                      {t("admin.hub.removeOne")}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -347,6 +415,7 @@ function Pack() {
   const packed = queue.filter((o) => o.status === "packed" && o.parcel);
   return (
     <div className="stack">
+      {printable}
       {message ? (
         <p className={message.kind === "ok" ? "ok" : "error"} role="status">
           {message.text}
@@ -362,7 +431,7 @@ function Pack() {
                 {o.number}
               </button>{" "}
               · {o.name} · {o.city}, {o.country} · {o.lines.reduce((n, l) => n + l.qty, 0)}{" "}
-              {t("admin.hub.units")}
+              {t("admin.hub.units")} · {slipButton(o.id)}
             </li>
           ))}
         </ul>
@@ -377,6 +446,27 @@ function Pack() {
               <a href={api.labelUrl(o.parcel?.id ?? "")} target="_blank" rel="noreferrer">
                 {t("admin.hub.printLabel")}
               </a>{" "}
+              · {slipButton(o.id)} ·{" "}
+              <button
+                type="button"
+                className="link-button"
+                onClick={async () => {
+                  const tracking = o.parcel?.trackingNumber ?? "";
+                  if (!tracking || !window.confirm(t("admin.hub.confirmHanded", { tracking }))) return;
+                  try {
+                    const r = await api.handOver(tracking);
+                    setMessage({
+                      kind: "ok",
+                      text: t("admin.hub.handedOver", { order: r.orderNumber, tracking: r.trackingNumber }),
+                    });
+                    setQueue((await api.packQueue()).items);
+                  } catch (e) {
+                    setMessage({ kind: "error", text: errorText(e) });
+                  }
+                }}
+              >
+                {t("admin.hub.markHanded")}
+              </button>{" "}
               ·{" "}
               <button
                 type="button"
