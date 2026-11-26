@@ -3,12 +3,13 @@ import {
   type BatchDetail,
   type BatchSummary,
   type HubAddress,
+  type OfferImportResult,
   type Supplier,
   type SupplierOfferList,
 } from "@kummie/contracts";
 import { formatMoney, parseEuroToCents } from "@kummie/core";
 import type { MessageKey } from "@kummie/i18n";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { api, centsToEuroInput, useAdmin } from "./context";
 
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
@@ -16,10 +17,14 @@ const NEW_SUPPLIER: Supplier = {
   id: "",
   name: "",
   orderEmail: null,
-  closeWeekdays: [1, 3, 5],
-  closeHour: 12,
+  // D-063: Monday and Thursday at 08:30; EU supplier; the purchase order is sent by staff.
+  closeWeekdays: [1, 4],
+  closeHour: 8,
+  closeMinute: 30,
   minOrderCents: 0,
   ddp: false,
+  inEu: true,
+  autoSend: false,
   active: true,
 };
 
@@ -33,14 +38,18 @@ function useExplain() {
     });
 }
 
-/** Admin → Сборни поръчки (M2): batches, suppliers with their offers, and the hub address. */
+/**
+ * Admin → Сборни поръчки (M2): batches, suppliers with their offers, and the hub address. The
+ * content role sees only the offers (D-063: those who enter products enter the wholesale prices).
+ */
 export function Batches() {
-  const { t } = useAdmin();
-  const [tab, setTab] = useState<"batches" | "suppliers" | "hub">("batches");
+  const { t, staff } = useAdmin();
+  const tabs = staff.role === "admin" ? (["batches", "suppliers", "hub"] as const) : (["suppliers"] as const);
+  const [tab, setTab] = useState<"batches" | "suppliers" | "hub">(tabs[0]);
   return (
     <div className="stack">
       <div className="row" role="tablist">
-        {(["batches", "suppliers", "hub"] as const).map((id) => (
+        {tabs.map((id) => (
           <button
             key={id}
             type="button"
@@ -67,6 +76,7 @@ function BatchesTab() {
   const [open, setOpen] = useState<BatchDetail | null>(null);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [tracking, setTracking] = useState("");
+  const [supplierRef, setSupplierRef] = useState("");
   const [busy, setBusy] = useState(false);
   const date = (iso: string | null) =>
     iso ? new Date(iso).toLocaleString(locale === "bg" ? "bg-BG" : "en-GB") : "—";
@@ -211,6 +221,33 @@ function BatchesTab() {
               {t("admin.ops.closeNow")}
             </button>
           ) : null}
+          {open.status === "closed" ? (
+            <div className="stack">
+              <p className="note">{t("admin.ops.sendLead")}</p>
+              <p>
+                <a className="btn btn--secondary" href={api.purchaseOrderUrl(open.id)} download>
+                  {t("admin.ops.downloadPo")}
+                </a>
+              </p>
+              <form
+                className="row"
+                onSubmit={(e: FormEvent) => {
+                  e.preventDefault();
+                  void act(() => api.batchOrdered(open.id, supplierRef.trim() || null), t("admin.saved"));
+                }}
+              >
+                <input
+                  aria-label={t("admin.ops.supplierReference")}
+                  placeholder={t("admin.ops.supplierReference")}
+                  value={supplierRef}
+                  onChange={(e) => setSupplierRef(e.target.value)}
+                />
+                <button type="submit" className="btn" disabled={busy}>
+                  {t("admin.ops.markOrdered")}
+                </button>
+              </form>
+            </div>
+          ) : null}
           {open.status === "ordered" ? (
             <form
               className="row"
@@ -242,7 +279,8 @@ function BatchesTab() {
 }
 
 function SuppliersTab() {
-  const { t, locale } = useAdmin();
+  const { t, locale, staff } = useAdmin();
+  const canEditSupplier = staff.role === "admin";
   const explain = useExplain();
   const [list, setList] = useState<Supplier[]>([]);
   const [form, setForm] = useState<Supplier>(NEW_SUPPLIER);
@@ -251,10 +289,25 @@ function SuppliersTab() {
   const [offers, setOffers] = useState<SupplierOfferList | null>(null);
   const [offer, setOffer] = useState({ sku: "", supplierSku: "", cost: "", active: true });
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const [imported, setImported] = useState<OfferImportResult | null>(null);
 
   useEffect(() => {
     api.suppliers().then((r) => setList(r.items));
   }, []);
+
+  async function importOffers(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setMessage(null);
+    try {
+      const result = await api.importOffers(form.id, await file.text());
+      setImported(result);
+      setOffers(result.offers);
+    } catch (err) {
+      setMessage({ kind: "error", text: explain(err) });
+    }
+  }
 
   function edit(s: Supplier) {
     setForm(s);
@@ -262,6 +315,7 @@ function SuppliersTab() {
     setMinEuro(centsToEuroInput(s.minOrderCents));
     api.supplierOffers(s.id).then(setOffers);
     setMessage(null);
+    setImported(null);
   }
 
   async function saveSupplier(e: FormEvent) {
@@ -305,18 +359,20 @@ function SuppliersTab() {
             {s.active ? "" : ` (${t("admin.ops.inactive")})`}
           </button>
         ))}
-        <button
-          type="button"
-          className="btn btn--secondary"
-          onClick={() => {
-            setForm(NEW_SUPPLIER);
-            setIsNew(true);
-            setMinEuro("0");
-            setOffers(null);
-          }}
-        >
-          + {t("admin.ops.newSupplier")}
-        </button>
+        {canEditSupplier ? (
+          <button
+            type="button"
+            className="btn btn--secondary"
+            onClick={() => {
+              setForm(NEW_SUPPLIER);
+              setIsNew(true);
+              setMinEuro("0");
+              setOffers(null);
+            }}
+          >
+            + {t("admin.ops.newSupplier")}
+          </button>
+        ) : null}
       </div>
       {message ? (
         <p className={message.kind === "ok" ? "ok" : "error"} role="status">
@@ -324,105 +380,159 @@ function SuppliersTab() {
         </p>
       ) : null}
 
-      <form className="panel stack" onSubmit={saveSupplier}>
-        <h2>{isNew ? t("admin.ops.newSupplier") : form.name}</h2>
-        <div className="grid-2">
-          <div className="field">
-            <label htmlFor="s-id">{t("admin.ops.supplierId")}</label>
-            <input
-              id="s-id"
-              value={form.id}
-              disabled={!isNew}
-              onChange={(e) => setForm({ ...form, id: e.target.value.toLowerCase() })}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="s-name">{t("admin.ops.supplierName")}</label>
-            <input
-              id="s-name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="s-mail">{t("admin.ops.orderEmail")}</label>
-            <input
-              id="s-mail"
-              type="email"
-              value={form.orderEmail ?? ""}
-              onChange={(e) => setForm({ ...form, orderEmail: e.target.value || null })}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="s-min">{t("admin.ops.minOrder")}</label>
-            <input
-              id="s-min"
-              inputMode="decimal"
-              value={minEuro}
-              onChange={(e) => setMinEuro(e.target.value)}
-            />
-          </div>
-        </div>
-        <fieldset className="fieldset">
-          <legend>{t("admin.ops.closeDays")}</legend>
-          <div className="row">
-            {WEEKDAYS.map((d) => (
-              <label key={d} className="check">
-                <input
-                  type="checkbox"
-                  checked={form.closeWeekdays.includes(d)}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      closeWeekdays: e.target.checked
-                        ? [...form.closeWeekdays, d].toSorted()
-                        : form.closeWeekdays.filter((x) => x !== d),
-                    })
-                  }
-                />
-                {t(`admin.ops.weekday.${d}`)}
-              </label>
-            ))}
-            <label className="check">
-              {t("admin.ops.closeHour")}
+      {canEditSupplier ? (
+        <form className="panel stack" onSubmit={saveSupplier}>
+          <h2>{isNew ? t("admin.ops.newSupplier") : form.name}</h2>
+          <div className="grid-2">
+            <div className="field">
+              <label htmlFor="s-id">{t("admin.ops.supplierId")}</label>
               <input
-                type="number"
-                min={0}
-                max={23}
-                value={form.closeHour}
-                onChange={(e) => setForm({ ...form, closeHour: Number(e.target.value) })}
-                style={{ width: 70 }}
+                id="s-id"
+                value={form.id}
+                disabled={!isNew}
+                onChange={(e) => setForm({ ...form, id: e.target.value.toLowerCase() })}
               />
+            </div>
+            <div className="field">
+              <label htmlFor="s-name">{t("admin.ops.supplierName")}</label>
+              <input
+                id="s-name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="s-mail">{t("admin.ops.orderEmail")}</label>
+              <input
+                id="s-mail"
+                type="email"
+                value={form.orderEmail ?? ""}
+                onChange={(e) => setForm({ ...form, orderEmail: e.target.value || null })}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="s-min">{t("admin.ops.minOrder")}</label>
+              <input
+                id="s-min"
+                inputMode="decimal"
+                value={minEuro}
+                onChange={(e) => setMinEuro(e.target.value)}
+              />
+            </div>
+          </div>
+          <fieldset className="fieldset">
+            <legend>{t("admin.ops.closeDays")}</legend>
+            <div className="row">
+              {WEEKDAYS.map((d) => (
+                <label key={d} className="check">
+                  <input
+                    type="checkbox"
+                    checked={form.closeWeekdays.includes(d)}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        closeWeekdays: e.target.checked
+                          ? [...form.closeWeekdays, d].toSorted()
+                          : form.closeWeekdays.filter((x) => x !== d),
+                      })
+                    }
+                  />
+                  {t(`admin.ops.weekday.${d}`)}
+                </label>
+              ))}
+              <label className="check">
+                {t("admin.ops.closeHour")}
+                <input
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={form.closeHour}
+                  onChange={(e) => setForm({ ...form, closeHour: Number(e.target.value) })}
+                  style={{ width: 70 }}
+                />
+              </label>
+              <label className="check">
+                {t("admin.ops.closeMinute")}
+                <input
+                  type="number"
+                  min={0}
+                  max={59}
+                  step={5}
+                  value={form.closeMinute}
+                  onChange={(e) => setForm({ ...form, closeMinute: Number(e.target.value) })}
+                  style={{ width: 70 }}
+                />
+              </label>
+            </div>
+          </fieldset>
+          <div className="row">
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={form.ddp}
+                onChange={(e) => setForm({ ...form, ddp: e.target.checked })}
+              />
+              {t("admin.ops.ddp")}
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={form.inEu}
+                onChange={(e) => setForm({ ...form, inEu: e.target.checked })}
+              />
+              {t("admin.ops.inEu")}
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={form.autoSend}
+                onChange={(e) => setForm({ ...form, autoSend: e.target.checked })}
+              />
+              {t("admin.ops.autoSend")}
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) => setForm({ ...form, active: e.target.checked })}
+              />
+              {t("admin.ops.active")}
             </label>
           </div>
-        </fieldset>
-        <div className="row">
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={form.ddp}
-              onChange={(e) => setForm({ ...form, ddp: e.target.checked })}
-            />
-            {t("admin.ops.ddp")}
-          </label>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={form.active}
-              onChange={(e) => setForm({ ...form, active: e.target.checked })}
-            />
-            {t("admin.ops.active")}
-          </label>
-        </div>
-        <button type="submit" className="btn">
-          {t("admin.save")}
-        </button>
-      </form>
+          <button type="submit" className="btn">
+            {t("admin.save")}
+          </button>
+        </form>
+      ) : null}
 
       {offers && !isNew ? (
         <section className="panel stack">
           <h2>{t("admin.ops.offers")}</h2>
           <p className="note">{t("admin.ops.offersLead")}</p>
+          <div className="stack">
+            <label className="btn btn--secondary" style={{ alignSelf: "flex-start" }}>
+              {t("admin.ops.importOffers")}
+              <input type="file" accept=".csv,text/csv" hidden onChange={(e) => void importOffers(e)} />
+            </label>
+            <p className="note">{t("admin.ops.importLead")}</p>
+            {imported ? (
+              <div role="status">
+                <p className="ok">{t("admin.ops.importResult", { saved: imported.saved })}</p>
+                {imported.issues.length > 0 ? (
+                  <>
+                    <p className="error">{t("admin.ops.importIssues")}</p>
+                    <ul className="checklist">
+                      {imported.issues.map((i) => (
+                        <li key={`${i.row}-${i.message}`}>
+                          {i.row}: {i.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
           <form className="row" onSubmit={saveOffer}>
             <input
               aria-label={t("admin.editor.sku")}
