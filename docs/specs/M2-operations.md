@@ -54,22 +54,27 @@ adapters replace them without changing the flow.
 1. **Data model** (migration 0006): `suppliers` (schedule, minimum, DDP, PO e-mail), `supplier_offers`
    (variant ↔ supplier SKU and cost), `batches` (one open batch per supplier, closing time,
    PO reference `PO-YYYY-NNNN`, supplier reference, shipped/received times, extra landed cost),
-   `batch_lines` (one per order line), `parcels` (carrier, tracking number, label PDF, weight,
-   status, times) and `parcel_items`; `operations` setting with the hub address.
+   `batch_lines` (one per order line, with the units counted at the hub), `parcels` (carrier,
+   tracking number, label PDF, weight, status, times; one parcel per order for now);
+   `operations` setting with the hub address. *(done, migration 0006)*
 2. **Core rules** (`packages/core/src/batches.ts`): closing schedule, consolidated PO lines, PO CSV,
-   landed-cost allocation, order progress from its batches. *(done: schedule, CSV, landed cost)*
+   landed-cost allocation, order progress from its batches. *(done)*
 3. **Test partners**: `FileSupplierAdapter` (PO CSV to `PO_OUTBOX_DIR`), `FakeCarrier` (labels,
    simulated tracking, offices and lockers). *(done)*
 4. **Operations job** in the tick (every 5 minutes): put paid orders into batches, close due
    batches and send purchase orders, poll tracking of parcels with the courier. Each step is
-   idempotent; status e-mails go through the outbox.
+   idempotent; status e-mails go through the outbox. *(done; also "Пусни сега" in the admin)*
 5. **Admin → Сборни поръчки** (role admin): suppliers and their schedule, offers per product,
-   hub address; open/closed batches with their lines, "Close now", "Shipped by supplier".
+   hub address; open/closed batches with their lines, "Close now", "Shipped by supplier". *(done)*
 6. **Admin → Пункт България** (roles admin, hub): receive a batch by scanning; packing queue;
-   pack an order by scanning, weight, create label, print; hand over by scanning the label.
-7. **Customer side**: order page shows the tracking number and link once handed to the courier.
+   pack an order by scanning, weight, create label, print; hand over by scanning the label. *(done)*
+7. **Customer side**: order page shows the tracking number once packed. *(done; carrier tracking
+   links come with the real couriers)*
 8. Tests: core unit tests; database tests for the whole path paid → delivered with the test
-   partners.
+   partners. *(done)*
+9. **Next part of M2:** missing units at the hub (cancel the line and refund part of the order,
+   credit note), returns after withdrawal, office/locker choice at checkout, real carrier and
+   supplier adapters once the contracts exist.
 
 ## C. Definition of done
 
