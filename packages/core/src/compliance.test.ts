@@ -80,6 +80,8 @@ describe("publishing gate (GPSR Art. 19)", () => {
 
   it("rejects zero or fractional prices and blank versions", () => {
     expect(missingComplianceFields({ ...complete, pricesCents: [0] })).toEqual(["price"]);
+    expect(missingComplianceFields({ ...complete, variantsWithoutOffer: 1 })).toEqual(["supplierOffer"]);
+    expect(missingComplianceFields({ ...complete, variantsWithoutOffer: 0 })).toEqual([]);
     expect(missingComplianceFields({ ...complete, pricesCents: [19.99] })).toEqual(["price"]);
     expect(missingComplianceFields({ ...complete, versions: ["Version A", " "] })).toEqual(["version"]);
   });

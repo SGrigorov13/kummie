@@ -25,6 +25,11 @@ export type ComplianceDraft = {
   returnExceptions: readonly Partial<Localized>[];
   /** Explicit "no exceptions beyond the legal ones". */
   returnExceptionsNone: boolean;
+  /**
+   * Active variants without any supplier offer (D-063, B3): a product we cannot buy is not
+   * published. Only the server knows the offers; left out, the check is skipped (admin preview).
+   */
+  variantsWithoutOffer?: number;
 };
 
 export type ComplianceField =
@@ -37,7 +42,8 @@ export type ComplianceField =
   | "manufacturer"
   | "euResponsiblePerson"
   | "safety"
-  | "returnExceptions";
+  | "returnExceptions"
+  | "supplierOffer";
 
 const filled = (value: string | null | undefined) => typeof value === "string" && value.trim().length > 0;
 const bothLanguages = (value: Partial<Localized> | null | undefined) =>
@@ -66,6 +72,8 @@ export function missingComplianceFields(draft: ComplianceDraft): ComplianceField
   const exceptionsGiven = draft.returnExceptions.length > 0 && draft.returnExceptions.every(bothLanguages);
   const exceptionsBroken = draft.returnExceptions.some((r) => !bothLanguages(r));
   if (exceptionsBroken || (!exceptionsGiven && !draft.returnExceptionsNone)) missing.push("returnExceptions");
+
+  if ((draft.variantsWithoutOffer ?? 0) > 0) missing.push("supplierOffer");
 
   return missing;
 }
