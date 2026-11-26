@@ -99,7 +99,7 @@ adapters replace them without changing the flow.
 17. **Packing list** printed with each parcel (products, safety information and warnings in the customer's language, return address, withdrawal steps). *(done, D-065: `GET /admin-api/hub/orders/:id/packing-slip`, printed from Пункт България → Опаковане)*
 18. **Landed cost and margin report:** transport and duties per supplier shipment at receiving,
     margin per product and order, export for the ERP.
-19. **Order ratings:** the customer rates a delivered order; staff see low ratings at once to make
+19. **Order ratings:** the customer rates a delivered order — with an account or as a guest through the link to the order (D-066); staff see low ratings at once to make
     it right. Compensation never depends on the rating; no bought or filtered ratings; public
     display only with a note on how they are checked; never on Teen routes.
 20. **Real adapters** for Speedy, Econt, BoxNow and the supplier once the contracts exist.
