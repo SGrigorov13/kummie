@@ -1,6 +1,8 @@
 import { resolve } from "node:path";
 import { accountJobHandlers } from "./accounts/erasure";
 import { DiskStorage } from "./adapters/disk-storage";
+import { FakeCarrier } from "./adapters/fake-carrier";
+import { FileSupplierAdapter } from "./adapters/fake-supplier";
 import { buildApp } from "./app";
 import { createSecretBox } from "./auth/crypto";
 import { createPgCatalogueRepository } from "./catalogue/pg-repository";
@@ -70,6 +72,16 @@ async function main() {
     config.FAKE_PAYMENT_SECRET,
   );
   const shop = accounts ? { ...accounts, payments: fakePayments, fakePayments } : undefined;
+  // M2 with test partners until the distributor and courier agreements (docs/specs/M2-operations.md).
+  const operations = shop
+    ? {
+        db: shop.db,
+        webUrl: config.WEB_URL,
+        supplier: new FileSupplierAdapter(resolve(process.cwd(), config.PO_OUTBOX_DIR)),
+        carriers: [new FakeCarrier()],
+        kick: shop.kick,
+      }
+    : undefined;
   const admin =
     database && config.STAFF_SECRET_KEY
       ? {
@@ -78,6 +90,7 @@ async function main() {
           allowedOrigins: originList(config.ADMIN_ORIGINS),
           cookieSecure,
           storage: media,
+          ...(operations ? { operations } : {}),
           ...(shop ? { shop } : {}),
         }
       : undefined;

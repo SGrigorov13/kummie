@@ -64,6 +64,8 @@ const EnvSchema = z.object({
    * deployed app (e.g. /home/<account>/kummie-media) so a release never deletes photos.
    */
   MEDIA_DIR: z.string().min(1).default("media"),
+  /** Test supplier (M2): purchase orders are written as CSV files to this folder (git-ignored). */
+  PO_OUTBOX_DIR: z.string().min(1).default("po-outbox"),
   /** Folder with Drizzle SQL migrations, relative to the app root. */
   MIGRATIONS_DIR: z.string().min(1).default("drizzle"),
 });

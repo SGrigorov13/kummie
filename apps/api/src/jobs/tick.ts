@@ -59,7 +59,25 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const config = loadConfig();
     const handle = config.DATABASE_URL ? createDatabase(config.DATABASE_URL, 2) : undefined;
     try {
-      const list = createJobs(handle ? { db: handle.db, email: createEmailAdapter(config) } : {});
+      const [{ FakeCarrier }, { FileSupplierAdapter }, { resolve }] = await Promise.all([
+        import("../adapters/fake-carrier"),
+        import("../adapters/fake-supplier"),
+        import("node:path"),
+      ]);
+      const list = createJobs(
+        handle
+          ? {
+              db: handle.db,
+              email: createEmailAdapter(config),
+              operations: {
+                db: handle.db,
+                webUrl: config.WEB_URL,
+                supplier: new FileSupplierAdapter(resolve(process.cwd(), config.PO_OUTBOX_DIR)),
+                carriers: [new FakeCarrier()],
+              },
+            }
+          : {},
+      );
       return await runTick(jobsFor(list, schedule));
     } finally {
       await handle?.close();

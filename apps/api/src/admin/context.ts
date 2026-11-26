@@ -3,6 +3,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { and, eq, gt } from "drizzle-orm";
 import type { StorageAdapter } from "../adapters/storage";
 import type { SecretBox } from "../auth/crypto";
+import type { OperationsDeps } from "../operations/service";
 import { sha256 } from "../auth/crypto";
 import type { Database } from "../db/client";
 import { auditLog, staffSessions, staffUsers } from "../db/schema";
@@ -22,6 +23,8 @@ export type AdminDeps = {
   shop?: ShopDeps;
   /** Product photo files (disk on the hosting); the photo screens are on only when set. */
   storage?: StorageAdapter;
+  /** Suppliers, batches and the hub (M2); on only together with the shop. */
+  operations?: OperationsDeps;
 };
 
 declare module "fastify" {
