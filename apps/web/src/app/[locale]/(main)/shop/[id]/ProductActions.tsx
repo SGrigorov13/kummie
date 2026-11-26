@@ -6,7 +6,7 @@ import { useDemoStore } from "@/lib/demo-store";
 import { useLocale, useT } from "@/lib/locale";
 import { shopApi, useCart } from "@/lib/shop";
 
-type Variant = { id: string; version: string; priceCents: number };
+type Variant = { id: string; version: string; priceCents: number; available: boolean };
 
 /** Version choice (when there is more than one), add to cart, wishlist and "I have it". */
 export function ProductActions({ slug, variants }: { slug: string; variants: Variant[] }) {
@@ -14,7 +14,9 @@ export function ProductActions({ slug, variants }: { slug: string; variants: Var
   const locale = useLocale();
   const { state, toggleWishlist, toggleOwned } = useDemoStore();
   const { setCart } = useCart();
-  const [variantId, setVariantId] = useState(variants[0]?.id ?? "");
+  const [variantId, setVariantId] = useState((variants.find((v) => v.available) ?? variants[0])?.id ?? "");
+  // No supplier has it right now (D-063): say so, never let it into the cart.
+  const soldOut = !(variants.find((v) => v.id === variantId)?.available ?? false);
   const [status, setStatus] = useState<"idle" | "adding" | "added" | "failed">("idle");
   const wished = state.wishlist.includes(slug);
   const owned = state.owned.includes(slug);
@@ -38,6 +40,7 @@ export function ProductActions({ slug, variants }: { slug: string; variants: Var
             {variants.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.version} — {formatMoney(v.priceCents, locale)}
+                {v.available ? "" : ` — ${t("shop.outOfStock")}`}
               </option>
             ))}
           </select>
@@ -47,10 +50,10 @@ export function ProductActions({ slug, variants }: { slug: string; variants: Var
         <button
           type="button"
           className="btn"
-          disabled={status === "adding" || !variantId}
+          disabled={status === "adding" || !variantId || soldOut}
           onClick={addToCart}
         >
-          {t("add")}
+          {soldOut ? t("shop.outOfStock") : t("add")}
         </button>
         <button
           type="button"

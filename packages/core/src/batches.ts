@@ -6,11 +6,14 @@ import { BUSINESS_TIME_ZONE } from "./kummies";
  * batch; the batch closes on fixed days and becomes one purchase order. Pure rules only.
  */
 
-/** When batches close: ISO weekdays (1 = Monday … 7 = Sunday) at a whole hour, Sofia time. */
-export type BatchSchedule = { weekdays: readonly number[]; hour: number };
+/** When batches close: ISO weekdays (1 = Monday … 7 = Sunday) at hour:minute, Sofia time. */
+export type BatchSchedule = { weekdays: readonly number[]; hour: number; minute?: number };
 
-/** Proposal (M2 spec B1): Monday, Wednesday and Friday at 12:00 — every 2–3 days. */
-export const DEFAULT_BATCH_SCHEDULE: BatchSchedule = { weekdays: [1, 3, 5], hour: 12 };
+/** Owner decision (D-063, B1): Monday and Thursday at 08:30 while orders are few. */
+export const DEFAULT_BATCH_SCHEDULE: BatchSchedule = { weekdays: [1, 4], hour: 8, minute: 30 };
+
+/** B2 (D-063): a batch below the supplier's minimum waits at most this long past its first closing. */
+export const MAX_MINIMUM_WAIT_DAYS = 7;
 
 function sofiaParts(ms: number) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -38,8 +41,8 @@ function sofiaParts(ms: number) {
 }
 
 /** The instant of a Sofia wall-clock time (handles summer/winter time). */
-export function sofiaTime(y: number, m: number, d: number, hour: number): Date {
-  const guess = Date.UTC(y, m - 1, d, hour);
+export function sofiaTime(y: number, m: number, d: number, hour: number, minute = 0): Date {
+  const guess = Date.UTC(y, m - 1, d, hour, minute);
   const p = sofiaParts(guess);
   const offset = Date.UTC(p.y, p.m - 1, p.d, p.h, p.min, p.s) - guess;
   return new Date(guess - offset);
@@ -50,15 +53,55 @@ export function nextBatchCloseAt(after: Date, schedule: BatchSchedule = DEFAULT_
   if (schedule.weekdays.length === 0) throw new Error("A batch schedule needs at least one weekday");
   if (!Number.isInteger(schedule.hour) || schedule.hour < 0 || schedule.hour > 23)
     throw new Error("Batch hour must be 0–23");
+  const minute = schedule.minute ?? 0;
+  if (!Number.isInteger(minute) || minute < 0 || minute > 59) throw new Error("Batch minute must be 0–59");
   const today = sofiaParts(after.getTime());
   for (let i = 0; i <= 7; i++) {
     const day = new Date(Date.UTC(today.y, today.m - 1, today.d + i));
     const weekday = ((today.weekday - 1 + i) % 7) + 1;
     if (!schedule.weekdays.includes(weekday)) continue;
-    const at = sofiaTime(day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), schedule.hour);
+    const at = sofiaTime(
+      day.getUTCFullYear(),
+      day.getUTCMonth() + 1,
+      day.getUTCDate(),
+      schedule.hour,
+      minute,
+    );
     if (at.getTime() > after.getTime()) return at;
   }
   throw new Error("unreachable: a weekly schedule always has a next closing time");
+}
+
+/**
+ * B2 (D-063): should a batch below the supplier's minimum wait for the next closing? Only while that
+ * next closing is at most MAX_MINIMUM_WAIT_DAYS after the batch's first closing time.
+ */
+export function waitForMinimum(input: {
+  totalCents: number;
+  minOrderCents: number;
+  firstClosesAt: Date;
+  nextCloseAt: Date;
+}): boolean {
+  if (input.minOrderCents <= 0 || input.totalCents >= input.minOrderCents) return false;
+  const limit = input.firstClosesAt.getTime() + MAX_MINIMUM_WAIT_DAYS * 24 * 60 * 60_000;
+  return input.nextCloseAt.getTime() <= limit;
+}
+
+/** An active offer for a variant, with what decides between suppliers (B3). */
+export type OfferChoice = { supplierId: string; inEu: boolean; unitCostCents: number };
+
+/**
+ * B3 (D-063): an EU supplier always wins over a non-EU one (faster, no customs); between equals the
+ * cheapest wins, then the supplier id so the choice is stable. Returns null when there is no offer.
+ */
+export function pickOffer<T extends OfferChoice>(offers: readonly T[]): T | null {
+  const sorted = offers.toSorted(
+    (a, b) =>
+      Number(b.inEu) - Number(a.inEu) ||
+      a.unitCostCents - b.unitCostCents ||
+      a.supplierId.localeCompare(b.supplierId),
+  );
+  return sorted[0] ?? null;
 }
 
 export type BatchLine = {

@@ -70,7 +70,13 @@ export function createMemoryCatalogueRepository(
         ...card(p),
         summary: p.summary,
         variants: [
-          { id: `${p.id}-v1`, sku: `${p.id.toUpperCase()}-1`, version: p.version, priceCents: p.priceCents },
+          {
+            id: `${p.id}-v1`,
+            sku: `${p.id.toUpperCase()}-1`,
+            version: p.version,
+            priceCents: p.priceCents,
+            available: true,
+          },
         ],
         compliance: {
           dispatchEstimate: p.dispatchEstimate,

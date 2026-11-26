@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDatabase, type DatabaseHandle } from "../db/client";
-import { productCompliance, products, variants } from "../db/schema";
+import { productCompliance, products, supplierOffers, suppliers, variants } from "../db/schema";
 import { seed } from "../db/seed";
 import { createPgCatalogueRepository } from "./pg-repository";
 import { publishProduct, PublishBlockedError } from "./publish";
@@ -80,9 +80,10 @@ describe.skipIf(!safe)("catalogue on PostgreSQL", () => {
     expect(error).toBeInstanceOf(PublishBlockedError);
     expect((error as PublishBlockedError).missing).toContain("manufacturer");
 
-    await handle.db
+    const [variant] = await handle.db
       .insert(variants)
-      .values({ productId: id, version: "A5", sku: "DRAFT-1", priceCents: 1000 });
+      .values({ productId: id, version: "A5", sku: "DRAFT-1", priceCents: 1000 })
+      .returning({ id: variants.id });
     await handle.db.insert(productCompliance).values({
       productId: id,
       dispatchEstimateBg: "3–5 дни",
@@ -93,7 +94,21 @@ describe.skipIf(!safe)("catalogue on PostgreSQL", () => {
       safetyNone: true,
       returnExceptionsNone: true,
     });
+    // D-063: still blocked until a supplier offers it.
+    const noOffer = await publishProduct(handle.db, id).catch((e: unknown) => e);
+    expect((noOffer as PublishBlockedError).missing).toEqual(["supplierOffer"]);
+    await handle.db.insert(suppliers).values({ id: "kmoon", name: "K-Moon" });
+    await handle.db.insert(supplierOffers).values({
+      variantId: variant?.id ?? "",
+      supplierId: "kmoon",
+      supplierSku: "KM-DRAFT-1",
+      unitCostCents: 400,
+      active: false,
+    });
     await publishProduct(handle.db, id);
+    // Every supplier says "none": published, but shown as out of stock.
+    const repo = createPgCatalogueRepository(handle.db, "/media");
+    expect((await repo.getProduct("draft-without-data"))?.variants[0]?.available).toBe(false);
     const [row] = await handle.db
       .select({ status: products.status })
       .from(products)

@@ -17,6 +17,7 @@ import {
   BatchDetail,
   BatchList,
   HandOverResult,
+  OfferImportResult,
   OperationsRun,
   OperationsSettings,
   PackQueue,
@@ -141,6 +142,9 @@ export function createAdminClient({
     supplierOffers: (id: string) => call("GET", `/admin-api/suppliers/${id}/offers`, SupplierOfferList),
     saveOffer: (id: string, offer: SupplierOfferInput) =>
       call("PUT", `/admin-api/suppliers/${id}/offers`, SupplierOfferList, offer),
+    /** A price list (CSV text, comma or semicolon) for one supplier. */
+    importOffers: (id: string, csv: string) =>
+      call("POST", `/admin-api/suppliers/${id}/offers/import`, OfferImportResult, { csv }),
     operationsSettings: () => call("GET", "/admin-api/operations/settings", OperationsSettings),
     saveHubAddress: (hub: HubAddress) =>
       call("PUT", "/admin-api/operations/settings", OperationsSettings, hub),
@@ -148,6 +152,10 @@ export function createAdminClient({
     batches: () => call("GET", "/admin-api/batches", BatchList),
     batch: (id: string) => call("GET", `/admin-api/batches/${id}`, BatchDetail),
     closeBatch: (id: string) => call("POST", `/admin-api/batches/${id}/close`, BatchDetail, {}),
+    /** The purchase order file of a closed batch (direct link; the staff cookie goes along). */
+    purchaseOrderUrl: (id: string) => `${base}/admin-api/batches/${id}/purchase-order.csv`,
+    batchOrdered: (id: string, supplierReference: string | null) =>
+      call("POST", `/admin-api/batches/${id}/ordered`, BatchDetail, { supplierReference }),
     batchShipped: (id: string, tracking: string | null) =>
       call("POST", `/admin-api/batches/${id}/shipped`, BatchDetail, { tracking }),
     scanReceived: (id: string, code: string) =>

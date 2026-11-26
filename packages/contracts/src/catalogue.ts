@@ -73,6 +73,8 @@ export const Variant = z.object({
   sku: z.string(),
   version: z.string(),
   priceCents: z.number().int().positive(),
+  /** False when no supplier has it right now: shown as "out of stock", cannot be added (D-063). */
+  available: z.boolean(),
 });
 
 /** Every field the product page renders under GPSR Art. 19. */

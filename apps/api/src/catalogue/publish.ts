@@ -1,7 +1,7 @@
 import { badgeProblems, missingComplianceFields, type ComplianceField, type Country } from "@kummie/core";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import type { Database } from "../db/client";
-import { productCompliance, products, variants } from "../db/schema";
+import { productCompliance, products, supplierOffers, variants } from "../db/schema";
 
 export class PublishBlockedError extends Error {
   constructor(readonly missing: ComplianceField[]) {
@@ -10,8 +10,12 @@ export class PublishBlockedError extends Error {
   }
 }
 
-/** Loads what the gate needs for one product from the database. */
-export async function loadComplianceDraft(db: Database, productId: string) {
+/**
+ * Loads what the gate needs for one product from the database. With `requireOffer`, every active
+ * variant needs a supplier offer (D-063: a product we cannot buy is not published); only demo data
+ * from the seed skips it.
+ */
+export async function loadComplianceDraft(db: Database, productId: string, requireOffer = true) {
   const [product] = await db.select().from(products).where(eq(products.id, productId));
   if (!product) return null;
   const [variantRows, complianceRows] = await Promise.all([
@@ -20,6 +24,18 @@ export async function loadComplianceDraft(db: Database, productId: string) {
   ]);
   const active = variantRows.filter((v) => v.active);
   const c = complianceRows[0];
+  const offered =
+    requireOffer && active.length > 0
+      ? await db
+          .selectDistinct({ variantId: supplierOffers.variantId })
+          .from(supplierOffers)
+          .where(
+            inArray(
+              supplierOffers.variantId,
+              active.map((v) => v.id),
+            ),
+          )
+      : [];
   return {
     title: product.title,
     sourcing: product.sourcing,
@@ -36,6 +52,7 @@ export async function loadComplianceDraft(db: Database, productId: string) {
     safetyNone: c?.safetyNone ?? false,
     returnExceptions: c?.returnExceptions ?? [],
     returnExceptionsNone: c?.returnExceptionsNone ?? false,
+    ...(requireOffer ? { variantsWithoutOffer: active.length - offered.length } : {}),
   };
 }
 
@@ -43,8 +60,13 @@ export async function loadComplianceDraft(db: Database, productId: string) {
  * Publishes a product only when the GPSR gate passes (CLAUDE.md: a product without these fields
  * cannot be published). Throws PublishBlockedError listing what is missing.
  */
-export async function publishProduct(db: Database, productId: string, now = new Date()): Promise<void> {
-  const draft = await loadComplianceDraft(db, productId);
+export async function publishProduct(
+  db: Database,
+  productId: string,
+  now = new Date(),
+  options: { requireOffer?: boolean } = {},
+): Promise<void> {
+  const draft = await loadComplianceDraft(db, productId, options.requireOffer ?? true);
   if (!draft) throw new Error(`Unknown product ${productId}`);
   const missing = missingComplianceFields(draft);
   if (missing.length > 0) throw new PublishBlockedError(missing);

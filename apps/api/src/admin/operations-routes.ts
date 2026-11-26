@@ -1,10 +1,13 @@
 import {
   BatchDetail,
   BatchList,
+  BatchOrdered,
   BatchShipped,
   HandOverInput,
   HandOverResult,
   IdParams,
+  OfferImportInput,
+  OfferImportResult,
   OperationsRun,
   OperationsSettings,
   HubAddress,
@@ -18,7 +21,7 @@ import {
   SupplierOfferInput,
   SupplierOfferList,
 } from "@kummie/contracts";
-import { and, asc, eq, notExists, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, notExists, sql } from "drizzle-orm";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { products, supplierOffers, suppliers, variants } from "../db/schema";
@@ -29,11 +32,13 @@ import {
   finishReceiving,
   handOver,
   listBatches,
+  markBatchOrdered,
   markBatchShipped,
   OperationsError,
   packOrder,
   packQueue,
   parcelLabel,
+  purchaseOrderFile,
   readHubAddress,
   runOperations,
   scanReceived,
@@ -42,6 +47,7 @@ import {
   writeHubAddress,
   type OperationsDeps,
 } from "../operations/service";
+import { parseOfferCsv } from "../operations/offers-import";
 import { audit, requireStaff, type AdminDeps } from "./context";
 
 const ApiError = z.object({ error: z.string(), message: z.string() });
@@ -55,13 +61,15 @@ const HTTP: Record<OperationsError["code"], 404 | 409 | 422> = {
 };
 
 /**
- * M2 operations in the admin (docs/specs/M2-operations.md): suppliers, offers and the hub address
- * (admin); batches (admin); receiving, packing and hand-over (admin and hub).
+ * M2 operations in the admin (docs/specs/M2-operations.md): suppliers and the hub address (admin);
+ * offers (admin and content, D-063); batches (admin); receiving, packing and hand-over (admin, hub).
  */
 export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps }): FastifyPluginAsyncZod {
   const { db, operations } = deps;
   const onlyAdmin = requireStaff(db, ["admin"]);
   const hubStaff = requireStaff(db, ["admin", "hub"]);
+  /** Those who enter products also enter the supplier offers (D-063, B3). */
+  const offerStaff = requireStaff(db, ["admin", "content"]);
   const staffId = (request: { staff: { id: string } | null }) => request.staff?.id ?? null;
 
   return async (app) => {
@@ -75,7 +83,7 @@ export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps 
 
     app.get(
       "/admin-api/suppliers",
-      { preHandler: onlyAdmin, schema: { response: { 200: SupplierList } } },
+      { preHandler: offerStaff, schema: { response: { 200: SupplierList } } },
       async () => ({ items: await db.select().from(suppliers).orderBy(asc(suppliers.name)) }),
     );
 
@@ -143,14 +151,14 @@ export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps 
 
     app.get(
       "/admin-api/suppliers/:id/offers",
-      { preHandler: onlyAdmin, schema: { params: SupplierParams, response: { 200: SupplierOfferList } } },
+      { preHandler: offerStaff, schema: { params: SupplierParams, response: { 200: SupplierOfferList } } },
       async (request) => offersOf(request.params.id),
     );
 
     app.put(
       "/admin-api/suppliers/:id/offers",
       {
-        preHandler: onlyAdmin,
+        preHandler: offerStaff,
         schema: {
           params: SupplierParams,
           body: SupplierOfferInput,
@@ -181,6 +189,69 @@ export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps 
           sku: request.body.sku,
         });
         return offersOf(supplier.id);
+      },
+    );
+
+    app.post(
+      "/admin-api/suppliers/:id/offers/import",
+      {
+        preHandler: offerStaff,
+        schema: {
+          params: SupplierParams,
+          body: OfferImportInput,
+          response: { 200: OfferImportResult, 404: ApiError },
+        },
+      },
+      async (request, reply) => {
+        const [supplier] = await db.select().from(suppliers).where(eq(suppliers.id, request.params.id));
+        if (!supplier) return reply.code(404).send({ error: "not_found", message: "No such supplier" });
+        const { rows, issues } = parseOfferCsv(request.body.csv);
+        const known = rows.length
+          ? await db
+              .select({ id: variants.id, sku: variants.sku })
+              .from(variants)
+              .where(
+                inArray(
+                  sql`upper(${variants.sku})`,
+                  rows.map((r) => r.sku),
+                ),
+              )
+          : [];
+        const bySku = new Map(known.map((v) => [v.sku.toUpperCase(), v.id]));
+        let saved = 0;
+        await db.transaction(async (tx) => {
+          for (const row of rows) {
+            const variantId = bySku.get(row.sku);
+            if (!variantId) {
+              issues.push({ row: row.row, message: `${row.sku}: no product with this SKU` });
+              continue;
+            }
+            const values = {
+              variantId,
+              supplierId: supplier.id,
+              supplierSku: row.supplierSku,
+              unitCostCents: row.unitCostCents,
+              active: row.active,
+            };
+            await tx
+              .insert(supplierOffers)
+              .values(values)
+              .onConflictDoUpdate({
+                target: [supplierOffers.variantId, supplierOffers.supplierId],
+                set: { ...values, updatedAt: new Date() },
+              });
+            saved += 1;
+          }
+        });
+        await audit(db, staffId(request), "supplier.offers_imported", "supplier", supplier.id, {
+          saved,
+          issues: issues.length,
+        });
+        return {
+          saved,
+          issues: issues.toSorted((a, b) => a.row - b.row),
+          offers: await offersOf(supplier.id),
+        };
       },
     );
 
@@ -237,6 +308,37 @@ export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps 
         await detail(request.params.id);
         await closeDueBatches(operations, new Date(), request.params.id);
         await audit(db, staffId(request), "batch.closed", "batch", request.params.id);
+        return detail(request.params.id);
+      },
+    );
+
+    /** The purchase order of a closed batch as CSV, for staff to e-mail themselves (D-063). */
+    app.get(
+      "/admin-api/batches/:id/purchase-order.csv",
+      { preHandler: onlyAdmin, schema: { params: IdParams } },
+      async (request, reply) => {
+        const file = await purchaseOrderFile(db, request.params.id);
+        return reply
+          .header("content-type", "text/csv; charset=utf-8")
+          .header("content-disposition", `attachment; filename="${file.reference}.csv"`)
+          .header("cache-control", "no-store")
+          .send(file.csv);
+      },
+    );
+
+    app.post(
+      "/admin-api/batches/:id/ordered",
+      {
+        preHandler: onlyAdmin,
+        schema: {
+          params: IdParams,
+          body: BatchOrdered,
+          response: { 200: BatchDetail, 404: ApiError, 409: ApiError },
+        },
+      },
+      async (request) => {
+        await markBatchOrdered(operations, request.params.id, request.body.supplierReference || null);
+        await audit(db, staffId(request), "batch.ordered", "batch", request.params.id);
         return detail(request.params.id);
       },
     );

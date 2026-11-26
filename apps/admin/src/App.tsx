@@ -20,7 +20,7 @@ const NAV: { id: Section; label: MessageKey; roles?: Staff["role"][] }[] = [
   { id: "catalog", label: "admin.catalog", roles: ["admin", "content"] },
   { id: "orders", label: "admin.orders" },
   { id: "reports", label: "admin.reports", roles: ["admin"] },
-  { id: "batches", label: "admin.batches", roles: ["admin"] },
+  { id: "batches", label: "admin.batches", roles: ["admin", "content"] },
   { id: "hub", label: "admin.hub", roles: ["admin", "hub"] },
   { id: "company", label: "admin.company", roles: ["admin"] },
   { id: "sales", label: "admin.gate", roles: ["admin"] },
@@ -153,7 +153,7 @@ function Dashboard() {
         ] as const
       ).map(([label, value]) => (
         <div className="stat" key={label}>
-          <span className="stat__value">{value ?? "…"}</span>
+          <span className="stat__value">{value ?? "â€¦"}</span>
           <span className="stat__label">{t(label)}</span>
         </div>
       ))}

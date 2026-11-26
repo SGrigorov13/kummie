@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   allocateLandedCost,
   orderProgressFromBatches,
+  pickOffer,
   purchaseOrderReference,
+  waitForMinimum,
   consolidateLines,
   nextBatchCloseAt,
   purchaseOrderCsv,
@@ -11,19 +13,20 @@ import {
 } from "./batches";
 
 describe("nextBatchCloseAt", () => {
-  it("closes Monday, Wednesday and Friday at 12:00 Sofia time", () => {
-    // Tuesday 2026-11-24 09:00 UTC (11:00 Sofia, winter time UTC+2) → Wednesday 12:00 Sofia.
-    expect(nextBatchCloseAt(new Date("2026-11-24T09:00:00Z")).toISOString()).toBe("2026-11-25T10:00:00.000Z");
-    // Exactly at closing time → the next one (Friday).
-    expect(nextBatchCloseAt(new Date("2026-11-25T10:00:00Z")).toISOString()).toBe("2026-11-27T10:00:00.000Z");
-    // Friday afternoon → Monday.
-    expect(nextBatchCloseAt(new Date("2026-11-27T15:00:00Z")).toISOString()).toBe("2026-11-30T10:00:00.000Z");
+  it("closes Monday and Thursday at 08:30 Sofia time (D-063)", () => {
+    // Tuesday 2026-11-24 11:00 Sofia (winter time UTC+2) → Thursday 08:30 Sofia.
+    expect(nextBatchCloseAt(new Date("2026-11-24T09:00:00Z")).toISOString()).toBe("2026-11-26T06:30:00.000Z");
+    // Exactly at closing time → the next one (Monday).
+    expect(nextBatchCloseAt(new Date("2026-11-26T06:30:00Z")).toISOString()).toBe("2026-11-30T06:30:00.000Z");
+    // Monday 08:29 Sofia → the same morning.
+    expect(nextBatchCloseAt(new Date("2026-11-30T06:29:00Z")).toISOString()).toBe("2026-11-30T06:30:00.000Z");
   });
 
   it("follows summer time", () => {
     expect(sofiaTime(2027, 7, 5, 12).toISOString()).toBe("2027-07-05T09:00:00.000Z");
-    // Saturday before the switch to summer time (28 March 2027) → Monday 12:00 at UTC+3.
-    expect(nextBatchCloseAt(new Date("2027-03-27T12:00:00Z")).toISOString()).toBe("2027-03-29T09:00:00.000Z");
+    expect(sofiaTime(2027, 7, 5, 8, 30).toISOString()).toBe("2027-07-05T05:30:00.000Z");
+    // Saturday before the switch to summer time (28 March 2027) → Monday 08:30 at UTC+3.
+    expect(nextBatchCloseAt(new Date("2027-03-27T12:00:00Z")).toISOString()).toBe("2027-03-29T05:30:00.000Z");
   });
 
   it("takes a custom schedule", () => {
@@ -31,6 +34,34 @@ describe("nextBatchCloseAt", () => {
       nextBatchCloseAt(new Date("2026-11-24T09:00:00Z"), { weekdays: [2], hour: 18 }).toISOString(),
     ).toBe("2026-11-24T16:00:00.000Z");
     expect(() => nextBatchCloseAt(new Date(), { weekdays: [], hour: 12 })).toThrow();
+    expect(() => nextBatchCloseAt(new Date(), { weekdays: [1], hour: 8, minute: 60 })).toThrow();
+  });
+});
+
+describe("waitForMinimum (B2)", () => {
+  const first = new Date("2026-11-30T06:30:00Z"); // Monday 08:30
+  const base = { totalCents: 6000, minOrderCents: 15000, firstClosesAt: first };
+  it("waits while the next closing is within 7 days of the first", () => {
+    expect(waitForMinimum({ ...base, nextCloseAt: new Date("2026-12-03T06:30:00Z") })).toBe(true);
+    expect(waitForMinimum({ ...base, nextCloseAt: new Date("2026-12-07T06:30:00Z") })).toBe(true);
+    expect(waitForMinimum({ ...base, nextCloseAt: new Date("2026-12-10T06:30:00Z") })).toBe(false);
+  });
+  it("never waits without a minimum or once it is reached", () => {
+    const next = new Date("2026-12-03T06:30:00Z");
+    expect(waitForMinimum({ ...base, minOrderCents: 0, nextCloseAt: next })).toBe(false);
+    expect(waitForMinimum({ ...base, totalCents: 15000, nextCloseAt: next })).toBe(false);
+  });
+});
+
+describe("pickOffer (B3)", () => {
+  it("prefers an EU supplier, then the cheapest", () => {
+    const korea = { supplierId: "seoul", inEu: false, unitCostCents: 900 };
+    const italy = { supplierId: "kmoon", inEu: true, unitCostCents: 1200 };
+    const spain = { supplierId: "madrid", inEu: true, unitCostCents: 1100 };
+    expect(pickOffer([korea, italy])).toBe(italy);
+    expect(pickOffer([korea, italy, spain])).toBe(spain);
+    expect(pickOffer([korea])).toBe(korea);
+    expect(pickOffer([])).toBeNull();
   });
 });
 
