@@ -138,6 +138,7 @@ export const PackOrder = z.object({
 });
 export type PackOrder = z.infer<typeof PackOrder>;
 export const PackQueue = z.object({ items: z.array(PackOrder) });
+export type PackQueue = z.infer<typeof PackQueue>;
 
 export const PackInput = z.object({
   /** Units scanned per our SKU; the server checks them against the order. */
