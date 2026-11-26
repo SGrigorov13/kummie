@@ -157,6 +157,33 @@ export type PackOrder = z.infer<typeof PackOrder>;
 export const PackQueue = z.object({ items: z.array(PackOrder) });
 export type PackQueue = z.infer<typeof PackQueue>;
 
+/**
+ * The A4 packing list that goes into the parcel (D-065): what is inside, safety information and
+ * warnings in the customer's language, the return address and how to withdraw. Name and city
+ * only — the full address is on the courier label.
+ */
+export const PackingSlip = z.object({
+  orderNumber: z.string(),
+  /** When the order was paid (ISO). */
+  orderedAt: z.string(),
+  locale: z.enum(["bg", "en"]),
+  recipient: z.object({ name: z.string(), city: z.string(), country: z.string() }),
+  lines: z.array(
+    z.object({ sku: z.string(), title: z.string(), version: z.string(), qty: z.number().int() }),
+  ),
+  /** Per product with safety information or warnings, in the customer's language. */
+  safety: z.array(
+    z.object({ title: z.string(), info: z.string().nullable(), warnings: z.array(z.string()) }),
+  ),
+  /** The hub address, which is also the return address (D-063); null until entered. */
+  returnAddress: HubAddress.nullable(),
+  /** The order page (without the guest key: customers open it from their e-mail or account). */
+  orderUrl: z.string(),
+  withdrawalUrl: z.string(),
+  withdrawalDays: z.number().int(),
+});
+export type PackingSlip = z.infer<typeof PackingSlip>;
+
 export const PackInput = z.object({
   /** Units scanned per our SKU; the server checks them against the order. */
   items: z.array(z.object({ sku: z.string().min(1).max(64), qty: z.number().int().positive() })).min(1),

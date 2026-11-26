@@ -656,7 +656,7 @@ export const en: Messages = {
   "admin.hub.inBox": "In the box",
   "admin.hub.weight": "Weight (kg)",
   "admin.hub.makeLabel": "Create label",
-  "admin.hub.scanAll": "Scan every product of the order to create the label.",
+  "admin.hub.scanAll": "Scan or confirm with “+1” every product of the order to create the label.",
   "admin.hub.toPack": "To pack",
   "admin.hub.nothingToPack": "No orders to pack.",
   "admin.hub.waitingCourier": "Packed, waiting for the courier",
@@ -664,7 +664,7 @@ export const en: Messages = {
   "admin.hub.confirmCancelLabel": "Cancel this label? The order goes back to packing.",
   "admin.hub.cancelLabel": "Cancel label",
   "admin.hub.handoverLead":
-    "When the courier collects the parcels, scan each label. The customer gets a “Handed to courier” e-mail.",
+    "When the courier collects the parcels, scan or type the number on each label (or press “Handed to the courier” under Packing). The customer gets a “Handed to courier” e-mail.",
   "admin.hub.unknownLabel": "no parcel with this label",
   "admin.hub.alreadyHanded": "already handed to the courier",
   "admin.hub.scanLabel": "Scan label",
@@ -672,6 +672,32 @@ export const en: Messages = {
   "order.tracking": "Parcel tracking",
   "order.trackingNumber": "Tracking number: {number}",
 
+  "admin.hub.confirmOne": "+1",
+  "admin.hub.confirmOneLabel": "Put 1 of {title} in the box",
+  "admin.hub.removeOne": "−1",
+  "admin.hub.removeOneLabel": "Take 1 of {title} out",
+  "admin.hub.printSlip": "Packing list",
+  "admin.hub.slipLoading": "Preparing the packing list…",
+  "admin.hub.noReturnAddress":
+    "No hub address yet, so the list has no return address. Enter it under Batches → Hub address.",
+  "admin.hub.markHanded": "Handed to the courier",
+  "admin.hub.confirmHanded": "Did the courier take parcel {tracking}?",
+  // ---- Packing list in the parcel (D-065): customer's language, printed on A4 ----
+  "packingSlip.title": "Packing list",
+  "packingSlip.order": "Order {number} of {date}",
+  "packingSlip.for": "For: {name}, {city}",
+  "packingSlip.sku": "Code",
+  "packingSlip.product": "Product",
+  "packingSlip.version": "Version",
+  "packingSlip.qty": "Qty",
+  "packingSlip.thanks":
+    "Thank you for shopping with KUMMIE! The sales document and your invoice (if you asked for one) are in your e-mail.",
+  "packingSlip.safetyTitle": "Safety information and warnings",
+  "packingSlip.withdrawalTitle": "Withdrawal within {days} days",
+  "packingSlip.withdrawalText":
+    "You can withdraw from the purchase within {days} days of receiving it without giving a reason. The terms, the steps and the model withdrawal form are at {url}.",
+  "packingSlip.orderPage": "Your order: {url}",
+  "packingSlip.returnTitle": "Return address",
   // ---- Groups and calendar ----
   follow: "Follow",
   following: "Following",
