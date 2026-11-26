@@ -8,6 +8,8 @@ import { AdminProvider, api, useAdmin } from "./context";
 import { OrderDetailView, Orders } from "./Orders";
 import { ProductEditor } from "./ProductEditor";
 import { Reports } from "./Reports";
+import { Batches } from "./Batches";
+import { Hub } from "./Hub";
 import { NapReminderBanner, SalesReadiness } from "./SalesReadiness";
 import { SignIn } from "./SignIn";
 
@@ -18,8 +20,8 @@ const NAV: { id: Section; label: MessageKey; roles?: Staff["role"][] }[] = [
   { id: "catalog", label: "admin.catalog", roles: ["admin", "content"] },
   { id: "orders", label: "admin.orders" },
   { id: "reports", label: "admin.reports", roles: ["admin"] },
-  { id: "batches", label: "admin.batches" },
-  { id: "hub", label: "admin.hub" },
+  { id: "batches", label: "admin.batches", roles: ["admin"] },
+  { id: "hub", label: "admin.hub", roles: ["admin", "hub"] },
   { id: "company", label: "admin.company", roles: ["admin"] },
   { id: "sales", label: "admin.gate", roles: ["admin"] },
 ];
@@ -130,11 +132,8 @@ function Shell({ langButton, onSignOut }: { langButton: React.ReactNode; onSignO
         {section === "orders" && openOrder ? (
           <OrderDetailView id={openOrder} onClose={() => setOpenOrder(null)} />
         ) : null}
-        {["batches", "hub"].includes(section) ? (
-          <section className="empty">
-            <p>{t("admin.comingLater")}</p>
-          </section>
-        ) : null}
+        {section === "batches" ? <Batches /> : null}
+        {section === "hub" ? <Hub /> : null}
       </main>
     </div>
   );
@@ -143,12 +142,7 @@ function Shell({ langButton, onSignOut }: { langButton: React.ReactNode; onSignO
 function Dashboard() {
   const { t, staff } = useAdmin();
   const stats = useProductStats();
-  if (staff.role === "hub")
-    return (
-      <section className="empty">
-        <p>{t("admin.comingLater")}</p>
-      </section>
-    );
+  if (staff.role === "hub") return <Hub />;
   return (
     <div className="stats">
       {(
