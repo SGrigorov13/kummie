@@ -5,6 +5,7 @@ import {
   CheckoutRequest,
   CheckoutResponse,
   IdParams,
+  InvoiceRequest,
   MAX_LINE_QTY,
   OrderDetail,
   OrderList,
@@ -33,7 +34,16 @@ import { supplierAvailable } from "../catalogue/availability";
 import { documentFileName, renderDocumentPdf } from "../documents/pdf";
 import { loadSalesReadiness, runtimeOf } from "../admin/golive";
 import { changeOrderStatus, StatusChangeError } from "./lifecycle";
-import { orderDetail, orderNumber, startPayment, vatShares, type OrderRow, type ShopDeps } from "./orders";
+import { InvoiceNotPossible, NumberRangeExhausted } from "../documents/issue";
+import {
+  orderDetail,
+  orderNumber,
+  requestLateInvoice,
+  startPayment,
+  vatShares,
+  type OrderRow,
+  type ShopDeps,
+} from "./orders";
 
 const ApiError = z.object({ error: z.string(), message: z.string() });
 const CartChanged = ApiError.extend({
@@ -343,6 +353,45 @@ export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
           }
           throw error;
         }
+      },
+    );
+
+    app.post(
+      "/orders/:id/invoice",
+      {
+        config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+        schema: {
+          params: IdParams,
+          body: InvoiceRequest,
+          response: { 200: OrderDetail, 404: ApiError, 409: ApiError, 503: ApiError },
+        },
+      },
+      async (request, reply) => {
+        const order = await accessibleOrder(request, request.params.id);
+        if (!order) return reply.code(404).send(notFound);
+        if (!(await orderDetail(db, order)).invoiceRequestUntil) {
+          return reply.code(409).send({
+            error: "invoice_not_possible",
+            message: "An invoice can no longer be requested for this order",
+          });
+        }
+        try {
+          await requestLateInvoice(deps, order, request.body);
+        } catch (error) {
+          if (error instanceof InvoiceNotPossible) {
+            return reply.code(409).send({ error: "invoice_not_possible", message: error.message });
+          }
+          if (error instanceof NumberRangeExhausted) {
+            request.log.error({ series: error.series }, "document number range used up");
+            return reply
+              .code(503)
+              .send({ error: "numbering_exhausted", message: "Invoices cannot be issued right now" });
+          }
+          throw error;
+        }
+        deps.kick?.();
+        const [fresh] = await db.select().from(orders).where(eq(orders.id, order.id));
+        return orderDetail(db, fresh ?? order);
       },
     );
 

@@ -8,7 +8,9 @@
  * against НАП's XSD) before real sales — see D-055.
  */
 
-const MAX_DOC_NUMBER = 9_999_999_999;
+import { addDays } from "./kummies";
+
+export const MAX_DOC_NUMBER = 9_999_999_999;
 
 /** Document numbers are 10 digits, ascending by one, without gaps (Н-18 чл. 52о; ЗДДС for invoices). */
 export function formatDocNumber(value: number): string {
@@ -16,6 +18,24 @@ export function formatDocNumber(value: number): string {
     throw new Error(`Invalid document number ${value}`);
   }
   return String(value).padStart(10, "0");
+}
+
+/**
+ * A number range for one series (set by the accountant so the platform's documents never share a
+ * number with those from the accounting program): whole numbers, 10 digits at most, first ≤ last.
+ */
+export function isValidNumberRange(first: number, last: number): boolean {
+  return (
+    Number.isInteger(first) && Number.isInteger(last) && first >= 1 && last <= MAX_DOC_NUMBER && first <= last
+  );
+}
+
+/**
+ * Last day (Sofia) on which a customer may still ask for an invoice for a sale paid on `paidDay`
+ * (ЗДДС чл. 113, ал. 4: an invoice within 5 days of the tax event; the number of days is a setting).
+ */
+export function invoiceRequestUntil(paidDay: string, days: number): string {
+  return addDays(paidDay, days);
 }
 
 /** Integer cents → "24.96" (point, two decimals, minus sign when negative). */

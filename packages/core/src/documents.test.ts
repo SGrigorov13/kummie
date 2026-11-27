@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   centsToDecimal,
   formatDocNumber,
+  invoiceRequestUntil,
+  isValidNumberRange,
   napAuditXml,
   receiptQrContent,
   sofiaDateTime,
@@ -14,6 +16,20 @@ describe("document numbers and amounts", () => {
     expect(formatDocNumber(9_999_999_999)).toBe("9999999999");
     expect(() => formatDocNumber(0)).toThrow();
     expect(() => formatDocNumber(10_000_000_000)).toThrow();
+  });
+
+  it("accepts only non-empty 10-digit ranges", () => {
+    expect(isValidNumberRange(2_000_000_001, 2_999_999_999)).toBe(true);
+    expect(isValidNumberRange(5, 5)).toBe(true);
+    expect(isValidNumberRange(10, 9)).toBe(false);
+    expect(isValidNumberRange(0, 9)).toBe(false);
+    expect(isValidNumberRange(1, 10_000_000_000)).toBe(false);
+    expect(isValidNumberRange(1.5, 9)).toBe(false);
+  });
+
+  it("counts the invoice request window in Sofia days, across months", () => {
+    expect(invoiceRequestUntil("2026-11-28", 5)).toBe("2026-12-03");
+    expect(invoiceRequestUntil("2026-11-28", 0)).toBe("2026-11-28");
   });
 
   it("writes cents as decimals with a sign", () => {

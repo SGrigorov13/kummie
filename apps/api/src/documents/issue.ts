@@ -1,18 +1,29 @@
-import type { CompanySettings } from "@kummie/contracts";
-import { businessDay, receiptQrContent } from "@kummie/core";
+import type { CompanySettings, InvoiceRequest } from "@kummie/contracts";
+import { businessDay, MAX_DOC_NUMBER, receiptQrContent } from "@kummie/core";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { documentSequences, orderLines, salesDocuments, type DocumentSnapshot } from "../db/schema";
+import { documentSequences, orderLines, orders, salesDocuments, type DocumentSnapshot } from "../db/schema";
 import { orderNumber, type OrderRow, type Tx } from "../shop/basics";
 
 export type DocumentRow = typeof salesDocuments.$inferSelect;
 type PaymentInfo = { terminalId: string | null; authCode: string | null; transactionRef: string | null };
 
+export type DocumentSeries = "receipt" | "invoice";
+
+/** The series' range is used up: no document can be issued until the accountant sets a new one. */
+export class NumberRangeExhausted extends Error {
+  constructor(readonly series: DocumentSeries) {
+    super(`The ${series} number range is used up`);
+    this.name = "NumberRangeExhausted";
+  }
+}
+
 /**
  * Next number of a series, inside the caller's transaction. The upsert locks the series row until
  * commit, so numbers are unique and — because a rolled-back transaction releases its number —
- * without gaps (Н-18 чл. 52о: ascending by one; ЗДДС: invoices in one unbroken series).
+ * without gaps (Н-18 чл. 52о: ascending by one; ЗДДС: invoices in one unbroken series). A number
+ * past the range's end is never issued (D-067): the whole transaction fails instead.
  */
-export async function nextDocumentNumber(tx: Tx, series: "receipt" | "invoice"): Promise<number> {
+export async function nextDocumentNumber(tx: Tx, series: DocumentSeries): Promise<number> {
   const [row] = await tx
     .insert(documentSequences)
     .values({ series, lastNumber: 1 })
@@ -20,8 +31,9 @@ export async function nextDocumentNumber(tx: Tx, series: "receipt" | "invoice"):
       target: documentSequences.series,
       set: { lastNumber: sql`${documentSequences.lastNumber} + 1` },
     })
-    .returning({ number: documentSequences.lastNumber });
+    .returning({ number: documentSequences.lastNumber, endNumber: documentSequences.endNumber });
   if (!row) throw new Error("no document number");
+  if (row.number > (row.endNumber ?? MAX_DOC_NUMBER)) throw new NumberRangeExhausted(series);
   return row.number;
 }
 
@@ -34,6 +46,18 @@ function sellerOf(company: CompanySettings): DocumentSnapshot["seller"] {
     email: company.contactEmail,
     eShopNumber: company.napRfNumber ?? company.napEShopNumber,
   };
+}
+
+function buyerOf(invoice: InvoiceRequest): NonNullable<DocumentSnapshot["buyer"]> {
+  return invoice.kind === "company"
+    ? {
+        kind: "company",
+        name: invoice.name,
+        address: invoice.address,
+        eik: invoice.eik,
+        vatNumber: invoice.vatNumber,
+      }
+    : { kind: "person", name: invoice.name, address: invoice.address };
 }
 
 /** Document lines: the goods plus delivery (when charged), with the order's frozen VAT shares. */
@@ -119,16 +143,7 @@ export async function issueSaleDocuments(
 
   if (order.invoice) {
     const invoiceNumber = await nextDocumentNumber(tx, "invoice");
-    const buyer: DocumentSnapshot["buyer"] =
-      order.invoice.kind === "company"
-        ? {
-            kind: "company",
-            name: order.invoice.name,
-            address: order.invoice.address,
-            eik: order.invoice.eik,
-            vatNumber: order.invoice.vatNumber,
-          }
-        : { kind: "person", name: order.invoice.name, address: order.invoice.address };
+    const buyer = buyerOf(order.invoice);
     const [invoice] = await tx
       .insert(salesDocuments)
       .values({
@@ -146,6 +161,64 @@ export async function issueSaleDocuments(
     if (invoice) issued.push(invoice);
   }
   return issued;
+}
+
+export class InvoiceNotPossible extends Error {
+  constructor(readonly code: "not_paid" | "already_invoiced" | "refunded") {
+    super(
+      code === "not_paid"
+        ? "The order has no sales document yet"
+        : code === "already_invoiced"
+          ? "The order already has an invoice"
+          : "The sale was refunded",
+    );
+    this.name = "InvoiceNotPossible";
+  }
+}
+
+/**
+ * An invoice asked for after the payment (D-067): same lines, amounts and payment as the чл. 52о
+ * document, the buyer's data from the request, the next number of the invoice series, and the sale
+ * day printed as the tax event date. The request is stored on the order as well.
+ */
+export async function issueLateInvoice(
+  tx: Tx,
+  order: OrderRow,
+  request: InvoiceRequest,
+  company: CompanySettings,
+  issuedAt = new Date(),
+): Promise<DocumentRow> {
+  const docs = await tx.select().from(salesDocuments).where(eq(salesDocuments.orderId, order.id));
+  const receipt = docs.find((d) => d.kind === "receipt");
+  if (!receipt) throw new InvoiceNotPossible("not_paid");
+  if (docs.some((d) => d.kind === "invoice")) throw new InvoiceNotPossible("already_invoiced");
+  if (docs.some((d) => d.kind === "receipt_storno")) throw new InvoiceNotPossible("refunded");
+
+  const number = await nextDocumentNumber(tx, "invoice");
+  const [invoice] = await tx
+    .insert(salesDocuments)
+    .values({
+      orderId: order.id,
+      kind: "invoice",
+      series: "invoice",
+      number,
+      issuedAt,
+      totalCents: receipt.totalCents,
+      vatCents: receipt.vatCents,
+      vatRateBp: receipt.vatRateBp,
+      snapshot: {
+        ...receipt.snapshot,
+        seller: sellerOf(company),
+        buyer: buyerOf(request),
+        qr: null,
+        refersToNumber: null,
+        taxEventDate: businessDay(receipt.issuedAt),
+      },
+    })
+    .returning();
+  if (!invoice) throw new Error("invoice not stored");
+  await tx.update(orders).set({ invoice: request }).where(eq(orders.id, order.id));
+  return invoice;
 }
 
 /**
@@ -189,6 +262,7 @@ export async function issueRefundDocuments(
           })),
           qr: null,
           refersToNumber: String(original.number).padStart(10, "0"),
+          taxEventDate: null,
         },
       })
       .returning();

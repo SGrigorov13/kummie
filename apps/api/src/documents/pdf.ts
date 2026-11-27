@@ -187,7 +187,7 @@ export async function renderDocumentPdf(doc: DocumentRow): Promise<Buffer> {
 
   if (doc.kind === "invoice" || doc.kind === "credit_note") {
     pdf.moveDown(0.6);
-    pdf.text(`Дата на данъчното събитие: ${date}`, { width: 300 });
+    pdf.text(`Дата на данъчното събитие: ${s.taxEventDate ?? date}`, { width: 300 });
     if (doc.kind === "credit_note")
       pdf.text("Основание: връщане на сумата при отказ от поръчката", { width: 300 });
   }

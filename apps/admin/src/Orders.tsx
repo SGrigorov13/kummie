@@ -8,6 +8,7 @@ import { formatMoney } from "@kummie/core";
 import type { MessageKey } from "@kummie/i18n";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, useAdmin } from "./context";
+import { canIssueInvoice, IssueInvoice } from "./IssueInvoice";
 
 const STATUSES: OrderStatus[] = [
   "pending_payment",
@@ -293,6 +294,9 @@ export function OrderDetailView({ id, onClose }: { id: string; onClose: () => vo
               ))}
             </ul>
           </>
+        ) : null}
+        {staff.role === "admin" && canIssueInvoice(order) ? (
+          <IssueInvoice order={order} onIssued={setOrder} />
         ) : null}
         <h2>{t("admin.order.payments")}</h2>
         <ul>

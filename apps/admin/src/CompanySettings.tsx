@@ -2,8 +2,9 @@ import { ApiRequestError, CompanySettings as Settings } from "@kummie/contracts"
 import { parseEuroToCents } from "@kummie/core";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, centsToEuroInput, useAdmin } from "./context";
+import { NumberingSettings } from "./NumberingSettings";
 
-type TextKey = Exclude<keyof Settings, "deliveryFeesCents">;
+type TextKey = Exclude<keyof Settings, "deliveryFeesCents" | "invoiceRequestDays">;
 
 const FIELDS: { key: TextKey; label: Parameters<ReturnType<typeof useAdmin>["t"]>[0]; type?: string }[] = [
   { key: "legalName", label: "admin.legalName" },
@@ -58,6 +59,7 @@ export function CompanySettings() {
       setInvalid(keys);
       const labels = [...FIELDS, ...NAP].filter((f) => keys.includes(f.key)).map((f) => t(f.label));
       if (keys.includes("deliveryFeesCents")) labels.push(t("admin.deliveryFees"));
+      if (keys.includes("invoiceRequestDays")) labels.push(t("admin.invoiceRequestDays"));
       setMessage(t("admin.checkFields", { fields: labels.join(", ") }));
       return;
     }
@@ -85,31 +87,45 @@ export function CompanySettings() {
   );
 
   return (
-    <form className="panel stack" onSubmit={save}>
-      <p className="note">{t("admin.companyLead")}</p>
-      <div className="grid-2">{FIELDS.map(field)}</div>
-      <h2>{t("admin.napTitle")}</h2>
-      <div className="grid-2">{NAP.map(field)}</div>
-      <h2>{t("admin.deliveryFees")}</h2>
-      <div className="grid-3">
-        {COUNTRIES.map((c) => (
-          <div className="field" key={c}>
-            <label htmlFor={`fee-${c}`}>{t(`country.${c}`)}</label>
-            <input
-              id={`fee-${c}`}
-              inputMode="decimal"
-              value={fees[c] ?? ""}
-              onChange={(e) => setFees({ ...fees, [c]: e.target.value })}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="row">
-        <button type="submit" className="btn">
-          {t("admin.save")}
-        </button>
-        {message ? <span role="status">{message}</span> : null}
-      </div>
-    </form>
+    <>
+      <form className="panel stack" onSubmit={save}>
+        <p className="note">{t("admin.companyLead")}</p>
+        <div className="grid-2">{FIELDS.map(field)}</div>
+        <h2>{t("admin.napTitle")}</h2>
+        <div className="grid-2">{NAP.map(field)}</div>
+        <h2>{t("admin.deliveryFees")}</h2>
+        <div className="grid-3">
+          {COUNTRIES.map((c) => (
+            <div className="field" key={c}>
+              <label htmlFor={`fee-${c}`}>{t(`country.${c}`)}</label>
+              <input
+                id={`fee-${c}`}
+                inputMode="decimal"
+                value={fees[c] ?? ""}
+                onChange={(e) => setFees({ ...fees, [c]: e.target.value })}
+              />
+            </div>
+          ))}
+        </div>
+        <div className={invalid.includes("invoiceRequestDays") ? "field field--missing" : "field"}>
+          <label htmlFor="company-invoiceRequestDays">{t("admin.invoiceRequestDays")}</label>
+          <input
+            id="company-invoiceRequestDays"
+            type="number"
+            min={0}
+            max={90}
+            value={settings.invoiceRequestDays}
+            onChange={(e) => setSettings({ ...settings, invoiceRequestDays: Number(e.target.value) })}
+          />
+        </div>
+        <div className="row">
+          <button type="submit" className="btn">
+            {t("admin.save")}
+          </button>
+          {message ? <span role="status">{message}</span> : null}
+        </div>
+      </form>
+      <NumberingSettings />
+    </>
   );
 }

@@ -5,6 +5,13 @@ import { formatMoney, SHIPPING_COUNTRIES } from "@kummie/core";
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { Field } from "@/components/Field";
+import {
+  EMPTY_INVOICE,
+  InvoiceFields,
+  toInvoiceRequest,
+  type InvoiceDraft,
+  type InvoiceKind,
+} from "@/components/InvoiceFields";
 import { accountApi, codeOf, commonErrorKey, statusOf } from "@/lib/account";
 import { useLocale, useT } from "@/lib/locale";
 import { href } from "@/lib/paths";
@@ -21,7 +28,7 @@ const EMPTY: DeliveryAddress = {
   phone: "",
 };
 
-type InvoiceKind = "none" | "person" | "company";
+type InvoiceChoice = "none" | InvoiceKind;
 
 /**
  * Checkout: contact, delivery address, optional invoice (A14), the withdrawal information and terms
@@ -39,8 +46,8 @@ export function CheckoutView() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState<DeliveryAddress>(EMPTY);
   const [saveAddress, setSaveAddress] = useState(true);
-  const [invoiceKind, setInvoiceKind] = useState<InvoiceKind>("none");
-  const [invoice, setInvoice] = useState({ name: "", address: "", eik: "", vatNumber: "" });
+  const [invoiceKind, setInvoiceKind] = useState<InvoiceChoice>("none");
+  const [invoice, setInvoice] = useState<InvoiceDraft>(EMPTY_INVOICE);
   const [accept, setAccept] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -104,17 +111,7 @@ export function CheckoutView() {
   }
 
   function invoiceRequest(): InvoiceRequest | null {
-    if (invoiceKind === "person") return { kind: "person", name: invoice.name, address: invoice.address };
-    if (invoiceKind === "company") {
-      return {
-        kind: "company",
-        name: invoice.name,
-        address: invoice.address,
-        eik: invoice.eik.trim(),
-        vatNumber: invoice.vatNumber.trim() ? invoice.vatNumber.trim().toUpperCase() : null,
-      };
-    }
-    return null;
+    return invoiceKind === "none" ? null : toInvoiceRequest(invoiceKind, invoice);
   }
 
   async function submit(event: FormEvent) {
@@ -280,43 +277,7 @@ export function CheckoutView() {
             </label>
           ))}
           {invoiceKind !== "none" ? (
-            <>
-              <Field
-                id="inv-name"
-                label={t("shop.invoiceName")}
-                required
-                value={invoice.name}
-                onChange={(e) => setInvoice({ ...invoice, name: e.target.value })}
-              />
-              <Field
-                id="inv-address"
-                label={t("shop.invoiceAddress")}
-                required
-                minLength={3}
-                value={invoice.address}
-                onChange={(e) => setInvoice({ ...invoice, address: e.target.value })}
-              />
-            </>
-          ) : null}
-          {invoiceKind === "company" ? (
-            <>
-              <Field
-                id="inv-eik"
-                label={t("shop.eik")}
-                required
-                inputMode="numeric"
-                pattern="\d{9}|\d{13}"
-                value={invoice.eik}
-                onChange={(e) => setInvoice({ ...invoice, eik: e.target.value })}
-              />
-              <Field
-                id="inv-vat"
-                label={t("shop.vatNumber")}
-                pattern="BG\d{9,10}"
-                value={invoice.vatNumber}
-                onChange={(e) => setInvoice({ ...invoice, vatNumber: e.target.value })}
-              />
-            </>
+            <InvoiceFields kind={invoiceKind} draft={invoice} onChange={setInvoice} />
           ) : null}
         </fieldset>
       </div>

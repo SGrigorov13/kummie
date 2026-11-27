@@ -1,9 +1,10 @@
-import type { OrderDetail } from "@kummie/contracts";
+import type { InvoiceRequest, OrderDetail } from "@kummie/contracts";
 import {
   businessDay,
   customerCanCancel,
   formatDocNumber,
   formatMoney,
+  invoiceRequestUntil,
   kummiesValidUntil,
   splitCents,
 } from "@kummie/core";
@@ -24,7 +25,7 @@ import {
 } from "../db/schema";
 import { enqueue } from "../jobs/outbox";
 import { loadCompanySettings } from "../admin/settings-routes";
-import { issueSaleDocuments } from "../documents/issue";
+import { issueLateInvoice, issueSaleDocuments } from "../documents/issue";
 import { orderNumber, type OrderRow, type Tx } from "./basics";
 import { clearBought } from "./cart-store";
 
@@ -239,6 +240,63 @@ export async function processPaymentEvent(
   return applied ? "applied" : "ignored";
 }
 
+/**
+ * Last day the customer may still ask for an invoice (D-067): the order is paid (its чл. 52о
+ * document exists), has no invoice, was not refunded, and the window after payment is still open.
+ */
+export function invoiceWindow(
+  order: OrderRow,
+  documentKinds: readonly string[],
+  requestDays: number,
+  now = new Date(),
+): string | null {
+  if (!order.paidAt || order.status === "refunded" || order.status === "cancelled") return null;
+  if (!documentKinds.includes("receipt")) return null;
+  if (documentKinds.includes("invoice") || documentKinds.includes("receipt_storno")) return null;
+  const until = invoiceRequestUntil(businessDay(order.paidAt), requestDays);
+  return businessDay(now) <= until ? until : null;
+}
+
+/** Issues the late invoice and e-mails it to the customer, in one transaction. */
+export async function requestLateInvoice(
+  deps: Pick<ShopDeps, "db" | "webUrl">,
+  order: OrderRow,
+  request: InvoiceRequest,
+): Promise<void> {
+  const company = await loadCompanySettings(deps.db);
+  await deps.db.transaction(async (tx) => {
+    const [locked] = await tx.select().from(orders).where(eq(orders.id, order.id)).for("update");
+    if (!locked) throw new Error("order vanished");
+    const invoice = await issueLateInvoice(tx, locked, request, company);
+    const number = orderNumber(locked.seq);
+    const site = `${deps.webUrl.replace(/\/$/, "")}/${locked.locale}`;
+    const key = `order-invoice:${locked.id}`;
+    await enqueue(
+      tx,
+      "email",
+      {
+        to: locked.email,
+        subject: t(locked.locale, "email.invoice.subject", { number }),
+        text: [
+          t(locked.locale, "email.invoice.body", {
+            name: request.name,
+            number,
+            invoice: formatDocNumber(invoice.number),
+          }),
+          "",
+          t(locked.locale, "email.signoff", { site }),
+        ].join("\n"),
+        locale: locked.locale,
+        category: "transactional",
+        idempotencyKey: key,
+        cta: { label: t(locked.locale, "email.cta.order"), url: orderLink(deps, locked) },
+        documentIds: [invoice.id],
+      },
+      key,
+    );
+  });
+}
+
 /** The order as the customer sees it. */
 export async function orderDetail(db: Database, order: OrderRow): Promise<OrderDetail> {
   const [lines, events, documents, parcelRows] = await Promise.all([
@@ -292,5 +350,10 @@ export async function orderDetail(db: Database, order: OrderRow): Promise<OrderD
       issuedAt: d.issuedAt.toISOString(),
     })),
     parcels: parcelRows.filter((p) => p.status !== "cancelled"),
+    invoiceRequestUntil: invoiceWindow(
+      order,
+      documents.map((d) => d.kind),
+      (await loadCompanySettings(db)).invoiceRequestDays,
+    ),
   };
 }
