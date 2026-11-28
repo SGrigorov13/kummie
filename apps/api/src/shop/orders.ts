@@ -26,6 +26,7 @@ import {
 import { enqueue } from "../jobs/outbox";
 import { loadCompanySettings } from "../admin/settings-routes";
 import { canComplain, orderComplaints } from "../complaints/service";
+import { orderReturns, withdrawalInfo } from "../returns/view";
 import { issueLateInvoice, issueSaleDocuments } from "../documents/issue";
 import { orderNumber, type OrderRow, type Tx } from "./basics";
 import { clearBought } from "./cart-store";
@@ -355,6 +356,8 @@ export async function orderDetail(db: Database, order: OrderRow): Promise<OrderD
     parcels: parcelRows.filter((p) => p.status !== "cancelled"),
     canComplain: canComplain(order),
     complaints: await orderComplaints(db, order.id),
+    withdrawal: await withdrawalInfo(db, order, lines),
+    returns: await orderReturns(db, order.id),
     invoiceRequestUntil: invoiceWindow(
       order,
       documents.map((d) => d.kind),

@@ -12,6 +12,7 @@ import {
 } from "@/components/InvoiceFields";
 import { codeOf, commonErrorKey } from "@/lib/account";
 import { ComplaintForm } from "./ComplaintForm";
+import { ReturnForm } from "./ReturnForm";
 import { useLocale, useT } from "@/lib/locale";
 import { fragmentValue, shopApi, useCart } from "@/lib/shop";
 
@@ -324,6 +325,7 @@ export function OrderView({ id }: { id: string }) {
         </div>
       ) : null}
 
+      <ReturnForm order={order} orderKey={key} onChange={setOrder} />
       <ComplaintForm order={order} orderKey={key} onChange={setOrder} />
 
       <h2 className="h3">{t("order.deliverTo")}</h2>

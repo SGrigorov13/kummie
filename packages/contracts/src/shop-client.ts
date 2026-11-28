@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import { ApiRequestError, type FetchLike } from "./client";
 import type { ComplaintRequest } from "./complaints";
+import type { ReturnRequest } from "./returns";
 import {
   Cart,
   CheckoutResponse,
@@ -82,6 +83,9 @@ export function createShopClient({
     requestInvoice: (id: string, request: InvoiceRequest, key?: string | null) =>
       call("POST", `/orders/${id}/invoice`, OrderDetail, request, keyHeader(key)),
     /** "Подай рекламация": registered at once with a number and a one-month deadline (D-069). */
+    /** "Откажи се" within 14 days of delivery: registered with a return number (D-070). */
+    requestReturn: (id: string, request: ReturnRequest, key?: string | null) =>
+      call("POST", `/orders/${id}/returns`, OrderDetail, request, keyHeader(key)),
     fileComplaint: (id: string, request: ComplaintRequest, key?: string | null) =>
       call("POST", `/orders/${id}/complaints`, OrderDetail, request, keyHeader(key)),
   };
