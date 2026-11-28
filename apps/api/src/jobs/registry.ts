@@ -1,6 +1,7 @@
 import { accountJobHandlers } from "../accounts/erasure";
 import type { EmailAdapter } from "../adapters/email";
 import type { Database } from "../db/client";
+import { sendComplaintReminders } from "../complaints/service";
 import { runOperations, type OperationsDeps } from "../operations/service";
 import { processDueJobs } from "./outbox";
 import type { Job } from "./types";
@@ -31,6 +32,18 @@ export function createJobs(
         );
         if (result.waitingWithoutOffer.length > 0)
           log.info(`[operations] waiting without a supplier offer: ${result.waitingWithoutOffer.join(", ")}`);
+      },
+    });
+  }
+  if (deps.db) {
+    const db = deps.db;
+    // Before the outbox, so the reminders go out in the same tick (D-069).
+    list.push({
+      name: "complaint-reminders",
+      schedule: "daily",
+      timeoutMs: 60_000,
+      run: async ({ log }) => {
+        log.info(`[complaints] ${await sendComplaintReminders(db)} reminder(s) queued`);
       },
     });
   }

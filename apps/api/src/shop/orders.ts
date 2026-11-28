@@ -25,6 +25,7 @@ import {
 } from "../db/schema";
 import { enqueue } from "../jobs/outbox";
 import { loadCompanySettings } from "../admin/settings-routes";
+import { canComplain, orderComplaints } from "../complaints/service";
 import { issueLateInvoice, issueSaleDocuments } from "../documents/issue";
 import { orderNumber, type OrderRow, type Tx } from "./basics";
 import { clearBought } from "./cart-store";
@@ -323,6 +324,7 @@ export async function orderDetail(db: Database, order: OrderRow): Promise<OrderD
     address: order.address,
     invoice: order.invoice ?? null,
     lines: lines.map((l) => ({
+      id: l.id,
       title: l.title,
       version: l.version,
       sku: l.sku,
@@ -351,6 +353,8 @@ export async function orderDetail(db: Database, order: OrderRow): Promise<OrderD
       issuedAt: d.issuedAt.toISOString(),
     })),
     parcels: parcelRows.filter((p) => p.status !== "cancelled"),
+    canComplain: canComplain(order),
+    complaints: await orderComplaints(db, order.id),
     invoiceRequestUntil: invoiceWindow(
       order,
       documents.map((d) => d.kind),

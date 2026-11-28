@@ -71,6 +71,13 @@
       "when": 1795825374843,
       "tag": "0009_shortages",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795826830062,
+      "tag": "0010_complaints",
+      "breakpoints": true
     }
   ]
 }

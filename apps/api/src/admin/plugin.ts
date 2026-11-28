@@ -3,6 +3,7 @@ import { ACCEPTED_TYPES } from "../media/images";
 import { authRoutes } from "./auth-routes";
 import type { AdminDeps } from "./context";
 import { runtimeOf } from "./golive";
+import { complaintsRoutes } from "./complaints-routes";
 import { operationsRoutes } from "./operations-routes";
 import { ordersAdminRoutes } from "./orders-routes";
 import { salesRoutes } from "./sales-routes";
@@ -43,6 +44,7 @@ export function adminPlugin(deps: AdminDeps): FastifyPluginAsyncZod {
     await app.register(importRoutes(deps));
     if (deps.storage) await app.register(imagesRoutes({ ...deps, storage: deps.storage }));
     if (deps.shop) await app.register(ordersAdminRoutes({ ...deps, shop: deps.shop }));
+    if (deps.shop) await app.register(complaintsRoutes({ ...deps, shop: deps.shop }));
     if (deps.shop) await app.register(salesRoutes({ ...deps, runtime: runtimeOf(deps.shop) }));
     if (deps.operations) await app.register(operationsRoutes({ ...deps, operations: deps.operations }));
   };

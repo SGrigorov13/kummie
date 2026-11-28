@@ -103,7 +103,7 @@ const csvCell = (value: string | number | null | undefined) => {
   return /[;"\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 /** Semicolon-separated with a BOM, so Excel with Bulgarian settings opens it correctly. */
-const toCsv = (rows: (string | number | null | undefined)[][]) =>
+export const toCsv = (rows: (string | number | null | undefined)[][]) =>
   `﻿${rows.map((r) => r.map(csvCell).join(";")).join("\r\n")}\r\n`;
 
 const KIND_BG = {
