@@ -539,6 +539,12 @@ export const en: Messages = {
     "Are you sure? {amount} goes back to the card, a storno and credit note are issued and the customer gets an e-mail.",
   "admin.hub.returnDue": "Money back by {date}",
   "admin.hub.returnOverdue": "Past the refund deadline ({date})",
+  "delivery.expected": "Expected delivery",
+  "delivery.expectedTo": "Expected delivery to {country}: {window}",
+  "delivery.note":
+    "Worked out from the next batch order, the way to us and the courier. Arrives in one parcel.",
+  "admin.courierDays": "Courier working days to each country (from – to)",
+  "admin.ops.transitDays": "Days to the hub (working, from – to)",
   "order.documents": "Documents",
   "doc.receipt": "Sales document",
   "doc.receipt_storno": "Reversal document",

@@ -1,7 +1,13 @@
 "use client";
 
 import type { Cart } from "@kummie/contracts";
-import { formatMoney, KUMMIES_MIN_ORDER_CENTS, SHIPPING_COUNTRIES, type ShippingCountry } from "@kummie/core";
+import {
+  formatDeliveryWindow,
+  formatMoney,
+  KUMMIES_MIN_ORDER_CENTS,
+  SHIPPING_COUNTRIES,
+  type ShippingCountry,
+} from "@kummie/core";
 import Link from "next/link";
 import { useLocale, useT } from "@/lib/locale";
 import { href } from "@/lib/paths";
@@ -43,6 +49,16 @@ export function CartTotals({ cart, signedIn }: { cart: Cart; signedIn: boolean |
           ? t("freeShipLeft", { amount: formatMoney(missingForFree, locale) })
           : t("freeShipReached")}
       </p>
+      {cart.deliveryWindow ? (
+        <p>
+          {t("delivery.expectedTo", {
+            country: t(`country.${cart.country}`),
+            window: formatDeliveryWindow(cart.deliveryWindow, locale),
+          })}
+          <br />
+          <span className="muted">{t("delivery.note")}</span>
+        </p>
+      ) : null}
       <p className="muted">{t("deliveryWindow")}</p>
       {missingForKummies > 0 ? (
         <p className="muted">{t("kummiesLeft", { amount: formatMoney(missingForKummies, locale) })}</p>
@@ -87,7 +103,10 @@ export function CartView() {
                 <strong>{line.title}</strong>
               </Link>
               <p className="muted">
-                {line.version} · {line.dispatchEstimate[locale]}
+                {line.version} ·{" "}
+                {line.deliveryWindow
+                  ? `${t("delivery.expected")}: ${formatDeliveryWindow(line.deliveryWindow, locale)}`
+                  : line.dispatchEstimate[locale]}
               </p>
               {line.available ? (
                 <p>

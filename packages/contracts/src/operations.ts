@@ -19,6 +19,9 @@ export const Supplier = z.object({
   inEu: z.boolean(),
   /** Purchase orders go out by themselves; off = staff send the file and mark it ordered (D-063). */
   autoSend: z.boolean(),
+  /** Working days from the batch closing to the hub — the delivery estimate uses them (D-071). */
+  transitDaysMin: z.number().int().min(0).max(60).default(2),
+  transitDaysMax: z.number().int().min(0).max(60).default(5),
   active: z.boolean(),
 });
 export type Supplier = z.infer<typeof Supplier>;

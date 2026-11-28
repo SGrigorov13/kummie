@@ -95,7 +95,8 @@ adapters replace them without changing the flow.
     D-069, migration 0010: Admin → Рекламации, "Подай рекламация" in the order)*
 13. **Split shipments:** an order whose parts reach the hub more than 3 days apart ships in parts.
 14. **Calculated delivery estimate:** next closing + supplier transit days + courier days per
-    country; staff enter the transit days; shown on the product page and in the cart.
+    country; staff enter the transit days; shown on the product page and in the cart. *(done,
+    D-071, migration 0012)*
 15. **Office/locker on a map** at checkout (courier map widget loaded only when opened, consent
     rules for third-party scripts; searchable list as fallback) — with the real courier adapters.
 16. **Delivery prices per country, courier and method** (D-063 B6) — when the offers arrive.

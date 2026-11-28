@@ -25,6 +25,8 @@ const NEW_SUPPLIER: Supplier = {
   ddp: false,
   inEu: true,
   autoSend: false,
+  transitDaysMin: 2,
+  transitDaysMax: 5,
   active: true,
 };
 
@@ -418,6 +420,30 @@ function SuppliersTab() {
                 value={minEuro}
                 onChange={(e) => setMinEuro(e.target.value)}
               />
+            </div>
+            <div className="field">
+              <label htmlFor="s-transit-min">{t("admin.ops.transitDays")}</label>
+              <div className="row">
+                <input
+                  id="s-transit-min"
+                  type="number"
+                  min={0}
+                  max={60}
+                  style={{ width: 70 }}
+                  value={form.transitDaysMin}
+                  onChange={(e) => setForm({ ...form, transitDaysMin: Number(e.target.value) || 0 })}
+                />
+                –
+                <input
+                  aria-label={`${t("admin.ops.transitDays")} max`}
+                  type="number"
+                  min={0}
+                  max={60}
+                  style={{ width: 70 }}
+                  value={form.transitDaysMax}
+                  onChange={(e) => setForm({ ...form, transitDaysMax: Number(e.target.value) || 0 })}
+                />
+              </div>
             </div>
           </div>
           <fieldset className="fieldset">

@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { api, centsToEuroInput, useAdmin } from "./context";
 import { NumberingSettings } from "./NumberingSettings";
 
-type TextKey = Exclude<keyof Settings, "deliveryFeesCents" | "invoiceRequestDays">;
+type TextKey = Exclude<keyof Settings, "deliveryFeesCents" | "invoiceRequestDays" | "courierDays">;
 
 const FIELDS: { key: TextKey; label: Parameters<ReturnType<typeof useAdmin>["t"]>[0]; type?: string }[] = [
   { key: "legalName", label: "admin.legalName" },
@@ -60,6 +60,7 @@ export function CompanySettings() {
       const labels = [...FIELDS, ...NAP].filter((f) => keys.includes(f.key)).map((f) => t(f.label));
       if (keys.includes("deliveryFeesCents")) labels.push(t("admin.deliveryFees"));
       if (keys.includes("invoiceRequestDays")) labels.push(t("admin.invoiceRequestDays"));
+      if (keys.includes("courierDays")) labels.push(t("admin.courierDays"));
       setMessage(t("admin.checkFields", { fields: labels.join(", ") }));
       return;
     }
@@ -104,6 +105,51 @@ export function CompanySettings() {
                 value={fees[c] ?? ""}
                 onChange={(e) => setFees({ ...fees, [c]: e.target.value })}
               />
+            </div>
+          ))}
+        </div>
+        <h2>{t("admin.courierDays")}</h2>
+        <div className="grid-3">
+          {COUNTRIES.map((c) => (
+            <div className={invalid.includes("courierDays") ? "field field--missing" : "field"} key={c}>
+              <label htmlFor={`courier-${c}`}>{t(`country.${c}`)}</label>
+              <div className="row">
+                <input
+                  id={`courier-${c}`}
+                  type="number"
+                  min={0}
+                  max={30}
+                  style={{ width: 70 }}
+                  value={settings.courierDays[c].min}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      courierDays: {
+                        ...settings.courierDays,
+                        [c]: { ...settings.courierDays[c], min: Number(e.target.value) || 0 },
+                      },
+                    })
+                  }
+                />
+                –
+                <input
+                  aria-label={`${t(`country.${c}`)} max`}
+                  type="number"
+                  min={0}
+                  max={30}
+                  style={{ width: 70 }}
+                  value={settings.courierDays[c].max}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      courierDays: {
+                        ...settings.courierDays,
+                        [c]: { ...settings.courierDays[c], max: Number(e.target.value) || 0 },
+                      },
+                    })
+                  }
+                />
+              </div>
             </div>
           ))}
         </div>

@@ -37,6 +37,10 @@ export const OkResponse = z.object({ ok: z.literal(true) });
 
 const optionalText = z.string().trim().max(300).nullable();
 
+const DayRange = z
+  .object({ min: z.number().int().min(0).max(30), max: z.number().int().min(0).max(30) })
+  .refine((r) => r.min <= r.max, { message: "min ≤ max" });
+
 export const CompanySettings = z.object({
   legalName: optionalText,
   eik: z
@@ -74,6 +78,10 @@ export const CompanySettings = z.object({
   }),
   /** Days after payment in which a customer may still ask for an invoice (D-067). */
   invoiceRequestDays: z.number().int().min(0).max(90).default(5),
+  /** Courier working days to each country, for the delivery estimate (D-071). */
+  courierDays: z
+    .object({ BG: DayRange, RO: DayRange, GR: DayRange })
+    .default({ BG: { min: 1, max: 2 }, RO: { min: 2, max: 4 }, GR: { min: 2, max: 5 } }),
 });
 export type CompanySettings = z.infer<typeof CompanySettings>;
 
@@ -92,6 +100,7 @@ export const EMPTY_COMPANY_SETTINGS: CompanySettings = {
   napRegisteredOn: null,
   deliveryFeesCents: { BG: 490, RO: 490, GR: 490 },
   invoiceRequestDays: 5,
+  courierDays: { BG: { min: 1, max: 2 }, RO: { min: 2, max: 4 }, GR: { min: 2, max: 5 } },
 };
 
 // ---------- Document numbering ranges (D-067) ----------

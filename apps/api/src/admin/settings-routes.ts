@@ -23,6 +23,7 @@ export async function loadCompanySettings(db: Database): Promise<CompanySettings
     ...EMPTY_COMPANY_SETTINGS,
     ...stored,
     deliveryFeesCents: { ...EMPTY_COMPANY_SETTINGS.deliveryFeesCents, ...stored.deliveryFeesCents },
+    courierDays: { ...EMPTY_COMPANY_SETTINGS.courierDays, ...stored.courierDays },
   });
 }
 

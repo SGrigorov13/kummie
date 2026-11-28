@@ -88,11 +88,21 @@ export const Compliance = z.object({
   returnExceptions: z.array(Localized),
 });
 
+/** First and last day (ISO) the parcel is expected, calculated per country (D-071). */
+export const DeliveryWindow = z.object({ from: z.iso.date(), to: z.iso.date() });
+export type DeliveryWindow = z.infer<typeof DeliveryWindow>;
+
 export const ProductDetail = ProductCard.extend({
   summary: Localized,
   variants: z.array(Variant).min(1),
   compliance: Compliance,
   images: z.array(ProductImage),
+  /** For the first available version; null where the product's own text applies (pre-orders). */
+  deliveryWindows: z.object({
+    BG: DeliveryWindow.nullable(),
+    RO: DeliveryWindow.nullable(),
+    GR: DeliveryWindow.nullable(),
+  }),
 });
 export type ProductDetail = z.infer<typeof ProductDetail>;
 
