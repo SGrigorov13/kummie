@@ -17,6 +17,7 @@ import {
 import { CategoryList, GroupList } from "./catalogue";
 import { ApiRequestError, type FetchLike } from "./client";
 import { ComplaintList, type ComplaintResolution, type StaffComplaintInput } from "./complaints";
+import { ReturnList, type ReturnDecisionInput } from "./returns";
 import {
   BatchDetail,
   BatchList,
@@ -195,6 +196,12 @@ export function createAdminClient({
         file,
       ),
     damagePhotoUrl: (damageId: string) => `${base}/admin-api/hub/damage/${damageId}/photo`,
+    returns: () => call("GET", "/admin-api/hub/returns", ReturnList),
+    returnReceived: (id: string) => call("POST", `/admin-api/hub/returns/${id}/received`, ReturnList, {}),
+    decideReturn: (id: string, input: ReturnDecisionInput) =>
+      call("PUT", `/admin-api/hub/returns/${id}/decision`, ReturnList, input),
+    /** Admin only: refunds the accepted lines (or closes the return as refused), D-070. */
+    refundReturn: (id: string) => call("POST", `/admin-api/hub/returns/${id}/refund`, ReturnList, {}),
     shortages: () => call("GET", "/admin-api/hub/shortages", ShortageList),
     shortageClaimSent: (id: string) => call("POST", `/admin-api/hub/shortages/${id}/claim`, ShortageList, {}),
     shortageArrived: (id: string) => call("POST", `/admin-api/hub/shortages/${id}/arrived`, ShortageList, {}),

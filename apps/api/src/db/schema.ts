@@ -989,6 +989,66 @@ export const complaints = pgTable(
   ],
 );
 
+export const returnStatusEnum = pgEnum("return_status", ["requested", "received", "refunded", "rejected"]);
+export const returnCourierEnum = pgEnum("return_courier", ["speedy", "econt", "boxnow"]);
+export const returnDecisionEnum = pgEnum("return_decision", ["pending", "accepted", "refused"]);
+export const returnDispositionEnum = pgEnum("return_disposition", ["to_supplier", "keep"]);
+
+/**
+ * Withdrawal within 14 days of delivery (ЗЗП чл. 50, D-064, D-070): the customer picks the units
+ * and the courier and sends them to the hub at their own cost; staff check each line when the
+ * parcel arrives; an admin confirms the refund. Own number sequence (RET-0001).
+ */
+export const returns = pgTable(
+  "returns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    seq: bigint("seq", { mode: "number" }).generatedAlwaysAsIdentity({ startWith: 1 }),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id),
+    status: returnStatusEnum("status").notNull().default("requested"),
+    courier: returnCourierEnum("courier").notNull(),
+    /** Optional — the customer need not give a reason. */
+    reason: text("reason"),
+    /** The money must be back within 14 days of the request (ЗЗП чл. 55). */
+    refundDueOn: date("refund_due_on", { mode: "string" }).notNull(),
+    receivedAt: timestamp("received_at", { withTimezone: true }),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    closedBy: text("closed_by"),
+    refundId: uuid("refund_id").references(() => refunds.id),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("returns_seq_unique").on(t.seq),
+    index("returns_order_idx").on(t.orderId),
+    index("returns_status_idx").on(t.status),
+  ],
+);
+
+export const returnLines = pgTable(
+  "return_lines",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    returnId: uuid("return_id")
+      .notNull()
+      .references(() => returns.id, { onDelete: "cascade" }),
+    orderLineId: uuid("order_line_id")
+      .notNull()
+      .references(() => orderLines.id),
+    qty: integer("qty").notNull(),
+    decision: returnDecisionEnum("decision").notNull().default("pending"),
+    /** Why a line was refused (e.g. a sealed album opened, ЗЗП чл. 57). */
+    refuseReason: text("refuse_reason"),
+    /** What happens to the goods: back to the supplier or kept (D-064). */
+    disposition: returnDispositionEnum("disposition"),
+  },
+  (t) => [
+    uniqueIndex("return_lines_return_line_unique").on(t.returnId, t.orderLineId),
+    check("return_lines_qty", sql`${t.qty} > 0`),
+  ],
+);
+
 export const parcelStatusEnum = pgEnum("parcel_status", [
   "labelled",
   "handed_over",

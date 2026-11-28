@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { OrderComplaint } from "./complaints";
+import { OrderReturn, WithdrawalInfo } from "./returns";
 import { ParcelTracking } from "./operations";
 import { AddressInput, ShippingCountry } from "./account";
 import { Localized } from "./catalogue";
@@ -186,6 +187,9 @@ export const OrderDetail = z.object({
   /** "Подай рекламация" is offered (the order reached the customer, D-069). */
   canComplain: z.boolean(),
   complaints: z.array(OrderComplaint),
+  /** "Откажи се" is offered: 14 days after delivery, with what can still go back (D-070). */
+  withdrawal: WithdrawalInfo.nullable(),
+  returns: z.array(OrderReturn),
 });
 export type OrderDetail = z.infer<typeof OrderDetail>;
 

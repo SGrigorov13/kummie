@@ -89,7 +89,8 @@ adapters replace them without changing the flow.
 11. **Withdrawal and returns:** "Откажи се" in the customer's order up to 14 days after delivery,
     choice of products; return form with the customer's courier choice and the minimum fee
     (amounts with the courier prices); refund when staff accept the parcel at the hub; per-product
-    decision what happens to the goods (back to the supplier / kept).
+    decision what happens to the goods (back to the supplier / kept). *(done, D-070, migration 0011:
+    return labels and the fee come with the real courier adapters)*
 12. **Complaints register (ЗЗП):** number, received date, one-month deadline, reminders, outcome. *(done,
     D-069, migration 0010: Admin → Рекламации, "Подай рекламация" in the order)*
 13. **Split shipments:** an order whose parts reach the hub more than 3 days apart ships in parts.

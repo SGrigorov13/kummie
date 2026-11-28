@@ -17,6 +17,8 @@ import {
   PackQueue,
   ReceivedQtyInput,
   ScanInput,
+  ReturnDecisionInput,
+  ReturnList,
   ScanResult,
   ShortageList,
   Supplier,
@@ -52,6 +54,7 @@ import {
   type OperationsDeps,
 } from "../operations/service";
 import { ACCEPTED_TYPES } from "../media/images";
+import { decideReturn, listReturns, markReturnReceived, refundReturn, ReturnError } from "../returns/service";
 import { parseOfferCsv } from "../operations/offers-import";
 import {
   damagePhoto,
@@ -97,6 +100,10 @@ export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps 
       (_r, body, done) => done(null, body),
     );
     app.setErrorHandler((error, _request, reply) => {
+      if (error instanceof ReturnError)
+        return reply
+          .code(error.code === "not_found" ? 404 : error.code === "refund_failed" ? 502 : 409)
+          .send({ error: error.code, message: error.message });
       if (error instanceof OperationsError)
         return reply.code(HTTP[error.code]).send({ error: error.code, message: error.message });
       throw error;
@@ -538,6 +545,63 @@ export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps 
         await refundShortage(shop, operations, request.params.id, `staff:${staffId(request) ?? "unknown"}`);
         await audit(db, staffId(request), "shortage.refunded", "shortage", request.params.id);
         return shortageList();
+      },
+    );
+
+    // ---------- Hub: withdrawals coming back (D-070) ----------
+
+    const returnList = async () => ({ items: await listReturns(db) });
+
+    app.get(
+      "/admin-api/hub/returns",
+      { preHandler: hubStaff, schema: { response: { 200: ReturnList } } },
+      returnList,
+    );
+
+    app.post(
+      "/admin-api/hub/returns/:id/received",
+      {
+        preHandler: hubStaff,
+        schema: { params: IdParams, response: { 200: ReturnList, 404: ApiError, 409: ApiError } },
+      },
+      async (request) => {
+        await markReturnReceived(db, request.params.id);
+        await audit(db, staffId(request), "return.received", "return", request.params.id);
+        return returnList();
+      },
+    );
+
+    app.put(
+      "/admin-api/hub/returns/:id/decision",
+      {
+        preHandler: hubStaff,
+        schema: {
+          params: IdParams,
+          body: ReturnDecisionInput,
+          response: { 200: ReturnList, 404: ApiError, 409: ApiError },
+        },
+      },
+      async (request) => {
+        await decideReturn(db, request.params.id, request.body);
+        await audit(db, staffId(request), "return.checked", "return", request.params.id);
+        return returnList();
+      },
+    );
+
+    app.post(
+      "/admin-api/hub/returns/:id/refund",
+      {
+        preHandler: onlyAdmin,
+        schema: {
+          params: IdParams,
+          response: { 200: ReturnList, 404: ApiError, 409: ApiError, 502: ApiError, 503: ApiError },
+        },
+      },
+      async (request, reply) => {
+        if (!shop) return reply.code(503).send({ error: "no_shop", message: "Payments are not configured" });
+        await refundReturn(shop, request.params.id, `staff:${staffId(request) ?? "unknown"}`);
+        await audit(db, staffId(request), "return.closed", "return", request.params.id);
+        return returnList();
       },
     );
 

@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { batchStatusKey } from "./Batches";
 import { api, useAdmin } from "./context";
 import { PackingSlipPrint } from "./PackingSlipPrint";
+import { Returns } from "./Returns";
 import { Shortages } from "./Shortages";
 
 type Message = { kind: "ok" | "error"; text: string } | null;
@@ -72,11 +73,11 @@ function beep(ok: boolean) {
 /** Admin → Пункт България (M2): receiving batches, packing orders, hand-over to the courier. */
 export function Hub() {
   const { t } = useAdmin();
-  const [tab, setTab] = useState<"receive" | "pack" | "handover" | "shortages">("receive");
+  const [tab, setTab] = useState<"receive" | "pack" | "handover" | "shortages" | "returns">("receive");
   return (
     <div className="stack">
       <div className="row" role="tablist">
-        {(["receive", "pack", "handover", "shortages"] as const).map((id) => (
+        {(["receive", "pack", "handover", "shortages", "returns"] as const).map((id) => (
           <button
             key={id}
             type="button"
@@ -93,6 +94,7 @@ export function Hub() {
       {tab === "pack" ? <Pack /> : null}
       {tab === "handover" ? <HandOver /> : null}
       {tab === "shortages" ? <Shortages /> : null}
+      {tab === "returns" ? <Returns /> : null}
     </div>
   );
 }

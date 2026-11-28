@@ -7,6 +7,7 @@ import {
   IdParams,
   ComplaintRequest,
   InvoiceRequest,
+  ReturnRequest,
   MAX_LINE_QTY,
   OrderDetail,
   OrderList,
@@ -36,6 +37,7 @@ import { documentFileName, renderDocumentPdf } from "../documents/pdf";
 import { loadSalesReadiness, runtimeOf } from "../admin/golive";
 import { changeOrderStatus, StatusChangeError } from "./lifecycle";
 import { ComplaintError, fileCustomerComplaint } from "../complaints/service";
+import { requestReturn, ReturnError } from "../returns/service";
 import { InvoiceNotPossible, NumberRangeExhausted } from "../documents/issue";
 import {
   orderDetail,
@@ -394,6 +396,30 @@ export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
         deps.kick?.();
         const [fresh] = await db.select().from(orders).where(eq(orders.id, order.id));
         return orderDetail(db, fresh ?? order);
+      },
+    );
+
+    app.post(
+      "/orders/:id/returns",
+      {
+        config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+        schema: {
+          params: IdParams,
+          body: ReturnRequest,
+          response: { 200: OrderDetail, 404: ApiError, 409: ApiError },
+        },
+      },
+      async (request, reply) => {
+        const order = await accessibleOrder(request, request.params.id);
+        if (!order) return reply.code(404).send(notFound);
+        try {
+          await requestReturn(deps, order, request.body);
+        } catch (error) {
+          if (error instanceof ReturnError)
+            return reply.code(409).send({ error: "withdrawal_not_possible", message: error.message });
+          throw error;
+        }
+        return orderDetail(db, order);
       },
     );
 
