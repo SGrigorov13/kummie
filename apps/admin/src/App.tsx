@@ -9,16 +9,19 @@ import { OrderDetailView, Orders } from "./Orders";
 import { ProductEditor } from "./ProductEditor";
 import { Reports } from "./Reports";
 import { Batches } from "./Batches";
+import { Complaints } from "./Complaints";
 import { Hub } from "./Hub";
 import { NapReminderBanner, SalesReadiness } from "./SalesReadiness";
 import { SignIn } from "./SignIn";
 
-type Section = "dashboard" | "catalog" | "company" | "orders" | "reports" | "sales" | "batches" | "hub";
+type Section =
+  "dashboard" | "catalog" | "company" | "orders" | "complaints" | "reports" | "sales" | "batches" | "hub";
 
 const NAV: { id: Section; label: MessageKey; roles?: Staff["role"][] }[] = [
   { id: "dashboard", label: "admin.dashboard" },
   { id: "catalog", label: "admin.catalog", roles: ["admin", "content"] },
   { id: "orders", label: "admin.orders" },
+  { id: "complaints", label: "admin.complaints", roles: ["admin"] },
   { id: "reports", label: "admin.reports", roles: ["admin"] },
   { id: "batches", label: "admin.batches", roles: ["admin", "content"] },
   { id: "hub", label: "admin.hub", roles: ["admin", "hub"] },
@@ -134,6 +137,7 @@ function Shell({ langButton, onSignOut }: { langButton: React.ReactNode; onSignO
         ) : null}
         {section === "batches" ? <Batches /> : null}
         {section === "hub" ? <Hub /> : null}
+        {section === "complaints" ? <Complaints /> : null}
       </main>
     </div>
   );

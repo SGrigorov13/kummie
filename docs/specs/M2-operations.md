@@ -90,7 +90,8 @@ adapters replace them without changing the flow.
     choice of products; return form with the customer's courier choice and the minimum fee
     (amounts with the courier prices); refund when staff accept the parcel at the hub; per-product
     decision what happens to the goods (back to the supplier / kept).
-12. **Complaints register (ЗЗП):** number, received date, one-month deadline, reminders, outcome.
+12. **Complaints register (ЗЗП):** number, received date, one-month deadline, reminders, outcome. *(done,
+    D-069, migration 0010: Admin → Рекламации, "Подай рекламация" in the order)*
 13. **Split shipments:** an order whose parts reach the hub more than 3 days apart ships in parts.
 14. **Calculated delivery estimate:** next closing + supplier transit days + courier days per
     country; staff enter the transit days; shown on the product page and in the cart.

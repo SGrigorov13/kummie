@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OrderComplaint } from "./complaints";
 import { ParcelTracking } from "./operations";
 import { AddressInput, ShippingCountry } from "./account";
 import { Localized } from "./catalogue";
@@ -131,6 +132,7 @@ export const OrderStatus = z.enum([
 export type OrderStatus = z.infer<typeof OrderStatus>;
 
 export const OrderLine = z.object({
+  id: z.string(),
   title: z.string(),
   version: z.string(),
   sku: z.string(),
@@ -181,6 +183,9 @@ export const OrderDetail = z.object({
    * (D-067); null when no request is possible (not paid, already invoiced, refunded, too late).
    */
   invoiceRequestUntil: z.iso.date().nullable(),
+  /** "Подай рекламация" is offered (the order reached the customer, D-069). */
+  canComplain: z.boolean(),
+  complaints: z.array(OrderComplaint),
 });
 export type OrderDetail = z.infer<typeof OrderDetail>;
 

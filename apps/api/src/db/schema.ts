@@ -944,6 +944,51 @@ export const shortages = pgTable(
   ],
 );
 
+export const complaintDemandEnum = pgEnum("complaint_demand", [
+  "repair",
+  "replacement",
+  "price_reduction",
+  "refund",
+]);
+export const complaintStatusEnum = pgEnum("complaint_status", ["open", "resolved", "rejected"]);
+export const complaintChannelEnum = pgEnum("complaint_channel", ["site", "email", "phone", "in_person"]);
+
+/**
+ * Complaints register (ЗЗП чл. 127, D-069): one number sequence (RK-0001), the day received, the
+ * one-month deadline, what the customer asks for and the outcome. Rows are never deleted.
+ */
+export const complaints = pgTable(
+  "complaints",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    seq: bigint("seq", { mode: "number" }).generatedAlwaysAsIdentity({ startWith: 1 }),
+    orderId: uuid("order_id").references(() => orders.id),
+    orderLineId: uuid("order_line_id").references(() => orderLines.id),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone"),
+    product: text("product").notNull(),
+    description: text("description").notNull(),
+    demand: complaintDemandEnum("demand").notNull(),
+    channel: complaintChannelEnum("channel").notNull(),
+    locale: text("locale").$type<"bg" | "en">().notNull().default("bg"),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+    dueOn: date("due_on", { mode: "string" }).notNull(),
+    status: complaintStatusEnum("status").notNull().default("open"),
+    outcome: text("outcome"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    /** "customer" or "staff:<id>". */
+    createdBy: text("created_by").notNull(),
+    resolvedBy: text("resolved_by"),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("complaints_seq_unique").on(t.seq),
+    index("complaints_status_idx").on(t.status, t.dueOn),
+    index("complaints_order_idx").on(t.orderId),
+  ],
+);
+
 export const parcelStatusEnum = pgEnum("parcel_status", [
   "labelled",
   "handed_over",

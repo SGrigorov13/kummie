@@ -5,6 +5,7 @@ import {
   CheckoutRequest,
   CheckoutResponse,
   IdParams,
+  ComplaintRequest,
   InvoiceRequest,
   MAX_LINE_QTY,
   OrderDetail,
@@ -34,6 +35,7 @@ import { supplierAvailable } from "../catalogue/availability";
 import { documentFileName, renderDocumentPdf } from "../documents/pdf";
 import { loadSalesReadiness, runtimeOf } from "../admin/golive";
 import { changeOrderStatus, StatusChangeError } from "./lifecycle";
+import { ComplaintError, fileCustomerComplaint } from "../complaints/service";
 import { InvoiceNotPossible, NumberRangeExhausted } from "../documents/issue";
 import {
   orderDetail,
@@ -392,6 +394,32 @@ export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
         deps.kick?.();
         const [fresh] = await db.select().from(orders).where(eq(orders.id, order.id));
         return orderDetail(db, fresh ?? order);
+      },
+    );
+
+    app.post(
+      "/orders/:id/complaints",
+      {
+        config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+        schema: {
+          params: IdParams,
+          body: ComplaintRequest,
+          response: { 200: OrderDetail, 404: ApiError, 409: ApiError },
+        },
+      },
+      async (request, reply) => {
+        const order = await accessibleOrder(request, request.params.id);
+        if (!order) return reply.code(404).send(notFound);
+        try {
+          await fileCustomerComplaint(deps, order, request.body);
+        } catch (error) {
+          if (error instanceof ComplaintError)
+            return reply
+              .code(error.code === "not_found" ? 404 : 409)
+              .send({ error: `complaint_${error.code}`, message: error.message });
+          throw error;
+        }
+        return orderDetail(db, order);
       },
     );
 

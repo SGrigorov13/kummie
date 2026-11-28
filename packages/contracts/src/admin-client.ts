@@ -16,6 +16,7 @@ import {
 } from "./admin";
 import { CategoryList, GroupList } from "./catalogue";
 import { ApiRequestError, type FetchLike } from "./client";
+import { ComplaintList, type ComplaintResolution, type StaffComplaintInput } from "./complaints";
 import {
   BatchDetail,
   BatchList,
@@ -116,6 +117,13 @@ export function createAdminClient({
     getOrder: (id: string) => call("GET", `/admin-api/orders/${id}`, AdminOrder),
     changeOrderStatus: (id: string, change: OrderStatusChange) =>
       call("POST", `/admin-api/orders/${id}/status`, AdminOrder, change),
+    complaints: (status?: "open" | "all") =>
+      call("GET", `/admin-api/complaints${status === "all" ? "?status=all" : ""}`, ComplaintList),
+    addComplaint: (input: StaffComplaintInput) => call("POST", "/admin-api/complaints", ComplaintList, input),
+    resolveComplaint: (id: string, resolution: ComplaintResolution) =>
+      call("POST", `/admin-api/complaints/${id}/resolve`, ComplaintList, resolution),
+    /** The whole register as CSV (for the accountant or an inspection). */
+    complaintsCsvUrl: () => `${base}/admin-api/complaints.csv`,
     /** Invoice for a paid order after the sale, without the customer's deadline (D-067). */
     issueInvoice: (id: string, request: InvoiceRequest) =>
       call("POST", `/admin-api/orders/${id}/invoice`, AdminOrder, request),
