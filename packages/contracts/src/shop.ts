@@ -174,6 +174,11 @@ export const OrderDetail = z.object({
   ),
   /** Parcels with the courier (tracking number), once the order is packed at the hub. */
   parcels: z.array(ParcelTracking),
+  /**
+   * Last day (Sofia, ISO date) the customer may still ask for an invoice for this paid order
+   * (D-067); null when no request is possible (not paid, already invoiced, refunded, too late).
+   */
+  invoiceRequestUntil: z.iso.date().nullable(),
 });
 export type OrderDetail = z.infer<typeof OrderDetail>;
 

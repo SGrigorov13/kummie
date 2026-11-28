@@ -2,8 +2,15 @@
 
 import type { OrderDetail, OrderStatus } from "@kummie/contracts";
 import { CUSTOMER_STEPS, customerStep, customerStepNumber, formatMoney, isOffTrack } from "@kummie/core";
-import { useEffect, useState } from "react";
-import { commonErrorKey } from "@/lib/account";
+import { useEffect, useState, type FormEvent } from "react";
+import {
+  EMPTY_INVOICE,
+  InvoiceFields,
+  toInvoiceRequest,
+  type InvoiceDraft,
+  type InvoiceKind,
+} from "@/components/InvoiceFields";
+import { codeOf, commonErrorKey } from "@/lib/account";
 import { useLocale, useT } from "@/lib/locale";
 import { fragmentValue, shopApi, useCart } from "@/lib/shop";
 
@@ -21,6 +28,11 @@ export function OrderView({ id }: { id: string }) {
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [invoiceKind, setInvoiceKind] = useState<InvoiceKind>("person");
+  const [invoiceDraft, setInvoiceDraft] = useState<InvoiceDraft>(EMPTY_INVOICE);
+  const [invoiceState, setInvoiceState] = useState<"idle" | "sending" | "done">("idle");
+  const [invoiceError, setInvoiceError] = useState<string | null>(null);
 
   useEffect(() => {
     const k = fragmentValue("k");
@@ -72,6 +84,23 @@ export function OrderView({ id }: { id: string }) {
       setNotice(null);
     } catch {
       setCancelError(t("order.cancelFailed"));
+    }
+  }
+
+  /** "Поискай фактура" after the payment (D-067): issued at once and e-mailed as PDF. */
+  async function requestInvoice(event: FormEvent) {
+    event.preventDefault();
+    setInvoiceError(null);
+    setInvoiceState("sending");
+    try {
+      setOrder(await shopApi.requestInvoice(id, toInvoiceRequest(invoiceKind, invoiceDraft), key));
+      setInvoiceState("done");
+      setInvoiceOpen(false);
+    } catch (e) {
+      setInvoiceState("idle");
+      setInvoiceError(
+        codeOf(e) === "invoice_not_possible" ? t("order.invoiceTooLate") : t(commonErrorKey(e)),
+      );
     }
   }
 
@@ -239,6 +268,56 @@ export function OrderView({ id }: { id: string }) {
             ))}
           </ul>
         </>
+      ) : null}
+
+      {invoiceState === "done" ? (
+        <p className="notice" role="status">
+          {t("order.invoiceIssued")}
+        </p>
+      ) : null}
+      {order.invoiceRequestUntil ? (
+        <div className="panel">
+          {invoiceOpen ? (
+            <form className="stack" onSubmit={requestInvoice}>
+              <fieldset className="fieldset">
+                <legend className="h3">{t("order.invoiceRequest")}</legend>
+                {(["person", "company"] as const).map((kind) => (
+                  <label key={kind} className="check">
+                    <input
+                      type="radio"
+                      name="late-invoice"
+                      checked={invoiceKind === kind}
+                      onChange={() => setInvoiceKind(kind)}
+                    />
+                    {t(kind === "person" ? "shop.invoicePerson" : "shop.invoiceCompany")}
+                  </label>
+                ))}
+                <InvoiceFields
+                  kind={invoiceKind}
+                  draft={invoiceDraft}
+                  onChange={setInvoiceDraft}
+                  idPrefix="late-inv"
+                />
+              </fieldset>
+              <div className="row">
+                <button type="submit" className="btn" disabled={invoiceState === "sending"}>
+                  {t("order.invoiceSend")}
+                </button>
+                <button type="button" className="btn btn--secondary" onClick={() => setInvoiceOpen(false)}>
+                  {t("order.cancelNo")}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <p className="muted">{t("order.invoiceUntil", { date: date(order.invoiceRequestUntil) })}</p>
+              <button type="button" className="btn btn--secondary" onClick={() => setInvoiceOpen(true)}>
+                {t("order.invoiceRequest")}
+              </button>
+            </>
+          )}
+          {invoiceError ? <p role="alert">{invoiceError}</p> : null}
+        </div>
       ) : null}
 
       <h2 className="h3">{t("order.deliverTo")}</h2>

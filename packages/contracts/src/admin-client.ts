@@ -5,10 +5,13 @@ import {
   AdminProductList,
   CompanySettings,
   LoginResponse,
+  NumberingList,
   OkResponse,
   ProductImportReport,
   SalesReadiness,
   Staff,
+  type DocumentSeries,
+  type NumberingRangeInput,
   type ProductInput,
 } from "./admin";
 import { CategoryList, GroupList } from "./catalogue";
@@ -30,7 +33,7 @@ import {
   type PackInput,
   type SupplierOfferInput,
 } from "./operations";
-import { AdminOrder, AdminOrderList, type OrderStatusChange } from "./shop";
+import { AdminOrder, AdminOrderList, type InvoiceRequest, type OrderStatusChange } from "./shop";
 
 /**
  * Client for the staff API. Uses the HTTP-only session cookie (credentials: "include"); every
@@ -90,6 +93,10 @@ export function createAdminClient({
     getCompany: () => call("GET", "/admin-api/settings/company", CompanySettings),
     saveCompany: (settings: CompanySettings) =>
       call("PUT", "/admin-api/settings/company", CompanySettings, settings),
+    /** Numbering ranges of the documents (D-067); a range is locked after its first document. */
+    getNumbering: () => call("GET", "/admin-api/settings/numbering", NumberingList),
+    saveNumbering: (series: DocumentSeries, range: NumberingRangeInput) =>
+      call("PUT", `/admin-api/settings/numbering/${series}`, NumberingList, range),
     listProducts: (q?: string) =>
       call("GET", `/admin-api/products${q ? `?q=${encodeURIComponent(q)}` : ""}`, AdminProductList),
     getProduct: (id: string) => call("GET", `/admin-api/products/${id}`, AdminProduct),
@@ -107,6 +114,9 @@ export function createAdminClient({
     getOrder: (id: string) => call("GET", `/admin-api/orders/${id}`, AdminOrder),
     changeOrderStatus: (id: string, change: OrderStatusChange) =>
       call("POST", `/admin-api/orders/${id}/status`, AdminOrder, change),
+    /** Invoice for a paid order after the sale, without the customer's deadline (D-067). */
+    issueInvoice: (id: string, request: InvoiceRequest) =>
+      call("POST", `/admin-api/orders/${id}/invoice`, AdminOrder, request),
     /** Direct links (the staff cookie goes along): document PDFs and the monthly reports. */
     documentUrl: (orderId: string, documentId: string) =>
       `${base}/admin-api/orders/${orderId}/documents/${documentId}`,

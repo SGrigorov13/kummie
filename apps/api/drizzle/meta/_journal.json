@@ -57,6 +57,13 @@
       "when": 1795705280663,
       "tag": "0007_decisions",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795823197315,
+      "tag": "0008_invoice_ranges",
+      "breakpoints": true
     }
   ]
 }

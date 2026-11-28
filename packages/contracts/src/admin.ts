@@ -72,6 +72,8 @@ export const CompanySettings = z.object({
     RO: z.number().int().min(0),
     GR: z.number().int().min(0),
   }),
+  /** Days after payment in which a customer may still ask for an invoice (D-067). */
+  invoiceRequestDays: z.number().int().min(0).max(90).default(5),
 });
 export type CompanySettings = z.infer<typeof CompanySettings>;
 
@@ -89,7 +91,34 @@ export const EMPTY_COMPANY_SETTINGS: CompanySettings = {
   napEShopNumber: null,
   napRegisteredOn: null,
   deliveryFeesCents: { BG: 490, RO: 490, GR: 490 },
+  invoiceRequestDays: 5,
 };
+
+// ---------- Document numbering ranges (D-067) ----------
+
+export const DocumentSeries = z.enum(["receipt", "invoice"]);
+export type DocumentSeries = z.infer<typeof DocumentSeries>;
+
+/** One numbering series as the admin sees it. A range can be set only before its first document. */
+export const NumberingSeries = z.object({
+  series: DocumentSeries,
+  firstNumber: z.number().int().nullable(),
+  endNumber: z.number().int().nullable(),
+  /** Last number issued; null before the first document. */
+  lastIssued: z.number().int().nullable(),
+  /** Numbers left in the range. */
+  remaining: z.number().int(),
+  locked: z.boolean(),
+});
+export type NumberingSeries = z.infer<typeof NumberingSeries>;
+export const NumberingList = z.object({ items: z.array(NumberingSeries) });
+export type NumberingList = z.infer<typeof NumberingList>;
+
+const DocNumber = z.number().int().min(1).max(9_999_999_999);
+export const NumberingRangeInput = z
+  .object({ firstNumber: DocNumber, endNumber: DocNumber })
+  .refine((r) => r.firstNumber <= r.endNumber, { message: "The range ends before it starts" });
+export type NumberingRangeInput = z.infer<typeof NumberingRangeInput>;
 
 // ---------- Products in admin ----------
 

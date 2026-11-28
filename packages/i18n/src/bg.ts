@@ -373,6 +373,33 @@ export const bg = {
   "email.cta.order": "Виж поръчката",
 
   // ---- Sales documents and tax reports (M1 Task 9) ----
+  "order.invoiceRequest": "Поискай фактура",
+  "order.invoiceUntil": "Можеш да поискаш фактура до {date}.",
+  "order.invoiceSend": "Издай фактурата",
+  "order.invoiceIssued": "Фактурата е издадена — виж я в „Документи“. Изпратихме я и по имейл.",
+  "order.invoiceTooLate": "За тази поръчка вече не може да се поиска фактура. Пиши ни, ако ти трябва.",
+  "email.invoice.subject": "Фактура към поръчка {number}",
+  "email.invoice.body":
+    "Здравей, {name}!\n\nИздадохме фактура № {invoice} към поръчка {number}. Прикачена е към този имейл и я намираш и в поръчката.",
+  "admin.order.issueInvoice": "Издай фактура",
+  "admin.order.invoiceLead":
+    "Клиентът я иска след покупката. Фактурата получава следващия номер, а датата на продажбата е дата на данъчното събитие.",
+  "admin.order.invoiceIssued": "Фактурата е издадена и изпратена на клиента.",
+  "admin.order.invoiceNotPossible":
+    "Не може: поръчката още не е платена, вече има фактура или сумата е върната.",
+  "admin.numberingTitle": "Номерация на документите",
+  "admin.numberingLead":
+    "Диапазоните се задават от счетоводителя преди първия документ, за да не се застъпват с номерата от счетоводната програма. След първия документ диапазонът се заключва.",
+  "admin.numberingSeries.receipt": "Документи за продажба (Н-18) и сторно",
+  "admin.numberingSeries.invoice": "Фактури и кредитни известия",
+  "admin.numberingFirst": "От номер",
+  "admin.numberingEnd": "До номер",
+  "admin.numberingDefault": "Не е зададен — номерата започват от 1.",
+  "admin.numberingState": "Последен издаден: {last}. Остават {remaining} номера.",
+  "admin.numberingLocked": "Заключен — вече има издадени документи.",
+  "admin.numberingLow": "Диапазонът почти свърши — поискай нов от счетоводителя.",
+  "admin.numberingSaveFailed": "Не е запазено: проверете числата (от ≤ до, най-много 10 цифри).",
+  "admin.invoiceRequestDays": "Дни след плащането, в които клиентът може да поиска фактура",
   "order.documents": "Документи",
   "doc.receipt": "Документ за продажба",
   "doc.receipt_storno": "Сторно документ",

@@ -3,6 +3,7 @@ import {
   AdminOrderList,
   AdminOrderListQuery,
   IdParams,
+  InvoiceRequest,
   OrderStatusChange,
 } from "@kummie/contracts";
 import { staffNextStatuses } from "@kummie/core";
@@ -16,7 +17,8 @@ import { documentFileName, renderDocumentPdf } from "../documents/pdf";
 import { napAuditFile, ossQuarterCsv, salesJournalCsv } from "../documents/reports";
 import { loadCompanySettings } from "./settings-routes";
 import { changeOrderStatus, StatusChangeError } from "../shop/lifecycle";
-import { orderDetail, orderNumber, type OrderRow, type ShopDeps } from "../shop/orders";
+import { InvoiceNotPossible, NumberRangeExhausted } from "../documents/issue";
+import { orderDetail, orderNumber, requestLateInvoice, type OrderRow, type ShopDeps } from "../shop/orders";
 import { audit, requireStaff, type AdminDeps } from "./context";
 
 const ApiError = z.object({ error: z.string(), message: z.string() });
@@ -195,6 +197,42 @@ export function ordersAdminRoutes(deps: AdminDeps & { shop: ShopDeps }): Fastify
         const [order] = await db.select().from(orders).where(eq(orders.id, request.params.id));
         if (!order) return reply.code(404).send({ error: "not_found", message: "No such order" });
         return adminOrder(db, order);
+      },
+    );
+
+    app.post(
+      "/admin-api/orders/:id/invoice",
+      {
+        preHandler: onlyAdmin,
+        schema: {
+          params: IdParams,
+          body: InvoiceRequest,
+          response: { 200: AdminOrder, 404: ApiError, 409: ApiError, 503: ApiError },
+        },
+      },
+      async (request, reply) => {
+        const [order] = await db.select().from(orders).where(eq(orders.id, request.params.id));
+        if (!order) return reply.code(404).send({ error: "not_found", message: "No such order" });
+        try {
+          // Staff may issue it after the customer's window (D-067), never twice or after a refund.
+          await requestLateInvoice(shop, order, request.body);
+        } catch (error) {
+          if (error instanceof InvoiceNotPossible) {
+            return reply.code(409).send({ error: error.code, message: error.message });
+          }
+          if (error instanceof NumberRangeExhausted) {
+            return reply
+              .code(503)
+              .send({ error: "numbering_exhausted", message: "The invoice number range is used up" });
+          }
+          throw error;
+        }
+        shop.kick?.();
+        await audit(db, request.staff?.id ?? null, "order.invoice_issued", "order", order.id, {
+          kind: request.body.kind,
+        });
+        const [fresh] = await db.select().from(orders).where(eq(orders.id, order.id));
+        return adminOrder(db, fresh ?? order);
       },
     );
 

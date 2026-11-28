@@ -377,6 +377,34 @@ export const en: Messages = {
   "email.cta.order": "View your order",
 
   // ---- Sales documents and tax reports (M1 Task 9) ----
+  "order.invoiceRequest": "Request an invoice",
+  "order.invoiceUntil": "You can request an invoice until {date}.",
+  "order.invoiceSend": "Issue the invoice",
+  "order.invoiceIssued": "The invoice is issued — see it under “Documents”. We also e-mailed it to you.",
+  "order.invoiceTooLate":
+    "An invoice can no longer be requested for this order. Write to us if you need one.",
+  "email.invoice.subject": "Invoice for order {number}",
+  "email.invoice.body":
+    "Hi {name},\n\nWe issued invoice No. {invoice} for order {number}. It is attached to this e-mail and also in your order.",
+  "admin.order.issueInvoice": "Issue an invoice",
+  "admin.order.invoiceLead":
+    "The customer asks for it after the purchase. The invoice gets the next number, and the sale day is the tax event date.",
+  "admin.order.invoiceIssued": "The invoice is issued and sent to the customer.",
+  "admin.order.invoiceNotPossible":
+    "Not possible: the order is not paid yet, already has an invoice, or was refunded.",
+  "admin.numberingTitle": "Document numbering",
+  "admin.numberingLead":
+    "The accountant sets the ranges before the first document, so they never overlap with the numbers from the accounting program. A range locks after its first document.",
+  "admin.numberingSeries.receipt": "Sales documents (N-18) and storno",
+  "admin.numberingSeries.invoice": "Invoices and credit notes",
+  "admin.numberingFirst": "From number",
+  "admin.numberingEnd": "To number",
+  "admin.numberingDefault": "Not set — numbers start from 1.",
+  "admin.numberingState": "Last issued: {last}. {remaining} numbers left.",
+  "admin.numberingLocked": "Locked — documents have been issued.",
+  "admin.numberingLow": "The range is almost used up — ask the accountant for a new one.",
+  "admin.numberingSaveFailed": "Not saved: check the numbers (from ≤ to, 10 digits at most).",
+  "admin.invoiceRequestDays": "Days after payment in which the customer may request an invoice",
   "order.documents": "Documents",
   "doc.receipt": "Sales document",
   "doc.receipt_storno": "Reversal document",

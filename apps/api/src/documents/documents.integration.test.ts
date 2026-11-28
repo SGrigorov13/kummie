@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
-import { businessDay } from "@kummie/core";
+import { businessDay, invoiceRequestUntil } from "@kummie/core";
 import type { LoginResponse } from "@kummie/contracts";
 import { eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -13,7 +13,14 @@ import { buildApp } from "../app";
 import { createSecretBox } from "../auth/crypto";
 import { timeStep, totpCode } from "../auth/totp";
 import { createDatabase, type DatabaseHandle } from "../db/client";
-import { products, salesDocuments, settings, variants } from "../db/schema";
+import {
+  documentSequences,
+  orders as ordersTable,
+  products,
+  salesDocuments,
+  settings,
+  variants,
+} from "../db/schema";
 import { seed } from "../db/seed";
 import { processDueJobs } from "../jobs/outbox";
 
@@ -168,6 +175,39 @@ describe.skipIf(!safe)("Н-18 sales documents and reports on PostgreSQL", () => 
     await handle?.close();
   });
 
+  it("takes the accountant's invoice range before the first document (D-067)", async () => {
+    const admin = (method: "GET" | "PUT", path: string, payload?: unknown) =>
+      call(method, path, payload, { cookie: staffCookie }, ADMIN);
+    expect(
+      (await admin("PUT", "/admin-api/settings/numbering/invoice", { firstNumber: 9, endNumber: 5 }))
+        .statusCode,
+    ).toBe(400);
+    const res = await admin("PUT", "/admin-api/settings/numbering/invoice", {
+      firstNumber: 2_000_000_001,
+      endNumber: 2_000_000_004,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().items).toEqual([
+      {
+        series: "receipt",
+        firstNumber: null,
+        endNumber: null,
+        lastIssued: null,
+        remaining: 9_999_999_999,
+        locked: false,
+      },
+      {
+        series: "invoice",
+        firstNumber: 2_000_000_001,
+        endNumber: 2_000_000_004,
+        lastIssued: null,
+        remaining: 4,
+        locked: false,
+      },
+    ]);
+    expect((await call("GET", "/admin-api/settings/numbering")).statusCode).toBe(401);
+  });
+
   it("issues the чл. 52о document and the requested invoice on payment, attached as PDF", async () => {
     const order = await guestOrder({
       kind: "company",
@@ -182,7 +222,7 @@ describe.skipIf(!safe)("Н-18 sales documents and reports on PostgreSQL", () => 
     ).json();
     expect(detail.documents.map((d: { kind: string; number: string }) => [d.kind, d.number])).toEqual([
       ["receipt", "0000000001"],
-      ["invoice", "0000000001"],
+      ["invoice", "2000000001"],
     ]);
     const [receipt] = await handle.db.select().from(salesDocuments).where(eq(salesDocuments.kind, "receipt"));
     expect(receipt?.snapshot.qr).toMatch(
@@ -207,7 +247,7 @@ describe.skipIf(!safe)("Н-18 sales documents and reports on PostgreSQL", () => 
     const [mail] = await deliver();
     expect(mail?.attachments?.map((a) => a.filename)).toEqual([
       "kummie-dokument-0000000001.pdf",
-      "kummie-faktura-0000000001.pdf",
+      "kummie-faktura-2000000001.pdf",
     ]);
   });
 
@@ -243,11 +283,11 @@ describe.skipIf(!safe)("Н-18 sales documents and reports on PostgreSQL", () => 
       refersToId: receipt?.id,
     });
     expect(storno?.snapshot.refersToNumber).toBe("0000000005");
-    expect(credit).toMatchObject({ series: "invoice", number: 3 });
+    expect(credit).toMatchObject({ series: "invoice", number: 2_000_000_003 });
     const mails = await deliver();
     expect(mails[0]?.attachments?.map((a) => a.filename)).toEqual([
       "kummie-storno-0000000006.pdf",
-      "kummie-kreditno-izvestie-0000000003.pdf",
+      "kummie-kreditno-izvestie-2000000003.pdf",
     ]);
   });
 
@@ -293,7 +333,7 @@ describe.skipIf(!safe)("Н-18 sales documents and reports on PostgreSQL", () => 
       ADMIN,
     );
     expect(sales.body).toContain("Сторно чл. 52о;0000000006;0000000005");
-    expect(sales.body).toContain("Кредитно известие;0000000003");
+    expect(sales.body).toContain("Кредитно известие;2000000003");
     const oss = await call(
       "GET",
       `/admin-api/reports/oss?year=${year}&quarter=${Math.ceil(month / 3)}`,
@@ -306,5 +346,103 @@ describe.skipIf(!safe)("Н-18 sales documents and reports on PostgreSQL", () => 
     expect((await call("GET", `/admin-api/reports/nap-audit?year=${year}&month=${month}`)).statusCode).toBe(
       401,
     );
+  });
+
+  it("issues an invoice asked for after the payment and e-mails it (D-067)", async () => {
+    const order = await guestOrder();
+    await pay(order.redirectUrl);
+    await deliver();
+    const key = { "x-order-key": order.orderKey };
+    const before = (await call("GET", `/orders/${order.orderId}`, undefined, key)).json();
+    expect(before.invoiceRequestUntil).toBe(invoiceRequestUntil(businessDay(new Date()), 5));
+
+    const buyer = {
+      kind: "company",
+      name: "Късна ЕООД",
+      eik: "112233445",
+      vatNumber: null,
+      address: "Варна",
+    };
+    expect((await call("POST", `/orders/${order.orderId}/invoice`, buyer)).statusCode).toBe(404);
+    const res = await call("POST", `/orders/${order.orderId}/invoice`, buyer, key);
+    expect(res.statusCode).toBe(200);
+    const after = res.json();
+    expect(after.documents.map((d: { kind: string; number: string }) => [d.kind, d.number])).toEqual([
+      ["receipt", before.documents[0].number],
+      ["invoice", "2000000004"],
+    ]);
+    expect(after.invoiceRequestUntil).toBeNull();
+    expect(after.invoice).toMatchObject({ kind: "company", eik: "112233445" });
+
+    const docs = await handle.db
+      .select()
+      .from(salesDocuments)
+      .where(eq(salesDocuments.orderId, order.orderId));
+    const receipt = docs.find((d) => d.kind === "receipt");
+    const invoice = docs.find((d) => d.kind === "invoice");
+    expect(invoice?.totalCents).toBe(receipt?.totalCents);
+    expect(invoice?.snapshot.taxEventDate).toBe(businessDay(receipt?.issuedAt ?? new Date()));
+    expect(invoice?.snapshot.buyer).toMatchObject({ name: "Късна ЕООД", eik: "112233445" });
+
+    const [mail] = await deliver();
+    expect(mail?.subject).toBe(`Фактура към поръчка ${order.number}`);
+    expect(mail?.attachments?.map((a) => a.filename)).toEqual(["kummie-faktura-2000000004.pdf"]);
+    expect((await call("POST", `/orders/${order.orderId}/invoice`, buyer, key)).json().error).toBe(
+      "invoice_not_possible",
+    );
+  });
+
+  it("closes the customer's window, stops at the range end and lets staff issue late", async () => {
+    const order = await guestOrder();
+    await pay(order.redirectUrl);
+    await deliver();
+    await handle.db
+      .update(ordersTable)
+      .set({ paidAt: new Date(Date.now() - 10 * 86_400_000) })
+      .where(eq(ordersTable.id, order.orderId));
+    const key = { "x-order-key": order.orderKey };
+    expect(
+      (await call("GET", `/orders/${order.orderId}`, undefined, key)).json().invoiceRequestUntil,
+    ).toBeNull();
+    const buyer = { kind: "person", name: "Мария Петрова", address: "Бургас" };
+    expect((await call("POST", `/orders/${order.orderId}/invoice`, buyer, key)).statusCode).toBe(409);
+
+    // The range 2000000001–2000000004 is used up: nothing is issued and no number is spent.
+    const staff = { cookie: staffCookie };
+    const full = await call("POST", `/admin-api/orders/${order.orderId}/invoice`, buyer, staff, ADMIN);
+    expect(full.statusCode).toBe(503);
+    expect(full.json().error).toBe("numbering_exhausted");
+    const [seq] = await handle.db
+      .select()
+      .from(documentSequences)
+      .where(eq(documentSequences.series, "invoice"));
+    expect(seq?.lastNumber).toBe(2_000_000_004);
+    const numbering = (await call("GET", "/admin-api/settings/numbering", undefined, staff, ADMIN)).json();
+    expect(numbering.items[1]).toMatchObject({ locked: true, lastIssued: 2_000_000_004, remaining: 0 });
+    expect(
+      (
+        await call(
+          "PUT",
+          "/admin-api/settings/numbering/invoice",
+          { firstNumber: 3_000_000_001, endNumber: 3_999_999_999 },
+          staff,
+          ADMIN,
+        )
+      ).json().error,
+    ).toBe("range_locked");
+
+    // A wider range (set directly here; in real life a new series agreed with the accountant).
+    await handle.db
+      .update(documentSequences)
+      .set({ endNumber: 2_000_000_010 })
+      .where(eq(documentSequences.series, "invoice"));
+    const issued = await call("POST", `/admin-api/orders/${order.orderId}/invoice`, buyer, staff, ADMIN);
+    expect(issued.statusCode).toBe(200);
+    expect(issued.json().documents.find((d: { kind: string }) => d.kind === "invoice").number).toBe(
+      "2000000005",
+    );
+    expect(
+      (await call("POST", `/admin-api/orders/${order.orderId}/invoice`, buyer, staff, ADMIN)).json().error,
+    ).toBe("already_invoiced");
   });
 });

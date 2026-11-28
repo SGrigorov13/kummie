@@ -103,6 +103,9 @@ adapters replace them without changing the flow.
     it right. Compensation never depends on the rating; no bought or filtered ratings; public
     display only with a note on how they are checked; never on Teen routes.
 20. **Real adapters** for Speedy, Econt, BoxNow and the supplier once the contracts exist.
+21. **Numbering ranges and invoices after the sale (D-067)** *(done, migration 0008)*: a range per
+    document series set by the accountant and locked after the first document; "Поискай фактура"
+    on the order page within `invoiceRequestDays`; "Издай фактура" for staff after that.
 
 ## C. Definition of done
 

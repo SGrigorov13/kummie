@@ -8,6 +8,7 @@ import {
   PayResponse,
   type CartLineUpdate,
   type CheckoutRequest,
+  type InvoiceRequest,
 } from "./shop";
 
 /**
@@ -76,6 +77,9 @@ export function createShopClient({
     /** Cancels before the order is batched; a paid order is refunded in full (A10, D-032). */
     cancelOrder: (id: string, key?: string | null) =>
       call("POST", `/orders/${id}/cancel`, OrderDetail, {}, keyHeader(key)),
+    /** "Поискай фактура" after the payment, until `invoiceRequestUntil` (D-067). */
+    requestInvoice: (id: string, request: InvoiceRequest, key?: string | null) =>
+      call("POST", `/orders/${id}/invoice`, OrderDetail, request, keyHeader(key)),
   };
 }
 

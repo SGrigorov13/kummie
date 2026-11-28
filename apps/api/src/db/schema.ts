@@ -669,6 +669,12 @@ export const documentKindEnum = pgEnum("document_kind", [
 export const documentSequences = pgTable("document_sequences", {
   series: text("series").primaryKey(),
   lastNumber: bigint("last_number", { mode: "number" }).notNull().default(0),
+  /**
+   * Range set by the accountant before the first document (D-067), so the platform never shares a
+   * number with the accounting program. Null: from 1 to 9 999 999 999. Locked once a document exists.
+   */
+  firstNumber: bigint("first_number", { mode: "number" }),
+  endNumber: bigint("end_number", { mode: "number" }),
 });
 
 export type DocumentSnapshot = {
@@ -700,6 +706,8 @@ export type DocumentSnapshot = {
   vatCountry: string;
   /** Number of the document this one corrects (storno / credit note). */
   refersToNumber: string | null;
+  /** Sale day when an invoice is issued later than the sale (D-067); otherwise the issue day. */
+  taxEventDate?: string | null;
 };
 
 /**
