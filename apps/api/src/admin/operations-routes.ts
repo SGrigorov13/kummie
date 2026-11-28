@@ -3,6 +3,7 @@ import {
   BatchList,
   BatchOrdered,
   BatchShipped,
+  DamageInput,
   HandOverInput,
   HandOverResult,
   IdParams,
@@ -17,6 +18,7 @@ import {
   ReceivedQtyInput,
   ScanInput,
   ScanResult,
+  ShortageList,
   Supplier,
   SupplierList,
   SupplierOfferInput,
@@ -49,25 +51,38 @@ import {
   writeHubAddress,
   type OperationsDeps,
 } from "../operations/service";
+import { ACCEPTED_TYPES } from "../media/images";
 import { parseOfferCsv } from "../operations/offers-import";
+import {
+  damagePhoto,
+  listShortages,
+  markArrived,
+  markClaimSent,
+  MAX_DAMAGE_PHOTO_BYTES,
+  recordDamage,
+  refundShortage,
+  saveDamagePhoto,
+} from "../operations/shortages";
 import { audit, requireStaff, type AdminDeps } from "./context";
 
 const ApiError = z.object({ error: z.string(), message: z.string() });
 const SupplierParams = z.object({ id: z.string().min(1).max(40) });
-const HTTP: Record<OperationsError["code"], 404 | 409 | 422> = {
+const HTTP: Record<OperationsError["code"], 404 | 409 | 422 | 502> = {
   not_found: 404,
   not_allowed: 409,
   mismatch: 422,
   no_carrier: 409,
   no_hub: 409,
+  refund_failed: 502,
 };
+const PHOTO_TYPES = [...ACCEPTED_TYPES];
 
 /**
  * M2 operations in the admin (docs/specs/M2-operations.md): suppliers and the hub address (admin);
  * offers (admin and content, D-063); batches (admin); receiving, packing and hand-over (admin, hub).
  */
 export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps }): FastifyPluginAsyncZod {
-  const { db, operations } = deps;
+  const { db, operations, shop } = deps;
   const onlyAdmin = requireStaff(db, ["admin"]);
   const hubStaff = requireStaff(db, ["admin", "hub"]);
   /** Those who enter products also enter the supplier offers (D-063, B3). */
@@ -75,6 +90,12 @@ export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps 
   const staffId = (request: { staff: { id: string } | null }) => request.staff?.id ?? null;
 
   return async (app) => {
+    // Damage photos arrive as raw image bytes (like product photos), parsed only in this plugin.
+    app.addContentTypeParser(
+      PHOTO_TYPES,
+      { parseAs: "buffer", bodyLimit: MAX_DAMAGE_PHOTO_BYTES },
+      (_r, body, done) => done(null, body),
+    );
     app.setErrorHandler((error, _request, reply) => {
       if (error instanceof OperationsError)
         return reply.code(HTTP[error.code]).send({ error: error.code, message: error.message });
@@ -410,6 +431,113 @@ export function operationsRoutes(deps: AdminDeps & { operations: OperationsDeps 
         await finishReceiving(operations, request.params.id);
         await audit(db, staffId(request), "batch.received", "batch", request.params.id);
         return detail(request.params.id);
+      },
+    );
+
+    // ---------- Hub: damaged units and the "Липси" list (D-063 B5, D-064) ----------
+
+    app.put(
+      "/admin-api/hub/batches/:id/damage",
+      {
+        preHandler: hubStaff,
+        schema: {
+          params: IdParams,
+          body: DamageInput,
+          response: { 200: BatchDetail, 404: ApiError, 409: ApiError },
+        },
+      },
+      async (request) => {
+        await recordDamage(db, request.params.id, request.body, staffId(request));
+        await audit(db, staffId(request), "batch.damage", "batch", request.params.id, {
+          supplierSku: request.body.supplierSku,
+          qty: request.body.qty,
+        });
+        return detail(request.params.id);
+      },
+    );
+
+    app.post(
+      "/admin-api/hub/batches/:id/damage-photo",
+      {
+        preHandler: hubStaff,
+        bodyLimit: MAX_DAMAGE_PHOTO_BYTES,
+        schema: {
+          params: IdParams,
+          querystring: z.object({ sku: z.string().min(1).max(64) }),
+          response: { 200: BatchDetail, 404: ApiError, 409: ApiError, 415: ApiError, 422: ApiError },
+        },
+      },
+      async (request, reply) => {
+        if (!Buffer.isBuffer(request.body))
+          return reply
+            .code(415)
+            .send({ error: "unsupported_media_type", message: "Send a JPEG, PNG or WebP photo" });
+        await saveDamagePhoto(db, request.params.id, request.query.sku, new Uint8Array(request.body));
+        return detail(request.params.id);
+      },
+    );
+
+    app.get(
+      "/admin-api/hub/damage/:id/photo",
+      { preHandler: hubStaff, schema: { params: IdParams } },
+      async (request, reply) => {
+        const photo = await damagePhoto(db, request.params.id);
+        if (!photo) return reply.code(404).send({ error: "not_found", message: "No photo" });
+        return reply
+          .header("content-type", "image/jpeg")
+          .header("cache-control", "private, no-store")
+          .send(Buffer.from(photo));
+      },
+    );
+
+    const shortageList = async () => ({ items: await listShortages(db) });
+
+    app.get(
+      "/admin-api/hub/shortages",
+      { preHandler: hubStaff, schema: { response: { 200: ShortageList } } },
+      shortageList,
+    );
+
+    app.post(
+      "/admin-api/hub/shortages/:id/claim",
+      {
+        preHandler: hubStaff,
+        schema: { params: IdParams, response: { 200: ShortageList, 404: ApiError, 409: ApiError } },
+      },
+      async (request) => {
+        await markClaimSent(db, request.params.id);
+        await audit(db, staffId(request), "shortage.claim_sent", "shortage", request.params.id);
+        return shortageList();
+      },
+    );
+
+    app.post(
+      "/admin-api/hub/shortages/:id/arrived",
+      {
+        preHandler: hubStaff,
+        schema: { params: IdParams, response: { 200: ShortageList, 404: ApiError, 409: ApiError } },
+      },
+      async (request) => {
+        await markArrived(operations, request.params.id, `staff:${staffId(request) ?? "unknown"}`);
+        await audit(db, staffId(request), "shortage.arrived", "shortage", request.params.id);
+        return shortageList();
+      },
+    );
+
+    app.post(
+      "/admin-api/hub/shortages/:id/refund",
+      {
+        preHandler: onlyAdmin,
+        schema: {
+          params: IdParams,
+          response: { 200: ShortageList, 404: ApiError, 409: ApiError, 502: ApiError, 503: ApiError },
+        },
+      },
+      async (request, reply) => {
+        if (!shop) return reply.code(503).send({ error: "no_shop", message: "Payments are not configured" });
+        await refundShortage(shop, operations, request.params.id, `staff:${staffId(request) ?? "unknown"}`);
+        await audit(db, staffId(request), "shortage.refunded", "shortage", request.params.id);
+        return shortageList();
       },
     );
 

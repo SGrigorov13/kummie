@@ -400,6 +400,38 @@ export const bg = {
   "admin.numberingLow": "Диапазонът почти свърши — поискай нов от счетоводителя.",
   "admin.numberingSaveFailed": "Не е запазено: проверете числата (от ≤ до, най-много 10 цифри).",
   "admin.invoiceRequestDays": "Дни след плащането, в които клиентът може да поиска фактура",
+  "order.lineRefunded": "{qty} бр. не пристигнаха или бяха повредени — сумата за тях е върната.",
+  "email.shortage.subject": "Поръчка {number}: върнахме {amount}",
+  "email.shortage.missing":
+    "Здравей, {name}!\n\nДоставчикът не ни изпрати {item} × {qty} от поръчка {number}. Върнахме {amount} по картата, с която плати; документите са прикачени. Останалото от поръчката продължава към теб.\n\nСледи поръчката: {link}",
+  "email.shortage.damaged":
+    "Здравей, {name}!\n\n{item} × {qty} от поръчка {number} пристигна при нас повреден и не искаме да ти го пращаме. Върнахме {amount} по картата, с която плати; документите са прикачени. Останалото от поръчката продължава към теб.\n\nСледи поръчката: {link}",
+  "admin.hub.damaged": "Повредени",
+  "admin.hub.damageNote": "Бележка за рекламацията",
+  "admin.hub.damagePhoto": "Снимка",
+  "admin.hub.damageSave": "Запиши повредените",
+  "admin.hub.damageLead":
+    "Броиш само здравите бройки. Повредените запиши отделно, със снимка за рекламацията към доставчика.",
+  "admin.hub.tab.shortages": "Липси",
+  "admin.hub.shortages": "Липси",
+  "admin.hub.shortagesLead":
+    "Бройки, които не пристигнаха или са повредени. Доставчикът има 3 работни дни; след това потвърди връщането на парите. Останалото от поръчката продължава.",
+  "admin.hub.shortagesEmpty": "Няма липси.",
+  "admin.hub.shortage.missing": "Липсва",
+  "admin.hub.shortage.damaged": "Повреден",
+  "admin.hub.shortage.open": "Отворена",
+  "admin.hub.shortage.arrived": "Пристигна",
+  "admin.hub.shortage.refunded": "Парите са върнати",
+  "admin.hub.shortageDue": "Чакаме доставчика до {date}",
+  "admin.hub.shortageOverdue": "Срокът мина ({date}) — потвърди връщането",
+  "admin.hub.claimSent": "Рекламацията е изпратена",
+  "admin.hub.markClaim": "Рекламацията е изпратена",
+  "admin.hub.markArrived": "Пристигна",
+  "admin.hub.refund": "Върни {amount} на клиента",
+  "admin.hub.refundConfirm":
+    "Сигурен ли си? Връщат се {amount} по картата, издават се сторно и кредитно известие и клиентът получава имейл.",
+  "admin.hub.refundFailed": "Връщането не мина: {message}",
+  "admin.hub.viewPhoto": "Виж снимката",
   "order.documents": "Документи",
   "doc.receipt": "Документ за продажба",
   "doc.receipt_storno": "Сторно документ",
@@ -671,7 +703,8 @@ export const bg = {
   "admin.hub.missing":
     "Липсват {count} бр. Поръчките с липсващи продукти остават назад, докато не решиш какво да правиш с тях.",
   "admin.hub.allReceived": "Всичко е получено.",
-  "admin.hub.confirmShort": "Липсват {count} бр. Да приключа ли приемането така?",
+  "admin.hub.confirmShort":
+    "Липсват {count} бр. Да приключа ли приемането така? Те отиват в „Липси“ и чакаме доставчика 3 работни дни.",
   "admin.hub.receivedDone": "Приемането е приключено. Пълните поръчки са готови за опаковане.",
   "admin.hub.finishReceiving": "Приключи приемането",
   "admin.hub.wrongProduct": "{code}: този продукт не е в поръчката!",

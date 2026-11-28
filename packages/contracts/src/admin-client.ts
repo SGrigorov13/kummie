@@ -26,9 +26,11 @@ import {
   OperationsSettings,
   PackQueue,
   ScanResult,
+  ShortageList,
   Supplier,
   SupplierList,
   SupplierOfferList,
+  type DamageInput,
   type HubAddress,
   type PackInput,
   type SupplierOfferInput,
@@ -174,6 +176,22 @@ export function createAdminClient({
     setReceived: (id: string, supplierSku: string, receivedQty: number) =>
       call("PUT", `/admin-api/hub/batches/${id}/received`, BatchDetail, { supplierSku, receivedQty }),
     finishReceiving: (id: string) => call("POST", `/admin-api/hub/batches/${id}/done`, BatchDetail, {}),
+    /** Damaged units of one supplier SKU while receiving (0 removes them). */
+    setDamage: (id: string, damage: DamageInput) =>
+      call("PUT", `/admin-api/hub/batches/${id}/damage`, BatchDetail, damage),
+    uploadDamagePhoto: (id: string, supplierSku: string, file: Blob) =>
+      call(
+        "POST",
+        `/admin-api/hub/batches/${id}/damage-photo?sku=${encodeURIComponent(supplierSku)}`,
+        BatchDetail,
+        file,
+      ),
+    damagePhotoUrl: (damageId: string) => `${base}/admin-api/hub/damage/${damageId}/photo`,
+    shortages: () => call("GET", "/admin-api/hub/shortages", ShortageList),
+    shortageClaimSent: (id: string) => call("POST", `/admin-api/hub/shortages/${id}/claim`, ShortageList, {}),
+    shortageArrived: (id: string) => call("POST", `/admin-api/hub/shortages/${id}/arrived`, ShortageList, {}),
+    /** Admin only: refunds the units to the card, with storno / credit note and e-mail (D-064). */
+    refundShortage: (id: string) => call("POST", `/admin-api/hub/shortages/${id}/refund`, ShortageList, {}),
     packQueue: () => call("GET", "/admin-api/hub/packing", PackQueue),
     packOrder: (id: string, input: PackInput) =>
       call("POST", `/admin-api/hub/orders/${id}/pack`, PackQueue, input),

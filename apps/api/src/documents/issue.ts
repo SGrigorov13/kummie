@@ -270,3 +270,54 @@ export async function issueRefundDocuments(
   }
   return issued;
 }
+
+/**
+ * On a partial refund (missing or damaged units, D-064): a storno of the receipt and, if there was
+ * an invoice, a credit note — only for the refunded lines (negative amounts), with the reason.
+ */
+export async function issuePartialRefundDocuments(
+  tx: Tx,
+  order: OrderRow,
+  refundId: string,
+  lines: DocumentSnapshot["lines"],
+  reason: string,
+  issuedAt = new Date(),
+): Promise<DocumentRow[]> {
+  const originals = await tx
+    .select()
+    .from(salesDocuments)
+    .where(and(eq(salesDocuments.orderId, order.id), inArray(salesDocuments.kind, ["receipt", "invoice"])));
+  const totalCents = lines.reduce((sum, l) => sum + l.totalCents, 0);
+  const vatCents = lines.reduce((sum, l) => sum + l.vatCents, 0);
+  const issued: DocumentRow[] = [];
+  for (const original of originals) {
+    const series = original.kind === "receipt" ? "receipt" : "invoice";
+    const kind = original.kind === "receipt" ? "receipt_storno" : "credit_note";
+    const number = await nextDocumentNumber(tx, series);
+    const [doc] = await tx
+      .insert(salesDocuments)
+      .values({
+        orderId: order.id,
+        kind,
+        series,
+        number,
+        issuedAt,
+        refersToId: original.id,
+        refundId,
+        totalCents,
+        vatCents,
+        vatRateBp: original.vatRateBp,
+        snapshot: {
+          ...original.snapshot,
+          lines,
+          qr: null,
+          refersToNumber: String(original.number).padStart(10, "0"),
+          taxEventDate: null,
+          reason,
+        },
+      })
+      .returning();
+    if (doc) issued.push(doc);
+  }
+  return issued;
+}

@@ -139,6 +139,8 @@ export const OrderLine = z.object({
   lineTotalCents: z.number().int(),
   vatCents: z.number().int(),
   dispatchEstimate: Localized,
+  /** Units refunded instead of shipped (missing or damaged, D-064). */
+  refundedQty: z.number().int(),
 });
 
 export const OrderDetail = z.object({

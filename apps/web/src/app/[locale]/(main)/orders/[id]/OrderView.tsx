@@ -218,6 +218,9 @@ export function OrderView({ id }: { id: string }) {
               <p className="muted">
                 {line.version} · {line.dispatchEstimate[locale]}
               </p>
+              {line.refundedQty > 0 ? (
+                <p className="notice">{t("order.lineRefunded", { qty: line.refundedQty })}</p>
+              ) : null}
             </div>
             <span>{formatMoney(line.lineTotalCents, locale)}</span>
           </li>

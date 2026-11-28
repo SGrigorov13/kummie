@@ -1,4 +1,4 @@
-import type { Messages } from "./types";
+﻿import type { Messages } from "./types";
 
 /** English copy — must have exactly the keys of `bg.ts`. */
 export const en: Messages = {
@@ -405,6 +405,38 @@ export const en: Messages = {
   "admin.numberingLow": "The range is almost used up — ask the accountant for a new one.",
   "admin.numberingSaveFailed": "Not saved: check the numbers (from ≤ to, 10 digits at most).",
   "admin.invoiceRequestDays": "Days after payment in which the customer may request an invoice",
+  "order.lineRefunded": "{qty} pcs did not arrive or were damaged — their price was refunded.",
+  "email.shortage.subject": "Order {number}: we refunded {amount}",
+  "email.shortage.missing":
+    "Hi {name},\n\nThe supplier did not send us {item} × {qty} from order {number}. We refunded {amount} to the card you paid with; the documents are attached. The rest of the order is on its way to you.\n\nTrack the order: {link}",
+  "email.shortage.damaged":
+    "Hi {name},\n\n{item} × {qty} from order {number} reached us damaged and we will not send it to you. We refunded {amount} to the card you paid with; the documents are attached. The rest of the order is on its way to you.\n\nTrack the order: {link}",
+  "admin.hub.damaged": "Damaged",
+  "admin.hub.damageNote": "Note for the claim",
+  "admin.hub.damagePhoto": "Photo",
+  "admin.hub.damageSave": "Save damaged units",
+  "admin.hub.damageLead":
+    "Count only the good units. Enter the damaged ones separately, with a photo for the claim to the supplier.",
+  "admin.hub.tab.shortages": "Shortages",
+  "admin.hub.shortages": "Shortages",
+  "admin.hub.shortagesLead":
+    "Units that did not arrive or are damaged. The supplier has 3 working days; after that, confirm the refund. The rest of the order goes on.",
+  "admin.hub.shortagesEmpty": "No shortages.",
+  "admin.hub.shortage.missing": "Missing",
+  "admin.hub.shortage.damaged": "Damaged",
+  "admin.hub.shortage.open": "Open",
+  "admin.hub.shortage.arrived": "Arrived",
+  "admin.hub.shortage.refunded": "Refunded",
+  "admin.hub.shortageDue": "Waiting for the supplier until {date}",
+  "admin.hub.shortageOverdue": "Past the deadline ({date}) — confirm the refund",
+  "admin.hub.claimSent": "Claim sent",
+  "admin.hub.markClaim": "Claim sent",
+  "admin.hub.markArrived": "Arrived",
+  "admin.hub.refund": "Refund {amount} to the customer",
+  "admin.hub.refundConfirm":
+    "Are you sure? {amount} goes back to the card, a storno and credit note are issued and the customer gets an e-mail.",
+  "admin.hub.refundFailed": "The refund did not go through: {message}",
+  "admin.hub.viewPhoto": "View photo",
   "order.documents": "Documents",
   "doc.receipt": "Sales document",
   "doc.receipt_storno": "Reversal document",
@@ -674,7 +706,8 @@ export const en: Messages = {
   "admin.hub.missing":
     "{count} unit(s) missing. Orders with missing products stay back until you decide what to do.",
   "admin.hub.allReceived": "Everything received.",
-  "admin.hub.confirmShort": "{count} unit(s) missing. Finish receiving anyway?",
+  "admin.hub.confirmShort":
+    "{count} unit(s) missing. Finish receiving anyway? They go to Shortages and we wait 3 working days for the supplier.",
   "admin.hub.receivedDone": "Receiving finished. Complete orders are ready to pack.",
   "admin.hub.finishReceiving": "Finish receiving",
   "admin.hub.wrongProduct": "{code}: this product is not in the order!",

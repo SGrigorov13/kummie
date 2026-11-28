@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import type {
   BatchDetail,
   LoginResponse,
+  ShortageList,
   PackingSlip,
   PackQueue,
   SupplierOfferList,
@@ -22,7 +23,20 @@ import { buildApp } from "../app";
 import { createSecretBox } from "../auth/crypto";
 import { timeStep, totpCode } from "../auth/totp";
 import { createDatabase, type DatabaseHandle } from "../db/client";
-import { batches, orders, productCompliance, products, variants } from "../db/schema";
+import { addWorkingDays, businessDay } from "@kummie/core";
+import sharp from "sharp";
+import {
+  batches,
+  orderLines,
+  orders,
+  payments,
+  productCompliance,
+  products,
+  refunds,
+  salesDocuments,
+  shortages,
+  variants,
+} from "../db/schema";
 import { seed } from "../db/seed";
 import { processDueJobs } from "../jobs/outbox";
 import { runOperations, type OperationsDeps } from "./service";
@@ -422,5 +436,110 @@ describe.skipIf(!safe)("M2 operations with the test partners on PostgreSQL", () 
   it("hands over a label only once and only for known parcels", async () => {
     const again = await call("POST", "/admin-api/hub/handover", { trackingNumber: "FKNOPE0000" }, true);
     expect(again.statusCode).toBe(404);
+  });
+
+  it("records damaged and missing units, refunds them on confirmation and ships the rest", async () => {
+    // The order from the previous test: 2 × KM-001 in K-Moon's batch, ordered from the supplier.
+    const [order] = await handle.db.select().from(orders).where(eq(orders.status, "ordered_from_supplier"));
+    const [batch] = await handle.db.select().from(batches).where(eq(batches.status, "ordered"));
+    const id = order?.id ?? "";
+    const batchId = batch?.id ?? "";
+
+    // One unit arrived broken (with a photo for the claim), the other did not arrive at all.
+    const damaged = await call(
+      "PUT",
+      `/admin-api/hub/batches/${batchId}/damage`,
+      { supplierSku: "KM-001", qty: 1, note: "Счупена кутия" },
+      true,
+    );
+    expect((damaged.json() as BatchDetail).items[0]).toMatchObject({ receivedQty: 0, damagedQty: 1 });
+    const png = await sharp({ create: { width: 40, height: 30, channels: 3, background: "#ff0000" } })
+      .png()
+      .toBuffer();
+    const photo = await app.inject({
+      method: "POST",
+      url: `/admin-api/hub/batches/${batchId}/damage-photo?sku=KM-001`,
+      payload: png,
+      headers: { origin: ADMIN, cookie: staffCookie, "content-type": "image/png" },
+    });
+    expect(photo.statusCode).toBe(200);
+    expect((photo.json() as BatchDetail).items[0]?.damagePhoto).toBe(true);
+    await call("POST", `/admin-api/hub/batches/${batchId}/done`, {}, true);
+    expect(await status(id)).toBe("supplier_shipped");
+
+    const [line] = await handle.db.select().from(orderLines).where(eq(orderLines.orderId, id));
+    const unit = line?.unitPriceCents ?? 0;
+    const list = (await call("GET", "/admin-api/hub/shortages", undefined, true)).json() as ShortageList;
+    const dueOn = addWorkingDays(businessDay(new Date()), 3);
+    expect(list.items.map((s) => [s.kind, s.qty, s.status, s.dueOn, s.refundCents, s.due])).toEqual([
+      ["damaged", 1, "open", dueOn, unit, false],
+      ["missing", 1, "open", dueOn, unit, false],
+    ]);
+    const damagedShortage = list.items.find((s) => s.kind === "damaged");
+    const missingShortage = list.items.find((s) => s.kind === "missing");
+    expect(damagedShortage).toMatchObject({ note: "Счупена кутия", supplierName: "K-Moon" });
+    const jpeg = await call(
+      "GET",
+      `/admin-api/hub/damage/${damagedShortage?.photoId}/photo`,
+      undefined,
+      true,
+    );
+    expect(jpeg.headers["content-type"]).toBe("image/jpeg");
+    expect((await call("GET", `/admin-api/hub/damage/${damagedShortage?.photoId}/photo`)).statusCode).toBe(
+      401,
+    );
+
+    // The claim goes to the supplier; the missing unit comes after all.
+    await call("POST", `/admin-api/hub/shortages/${damagedShortage?.id}/claim`, {}, true);
+    const afterArrived = (
+      await call("POST", `/admin-api/hub/shortages/${missingShortage?.id}/arrived`, {}, true)
+    ).json() as ShortageList;
+    expect(afterArrived.items.find((s) => s.id === missingShortage?.id)?.status).toBe("arrived");
+    expect(afterArrived.items.find((s) => s.id === damagedShortage?.id)?.claimSentAt).not.toBeNull();
+    expect(await status(id)).toBe("supplier_shipped");
+
+    // Staff confirm the refund of the damaged unit: card, storno, e-mail; the rest goes on.
+    await deliver();
+    const refunded = await call("POST", `/admin-api/hub/shortages/${damagedShortage?.id}/refund`, {}, true);
+    expect(refunded.statusCode).toBe(200);
+    expect(await status(id)).toBe("received_at_hub");
+    const [after] = await handle.db.select().from(orderLines).where(eq(orderLines.orderId, id));
+    expect(after?.refundedQty).toBe(1);
+    const [refund] = await handle.db.select().from(refunds).where(eq(refunds.orderId, id));
+    expect(refund).toMatchObject({ amountCents: unit, reason: "damaged", status: "succeeded" });
+    const [payment] = await handle.db.select().from(payments).where(eq(payments.orderId, id));
+    expect(payment?.status).toBe("partially_refunded");
+    const storno = (await handle.db.select().from(salesDocuments).where(eq(salesDocuments.orderId, id))).find(
+      (d) => d.kind === "receipt_storno",
+    );
+    expect(storno).toMatchObject({ totalCents: -unit, refundId: refund?.id });
+    expect(storno?.snapshot.reason).toBe("повредени при доставката бройки");
+    expect(storno?.snapshot.lines).toHaveLength(1);
+    const mails = (await deliver()).filter((m) => m.to === "maria@kummie.test");
+    const mail = mails.find((m) => m.subject.includes("върнахме"));
+    expect(mail?.text).toContain("пристигна при нас повреден");
+    expect(mail?.attachments?.map((a) => a.filename)).toEqual([
+      expect.stringMatching(/^kummie-storno-\d{10}\.pdf$/),
+    ]);
+    expect(
+      (await call("POST", `/admin-api/hub/shortages/${damagedShortage?.id}/refund`, {}, true)).statusCode,
+    ).toBe(409);
+    const [row] = await handle.db
+      .select()
+      .from(shortages)
+      .where(eq(shortages.id, damagedShortage?.id ?? ""));
+    expect(row?.status).toBe("refunded");
+
+    // Only the one good unit is packed.
+    const queue = (await call("GET", "/admin-api/hub/packing", undefined, true)).json() as PackQueue;
+    expect(queue.items.find((o) => o.id === id)?.lines).toEqual([expect.objectContaining({ sku, qty: 1 })]);
+    const packed = await call(
+      "POST",
+      `/admin-api/hub/orders/${id}/pack`,
+      { items: [{ sku, qty: 1 }], weightGrams: 500 },
+      true,
+    );
+    expect(packed.statusCode).toBe(200);
+    expect(await status(id)).toBe("packed");
   });
 });

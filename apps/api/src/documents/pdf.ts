@@ -189,7 +189,7 @@ export async function renderDocumentPdf(doc: DocumentRow): Promise<Buffer> {
     pdf.moveDown(0.6);
     pdf.text(`Дата на данъчното събитие: ${s.taxEventDate ?? date}`, { width: 300 });
     if (doc.kind === "credit_note")
-      pdf.text("Основание: връщане на сумата при отказ от поръчката", { width: 300 });
+      pdf.text(`Основание: ${s.reason ?? "връщане на сумата при отказ от поръчката"}`, { width: 300 });
   }
 
   if (qrPng) pdf.image(qrPng, left + width - 130, y, { width: 130 });
