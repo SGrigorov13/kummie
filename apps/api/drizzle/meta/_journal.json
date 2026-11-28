@@ -64,6 +64,13 @@
       "when": 1795823197315,
       "tag": "0008_invoice_ranges",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795825374843,
+      "tag": "0009_shortages",
+      "breakpoints": true
     }
   ]
 }

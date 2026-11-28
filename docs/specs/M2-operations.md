@@ -84,7 +84,8 @@ adapters replace them without changing the flow.
 10. **Missing and damaged units:** "Липси" list after receiving; claim to the supplier with photo;
     after 3 working days staff **confirm** the partial refund (card refund through the payment
     adapter, credit note, Kummies re-counted per D-032) and the customer gets an e-mail; the rest
-    of the order ships.
+    of the order ships. *(done, D-068, migration 0009: damage per supplier SKU while receiving,
+    Пункт България → Липси, `POST /admin-api/hub/shortages/:id/refund`)*
 11. **Withdrawal and returns:** "Откажи се" in the customer's order up to 14 days after delivery,
     choice of products; return form with the customer's courier choice and the minimum fee
     (amounts with the courier prices); refund when staff accept the parcel at the hub; per-product

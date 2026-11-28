@@ -80,6 +80,10 @@ async function cancel(deps: ShopDeps, order: OrderRow, actor: string, note: stri
     return;
   }
 
+  // After a partial refund (missing or damaged units) the full refund would pay back too much.
+  const earlier = await db.select({ id: refunds.id }).from(refunds).where(eq(refunds.orderId, order.id));
+  if (earlier.length > 0)
+    throw new StatusChangeError("not_allowed", "Part of this order was already refunded");
   const [payment] = await db
     .select()
     .from(payments)

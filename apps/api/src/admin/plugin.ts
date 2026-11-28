@@ -11,7 +11,9 @@ import { importRoutes } from "./import-routes";
 import { productsAdminRoutes } from "./products-routes";
 import { settingsRoutes } from "./settings-routes";
 
-const PHOTO_UPLOAD = /^\/admin-api\/products\/[0-9a-f-]{36}\/images$/;
+/** Product photos (D-061) and damage photos for supplier claims (D-064). */
+const PHOTO_UPLOAD =
+  /^\/admin-api\/(products\/[0-9a-f-]{36}\/images|hub\/batches\/[0-9a-f-]{36}\/damage-photo\?sku=[^&]+)$/;
 const isAcceptedImageType = (type: string) =>
   (ACCEPTED_TYPES as readonly string[]).includes(type.split(";")[0]?.trim() ?? "");
 

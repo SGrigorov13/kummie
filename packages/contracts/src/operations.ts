@@ -104,6 +104,9 @@ export const BatchItem = z.object({
   qty: z.number().int(),
   receivedQty: z.number().int(),
   unitCostCents: z.number().int(),
+  /** Units marked damaged while receiving (D-063 B5); not counted as received. */
+  damagedQty: z.number().int(),
+  damagePhoto: z.boolean(),
 });
 export type BatchItem = z.infer<typeof BatchItem>;
 
@@ -119,6 +122,44 @@ export const ReceivedQtyInput = z.object({
   supplierSku: z.string().min(1).max(64),
   receivedQty: z.number().int().min(0),
 });
+
+/** Damaged units of one supplier SKU while receiving (0 removes the record). */
+export const DamageInput = z.object({
+  supplierSku: z.string().min(1).max(64),
+  qty: z.number().int().min(0).max(9999),
+  note: z.string().trim().max(500).nullable(),
+});
+export type DamageInput = z.infer<typeof DamageInput>;
+
+/** Units an order did not get (missing or damaged, D-064) — the "Липси" list. */
+export const Shortage = z.object({
+  id: z.string(),
+  kind: z.enum(["missing", "damaged"]),
+  status: z.enum(["open", "arrived", "refunded"]),
+  qty: z.number().int(),
+  /** The supplier's last working day to send them (3 working days, D-063 B5). */
+  dueOn: z.iso.date(),
+  /** The wait is over: staff may confirm the refund now. */
+  due: z.boolean(),
+  orderId: z.string(),
+  orderNumber: z.string(),
+  sku: z.string(),
+  title: z.string(),
+  version: z.string(),
+  supplierSku: z.string(),
+  supplierName: z.string(),
+  poReference: z.string().nullable(),
+  /** What the customer gets back (units at their price incl. VAT; plus delivery if nothing is left). */
+  refundCents: z.number().int(),
+  claimSentAt: z.string().nullable(),
+  note: z.string().nullable(),
+  /** Id of the damage record with a photo, for the claim to the supplier. */
+  photoId: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type Shortage = z.infer<typeof Shortage>;
+export const ShortageList = z.object({ items: z.array(Shortage) });
+export type ShortageList = z.infer<typeof ShortageList>;
 
 export const ScanResult = z.object({
   ok: z.boolean(),

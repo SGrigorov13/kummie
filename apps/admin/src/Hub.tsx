@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { batchStatusKey } from "./Batches";
 import { api, useAdmin } from "./context";
 import { PackingSlipPrint } from "./PackingSlipPrint";
+import { Shortages } from "./Shortages";
 
 type Message = { kind: "ok" | "error"; text: string } | null;
 
@@ -71,11 +72,11 @@ function beep(ok: boolean) {
 /** Admin → Пункт България (M2): receiving batches, packing orders, hand-over to the courier. */
 export function Hub() {
   const { t } = useAdmin();
-  const [tab, setTab] = useState<"receive" | "pack" | "handover">("receive");
+  const [tab, setTab] = useState<"receive" | "pack" | "handover" | "shortages">("receive");
   return (
     <div className="stack">
       <div className="row" role="tablist">
-        {(["receive", "pack", "handover"] as const).map((id) => (
+        {(["receive", "pack", "handover", "shortages"] as const).map((id) => (
           <button
             key={id}
             type="button"
@@ -91,6 +92,7 @@ export function Hub() {
       {tab === "receive" ? <Receive /> : null}
       {tab === "pack" ? <Pack /> : null}
       {tab === "handover" ? <HandOver /> : null}
+      {tab === "shortages" ? <Shortages /> : null}
     </div>
   );
 }
@@ -104,6 +106,21 @@ function Receive() {
   const [list, setList] = useState<BatchSummary[]>([]);
   const [batch, setBatch] = useState<BatchDetail | null>(null);
   const [message, setMessage] = useState<Message>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+
+  const saveDamage = (supplierSku: string, qty: number) => {
+    if (!batch) return;
+    const note = notes[supplierSku]?.trim() || null;
+    api
+      .setDamage(batch.id, { supplierSku, qty, note })
+      .then(setBatch, (err: unknown) => setMessage({ kind: "error", text: errorText(err) }));
+  };
+  const uploadPhoto = (supplierSku: string, file: File | undefined) => {
+    if (!batch || !file) return;
+    api
+      .uploadDamagePhoto(batch.id, supplierSku, file)
+      .then(setBatch, (err: unknown) => setMessage({ kind: "error", text: errorText(err) }));
+  };
 
   const load = () =>
     api
@@ -163,6 +180,7 @@ function Receive() {
         {batch.poReference} · {batch.supplierName}
       </h2>
       <ScanField label={t("admin.hub.scanProduct")} onScan={(c) => void scan(c)} />
+      <p className="note">{t("admin.hub.damageLead")}</p>
       {message ? (
         <p className={message.kind === "ok" ? "ok" : "error"} role="status">
           {message.text}
@@ -176,6 +194,7 @@ function Receive() {
             <th>{t("admin.ops.product")}</th>
             <th>{t("admin.hub.expected")}</th>
             <th>{t("admin.ops.received")}</th>
+            <th>{t("admin.hub.damaged")}</th>
           </tr>
         </thead>
         <tbody>
@@ -199,6 +218,38 @@ function Receive() {
                       .then(setBatch, (err: unknown) => setMessage({ kind: "error", text: errorText(err) }))
                   }
                 />
+              </td>
+              <td className="stack">
+                <input
+                  type="number"
+                  min={0}
+                  max={i.qty}
+                  value={i.damagedQty}
+                  aria-label={`${t("admin.hub.damaged")} ${i.supplierSku}`}
+                  style={{ width: 70 }}
+                  disabled={batch.status === "received"}
+                  onChange={(e) => saveDamage(i.supplierSku, Math.max(0, Number(e.target.value) || 0))}
+                />
+                {i.damagedQty > 0 && batch.status !== "received" ? (
+                  <>
+                    <input
+                      aria-label={`${t("admin.hub.damageNote")} ${i.supplierSku}`}
+                      placeholder={t("admin.hub.damageNote")}
+                      value={notes[i.supplierSku] ?? ""}
+                      onChange={(e) => setNotes({ ...notes, [i.supplierSku]: e.target.value })}
+                      onBlur={() => saveDamage(i.supplierSku, i.damagedQty)}
+                    />
+                    <label>
+                      {t("admin.hub.damagePhoto")}
+                      {i.damagePhoto ? " ✓" : ""}{" "}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(e) => uploadPhoto(i.supplierSku, e.target.files?.[0])}
+                      />
+                    </label>
+                  </>
+                ) : null}
               </td>
             </tr>
           ))}

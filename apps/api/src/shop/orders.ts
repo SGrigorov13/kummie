@@ -331,6 +331,7 @@ export async function orderDetail(db: Database, order: OrderRow): Promise<OrderD
       lineTotalCents: l.lineTotalCents,
       vatCents: l.vatCents,
       dispatchEstimate: l.dispatchEstimate,
+      refundedQty: l.refundedQty,
     })),
     goodsCents: order.goodsCents,
     shippingCents: order.shippingCents,

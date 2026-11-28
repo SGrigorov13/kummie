@@ -25,6 +25,7 @@ import type { CarrierAdapter, TrackingStatus } from "../adapters/carrier";
 import type { SupplierAdapter } from "../adapters/supplier";
 import type { Database } from "../db/client";
 import {
+  batchDamage,
   batches,
   batchLines,
   orderLines,
@@ -41,6 +42,7 @@ import { queueStatusEmail } from "../shop/lifecycle";
 import { transition } from "../shop/orders";
 
 /** Everything the operations need: the database, the test or real partners and the shop address. */
+import { createShortages } from "./shortage-records";
 export type OperationsDeps = {
   db: Database;
   /** For links in the status e-mails. */
@@ -53,7 +55,7 @@ export type OperationsDeps = {
 
 export class OperationsError extends Error {
   constructor(
-    readonly code: "not_found" | "not_allowed" | "mismatch" | "no_carrier" | "no_hub",
+    readonly code: "not_found" | "not_allowed" | "mismatch" | "no_carrier" | "no_hub" | "refund_failed",
     message: string,
   ) {
     super(message);
@@ -89,17 +91,19 @@ async function advance(deps: OperationsDeps, tx: Tx, order: OrderRow, to: OrderS
 }
 
 /** Re-computes the status of orders from their batch lines (B10). */
-async function syncOrders(deps: OperationsDeps, tx: Tx, orderIds: readonly string[]) {
+export async function syncOrders(deps: OperationsDeps, tx: Tx, orderIds: readonly string[]) {
   if (orderIds.length === 0) return;
+  // Units refunded instead of shipped (D-064) are no longer waited for.
   const rows = await tx
     .select({
       orderId: batchLines.orderId,
       batchStatus: batches.status,
-      qty: batchLines.qty,
+      qty: sql<number>`greatest(${batchLines.qty} - ${orderLines.refundedQty}, 0)::int`,
       receivedQty: batchLines.receivedQty,
     })
     .from(batchLines)
     .innerJoin(batches, eq(batches.id, batchLines.batchId))
+    .innerJoin(orderLines, eq(orderLines.id, batchLines.orderLineId))
     .where(inArray(batchLines.orderId, [...orderIds]));
   const locked = await tx
     .select()
@@ -460,6 +464,7 @@ export async function finishReceiving(deps: OperationsDeps, batchId: string) {
         updatedAt: new Date(),
       })
       .where(eq(batches.id, batchId));
+    await createShortages(tx, batchId);
     await syncOrders(deps, tx, await batchOrderIds(tx, batchId));
   });
   deps.kick?.();
@@ -503,13 +508,13 @@ export async function packQueue(db: Database): Promise<PackOrder[]> {
       city: order.address.city,
       country: order.country,
       lines: lines
-        .filter((l) => l.orderId === order.id)
+        .filter((l) => l.orderId === order.id && l.qty > l.refundedQty)
         .map((l) => ({
           sku: l.sku,
           supplierSku: offerSkus.find((o) => o.orderLineId === l.id)?.supplierSku ?? null,
           title: l.title,
           version: l.version,
-          qty: l.qty,
+          qty: l.qty - l.refundedQty,
         })),
       parcel: parcel
         ? {
@@ -535,7 +540,10 @@ export async function packOrder(deps: OperationsDeps, orderId: string, input: Pa
     throw new OperationsError("not_allowed", "This order is not waiting to be packed");
   const lines = await db.select().from(orderLines).where(eq(orderLines.orderId, orderId));
   const want = new Map<string, number>();
-  for (const l of lines) want.set(l.sku.toUpperCase(), (want.get(l.sku.toUpperCase()) ?? 0) + l.qty);
+  for (const l of lines) {
+    const qty = l.qty - l.refundedQty;
+    if (qty > 0) want.set(l.sku.toUpperCase(), (want.get(l.sku.toUpperCase()) ?? 0) + qty);
+  }
   const got = new Map<string, number>();
   for (const i of input.items) got.set(i.sku.toUpperCase(), (got.get(i.sku.toUpperCase()) ?? 0) + i.qty);
   const same = want.size === got.size && [...want].every(([sku, qty]) => got.get(sku) === qty);
@@ -673,7 +681,9 @@ export async function packingSlip(deps: OperationsDeps, orderId: string): Promis
     orderedAt: (order.paidAt ?? order.createdAt).toISOString(),
     locale,
     recipient: { name: order.address.name, city: order.address.city, country: order.country },
-    lines: lines.map((l) => ({ sku: l.sku, title: l.title, version: l.version, qty: l.qty })),
+    lines: lines
+      .filter((l) => l.qty > l.refundedQty)
+      .map((l) => ({ sku: l.sku, title: l.title, version: l.version, qty: l.qty - l.refundedQty })),
     safety,
     returnAddress: await readHubAddress(db),
     orderUrl: `${site}/orders/${order.id}`,
@@ -807,6 +817,14 @@ export async function batchDetail(db: Database, batchId: string): Promise<BatchD
     .innerJoin(orders, eq(orders.id, batchLines.orderId))
     .where(eq(batchLines.batchId, batchId))
     .orderBy(asc(batchLines.supplierSku));
+  const damage = await db
+    .select({
+      supplierSku: batchDamage.supplierSku,
+      qty: batchDamage.qty,
+      photo: sql<boolean>`${batchDamage.photo} is not null`,
+    })
+    .from(batchDamage)
+    .where(eq(batchDamage.batchId, batchId));
   const items = new Map<string, BatchDetail["items"][number]>();
   for (const { line, sku } of lines) {
     const item = items.get(line.supplierSku);
@@ -821,6 +839,8 @@ export async function batchDetail(db: Database, batchId: string): Promise<BatchD
         qty: line.qty,
         receivedQty: line.receivedQty,
         unitCostCents: line.unitCostCents,
+        damagedQty: damage.find((d) => d.supplierSku === line.supplierSku)?.qty ?? 0,
+        damagePhoto: damage.find((d) => d.supplierSku === line.supplierSku)?.photo ?? false,
       });
   }
   return {

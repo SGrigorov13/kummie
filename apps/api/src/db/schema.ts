@@ -525,6 +525,8 @@ export const orderLines = pgTable(
     vatCents: integer("vat_cents").notNull(),
     dispatchEstimate: jsonb("dispatch_estimate").$type<Localized>().notNull(),
     position: integer("position").notNull(),
+    /** Units refunded instead of shipped (missing or damaged, D-064); they are not packed. */
+    refundedQty: integer("refunded_qty").notNull().default(0),
   },
   (t) => [index("order_lines_order_idx").on(t.orderId)],
 );
@@ -708,6 +710,8 @@ export type DocumentSnapshot = {
   refersToNumber: string | null;
   /** Sale day when an invoice is issued later than the sale (D-067); otherwise the issue day. */
   taxEventDate?: string | null;
+  /** Why the money went back (credit notes and storno for missing or damaged units, D-064). */
+  reason?: string | null;
 };
 
 /**
@@ -869,6 +873,74 @@ export const batchLines = pgTable(
     uniqueIndex("batch_lines_order_line_unique").on(t.orderLineId),
     index("batch_lines_batch_idx").on(t.batchId),
     index("batch_lines_order_idx").on(t.orderId),
+  ],
+);
+
+/**
+ * Units of one supplier SKU that arrived damaged (D-063 B5), entered while receiving. The good
+ * units are counted as received; these become "damaged" shortages when receiving is done. The
+ * photo is for the claim to the supplier (re-encoded, no metadata, staff only).
+ */
+export const batchDamage = pgTable(
+  "batch_damage",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    batchId: uuid("batch_id")
+      .notNull()
+      .references(() => batches.id),
+    supplierSku: text("supplier_sku").notNull(),
+    qty: integer("qty").notNull(),
+    note: text("note"),
+    photo: bytea("photo"),
+    createdBy: uuid("created_by"),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("batch_damage_batch_sku_unique").on(t.batchId, t.supplierSku),
+    check("batch_damage_qty", sql`${t.qty} > 0`),
+  ],
+);
+
+export const shortageKindEnum = pgEnum("shortage_kind", ["missing", "damaged"]);
+export const shortageStatusEnum = pgEnum("shortage_status", ["open", "arrived", "refunded"]);
+
+/**
+ * Units an order line did not get at receiving (D-063 B5, D-064). Open until the supplier sends
+ * them ("arrived") or staff confirm the partial refund ("refunded") after the 3 working days.
+ */
+export const shortages = pgTable(
+  "shortages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    batchId: uuid("batch_id")
+      .notNull()
+      .references(() => batches.id),
+    batchLineId: uuid("batch_line_id")
+      .notNull()
+      .references(() => batchLines.id),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id),
+    orderLineId: uuid("order_line_id")
+      .notNull()
+      .references(() => orderLines.id),
+    damageId: uuid("damage_id").references(() => batchDamage.id),
+    kind: shortageKindEnum("kind").notNull(),
+    qty: integer("qty").notNull(),
+    /** The supplier's last working day to send the units (Sofia date). */
+    dueOn: date("due_on", { mode: "string" }).notNull(),
+    status: shortageStatusEnum("status").notNull().default("open"),
+    claimSentAt: timestamp("claim_sent_at", { withTimezone: true }),
+    refundId: uuid("refund_id").references(() => refunds.id),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolvedBy: text("resolved_by"),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("shortages_line_kind_unique").on(t.batchLineId, t.kind),
+    index("shortages_status_idx").on(t.status),
+    index("shortages_order_idx").on(t.orderId),
+    check("shortages_qty", sql`${t.qty} > 0`),
   ],
 );
 
