@@ -1,4 +1,5 @@
-import { badgeSpec } from "@kummie/core";
+import type { DeliveryWindow } from "@kummie/contracts";
+import { badgeSpec, formatDeliveryWindow } from "@kummie/core";
 import { t } from "@kummie/i18n";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -103,7 +104,27 @@ export default async function ProductPage({ params }: Props) {
           </div>
           <div>
             <dt>{t(locale, "dispatch")}</dt>
-            <dd>{compliance.dispatchEstimate[locale]}</dd>
+            <dd>
+              {product.deliveryWindows.BG ? (
+                <>
+                  {(["BG", "RO", "GR"] as const)
+                    .filter((c) => product.deliveryWindows[c] && compliance.deliveryRegions.includes(c))
+                    .map((c) => (
+                      <span key={c} style={{ display: "block" }}>
+                        {t(locale, "delivery.expectedTo", {
+                          country: t(locale, `country.${c}`),
+                          window: formatDeliveryWindow(product.deliveryWindows[c] as DeliveryWindow, locale),
+                        })}
+                      </span>
+                    ))}
+                  <span className="muted" style={{ display: "block" }}>
+                    {t(locale, "delivery.note")}
+                  </span>
+                </>
+              ) : (
+                compliance.dispatchEstimate[locale]
+              )}
+            </dd>
           </div>
           <div>
             <dt>{t(locale, "regions")}</dt>

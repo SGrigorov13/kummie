@@ -1,5 +1,6 @@
 import type { ProductCard, ProductDetail, ProductListFilters } from "@kummie/contracts";
 import { and, asc, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
+import { deliveryWindows } from "./delivery";
 import type { Database } from "../db/client";
 import {
   categories,
@@ -232,7 +233,12 @@ export function createPgCatalogueRepository(db: Database, mediaBaseUrl: string):
           returnExceptions: c.returnExceptions,
         },
         images: imageRows.map((img) => image(img, row.title)),
+        deliveryWindows: { BG: null, RO: null, GR: null },
       };
+      const first = variantRows.find((v) => v.available) ?? variantRows[0];
+      if (first)
+        detail.deliveryWindows =
+          (await deliveryWindows(db, [first.id])).get(first.id) ?? detail.deliveryWindows;
       return detail;
     },
   };

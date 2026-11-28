@@ -3,7 +3,7 @@ import { OrderComplaint } from "./complaints";
 import { OrderReturn, WithdrawalInfo } from "./returns";
 import { ParcelTracking } from "./operations";
 import { AddressInput, ShippingCountry } from "./account";
-import { Localized } from "./catalogue";
+import { DeliveryWindow, Localized } from "./catalogue";
 
 // ---------- Cart (M1 Task 6) ----------
 
@@ -19,6 +19,8 @@ export const CartLine = z.object({
   qty: z.number().int().min(1),
   lineTotalCents: z.number().int(),
   dispatchEstimate: Localized,
+  /** Calculated for the cart's country (D-071); null: the product's own text applies. */
+  deliveryWindow: DeliveryWindow.nullable(),
   /** False when the product was unpublished, the version switched off or it does not ship there. */
   available: z.boolean(),
 });
@@ -44,6 +46,8 @@ export const Cart = z.object({
   country: ShippingCountry,
   count: z.number().int(),
   quote: CartQuote,
+  /** The whole order arrives together: the latest of the lines' windows (D-071). */
+  deliveryWindow: DeliveryWindow.nullable(),
 });
 export type Cart = z.infer<typeof Cart>;
 

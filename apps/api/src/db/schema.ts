@@ -783,6 +783,9 @@ export const suppliers = pgTable("suppliers", {
    * staff download the file, send it and mark the batch as ordered.
    */
   autoSend: boolean("auto_send").notNull().default(false),
+  /** Working days from the batch closing until the goods reach the hub (delivery estimate, D-071). */
+  transitDaysMin: integer("transit_days_min").notNull().default(2),
+  transitDaysMax: integer("transit_days_max").notNull().default(5),
   active: boolean("active").notNull().default(true),
   ...timestamps,
 });

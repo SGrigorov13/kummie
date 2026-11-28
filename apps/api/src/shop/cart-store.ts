@@ -1,6 +1,14 @@
 import type { Cart, CartLine } from "@kummie/contracts";
-import { businessDay, FREE_SHIPPING_FROM_CENTS, quoteCart, vatCountryFor, type Country } from "@kummie/core";
+import {
+  businessDay,
+  FREE_SHIPPING_FROM_CENTS,
+  latestWindow,
+  quoteCart,
+  vatCountryFor,
+  type Country,
+} from "@kummie/core";
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { deliveryWindows } from "../catalogue/delivery";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { customerFromRequest } from "../accounts/context";
 import { randomToken, sha256 } from "../auth/crypto";
@@ -129,6 +137,10 @@ export async function pricedLines(db: Database, cartId: string, country: Country
     .leftJoin(productCompliance, eq(productCompliance.productId, products.id))
     .where(eq(cartLines.cartId, cartId))
     .orderBy(cartLines.addedAt);
+  const windows = await deliveryWindows(
+    db,
+    rows.map((r) => r.variantId),
+  );
   return rows.map((r) => ({
     variantId: r.variantId,
     productId: r.productId,
@@ -141,6 +153,8 @@ export async function pricedLines(db: Database, cartId: string, country: Country
     qty: r.qty,
     lineTotalCents: r.priceCents * r.qty,
     dispatchEstimate: { bg: r.dispatchBg ?? "", en: r.dispatchEn ?? "" },
+    // Poland is not delivered to yet (no courier days): no window there.
+    deliveryWindow: country === "PL" ? null : (windows.get(r.variantId)?.[country] ?? null),
     available:
       r.status === "published" &&
       r.variantActive &&
@@ -193,6 +207,7 @@ export async function cartView(db: Database, cart: CartRow | null, signedIn: boo
     country,
     count: lines.reduce((sum, l) => sum + l.qty, 0),
     quote,
+    deliveryWindow: latestWindow(lines.filter((l) => l.available).map((l) => l.deliveryWindow)),
   };
 }
 

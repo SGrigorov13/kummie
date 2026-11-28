@@ -23,7 +23,7 @@ import { buildApp } from "../app";
 import { createSecretBox } from "../auth/crypto";
 import { timeStep, totpCode } from "../auth/totp";
 import { createDatabase, type DatabaseHandle } from "../db/client";
-import { addWorkingDays, businessDay } from "@kummie/core";
+import { addWorkingDays, businessDay, estimateDelivery } from "@kummie/core";
 import sharp from "sharp";
 import {
   batches,
@@ -226,6 +226,27 @@ describe.skipIf(!safe)("M2 operations with the test partners on PostgreSQL", () 
       )
     ).json() as SupplierOfferList;
     expect(offers.items.map((o) => [o.sku, o.supplierSku])).toEqual([[sku, "KM-001"]]);
+
+    // D-071: with an offer, the cart shows the calculated window (closing + transit + courier).
+    const [v] = await handle.db.select({ id: variants.id }).from(variants).where(eq(variants.sku, sku));
+    const added = await call("PUT", "/cart/lines", { variantId: v?.id, qty: 1, add: true });
+    const cartCookie = added.cookies.find((c) => c.name === "kummie_cart");
+    const cart = (
+      await app.inject({
+        method: "GET",
+        url: "/cart",
+        headers: { origin: WEB, cookie: `kummie_cart=${cartCookie?.value}` },
+      })
+    ).json() as { deliveryWindow: unknown; lines: { deliveryWindow: unknown }[] };
+    const expected = estimateDelivery({
+      now: new Date(),
+      schedule: { weekdays: [1, 3, 5], hour: 12, minute: 0 },
+      transitDays: { min: 2, max: 5 },
+      courierDays: { min: 1, max: 2 },
+      minimumOrder: false,
+    });
+    expect(cart.lines[0]?.deliveryWindow).toEqual(expected);
+    expect(cart.deliveryWindow).toEqual(expected);
     await call(
       "PUT",
       "/admin-api/operations/settings",
@@ -399,6 +420,9 @@ describe.skipIf(!safe)("M2 operations with the test partners on PostgreSQL", () 
     );
 
     const id = await paidOrder();
+    // The window is frozen into the order line at checkout (D-071).
+    const [frozen] = await handle.db.select().from(orderLines).where(eq(orderLines.orderId, id));
+    expect(frozen?.dispatchEstimate.bg).toMatch(/^Очаквана доставка: \d/);
     expect((await runOperations(operations, clock)).assigned).toBe(1);
     const open = async () => (await handle.db.select().from(batches).where(eq(batches.status, "open")))[0];
     expect((await open())?.supplierId).toBe("kmoon");

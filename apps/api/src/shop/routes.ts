@@ -30,7 +30,8 @@ import {
   variants,
   salesDocuments,
 } from "../db/schema";
-import { customerCanCancel } from "@kummie/core";
+import { customerCanCancel, formatDeliveryWindow } from "@kummie/core";
+import { t } from "@kummie/i18n";
 import { cartView, priceCart, pricedLines, resolveCart } from "./cart-store";
 import { supplierAvailable } from "../catalogue/availability";
 import { documentFileName, renderDocumentPdf } from "../documents/pdf";
@@ -243,7 +244,13 @@ export function shopRoutes(deps: ShopDeps): FastifyPluginAsyncZod {
               qty: l.qty,
               lineTotalCents: l.lineTotalCents,
               vatCents: shares.lines[position] ?? 0,
-              dispatchEstimate: l.dispatchEstimate,
+              // The calculated window is frozen with the order (D-071); otherwise the product's text.
+              dispatchEstimate: l.deliveryWindow
+                ? {
+                    bg: `${t("bg", "delivery.expected")}: ${formatDeliveryWindow(l.deliveryWindow, "bg")}`,
+                    en: `${t("en", "delivery.expected")}: ${formatDeliveryWindow(l.deliveryWindow, "en")}`,
+                  }
+                : l.dispatchEstimate,
               position,
             })),
           );

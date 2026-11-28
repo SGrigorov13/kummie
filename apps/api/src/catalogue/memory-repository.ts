@@ -88,6 +88,7 @@ export function createMemoryCatalogueRepository(
           returnExceptions: p.returnExceptions ?? [],
         },
         images: [],
+        deliveryWindows: { BG: null, RO: null, GR: null },
       };
       return detail;
     },
